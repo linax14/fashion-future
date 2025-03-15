@@ -1,0 +1,243 @@
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 90%;
+    overflow: auto;
+    background-color: #161515;
+}
+
+.modal-content {
+    margin: 15% auto;
+    padding: var(--padding-main);
+    border: 1px solid var(--grey-focus);
+    width: 80%;
+}
+
+.close {
+    float: right;
+}
+
+.close.btn {
+    padding: var(--padding-small);
+    background-color: transparent;
+    font-size: 20px;
+    margin-bottom: var(--margin-big);
+}
+
+.form-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-self: baseline;
+    margin: 40px;
+    gap: 20px;
+    padding-top: var(--padding-small);
+}
+
+.modal-group {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.modal-group label {
+    align-content: center;
+    font-size: var(--font-size-label);
+    font-variant: small-caps;
+    font-weight: var(--font-weight-label);
+}
+
+.modal-group.category,
+.modal-group.occasion {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.modal-group.category>:first-child,
+.modal-group.occasion>:first-child {
+    grid-column: span 3;
+    margin-bottom: var(--margin-medium);
+}
+
+.modal-group.category>:not(:first-child),
+.modal-group.occasion>:not(:first-child) {
+    text-align: center;
+}
+
+.modal-group.category .element,
+.modal-group.occasion .element {
+    padding-left: 4px;
+    padding-right: 4px;
+    border: 1px solid var(--grey-focus);
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-group.category .element.selected,
+.modal-group.occasion .element.selected {
+    border: 1px solid var(--font-color);
+}
+
+
+.modal-group.colour {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--gap-big);
+}
+
+.modal-group.colour>:first-child {
+    grid-column: span 3;
+    margin-bottom: var(--margin-medium);
+}
+
+.modal-group.season {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: auto;
+}
+
+.modal-group.season>:first-child {
+    grid-column: span 2;
+    margin-bottom: var(--margin-medium);
+}
+
+.modal-group.season>:not(:first-child) {
+    grid-column: span 1;
+}
+
+.modal-group.season .checkbox-wrapper label {
+    font-size: var(--font-size-label);
+    font-variant: normal;
+    font-weight: 400;
+}
+
+.checkbox-wrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: end;
+    gap: var(--gap-medium);
+}
+
+.modal-group.season input[type=checkbox] {
+    background-color: var(--focus-color);
+    -webkit-appearance: none;
+    appearance: none;
+    margin: 0;
+    font: inherit;
+    color: var(--grey-focus);
+    width: 1.15em;
+    height: 1.15em;
+    border: 0.15em solid currentColor;
+    border-radius: 0.15em;
+    transform: translateY(-0.075em);
+    display: grid;
+    place-content: center;
+}
+
+input[type="checkbox"]::before {
+    content: "";
+    width: 0.65em;
+    height: 0.65em;
+    transform: scale(0);
+    transition: 120ms transform ease-in-out;
+    box-shadow: inset 1em 1em var(--grey);
+    background-color: CanvasText;
+    transform-origin: bottom left;
+    clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+
+}
+
+input[type="checkbox"]:checked::before {
+    transform: scale(1);
+}
+
+.modal-group.colour .colors {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--gap-small);
+}
+
+.modal-group.colour .colors label {
+    align-content: center;
+    font-size: 12px;
+    font-variant: normal;
+    font-weight: 300;
+    display: flex;
+    flex-direction: row;
+}
+
+.color.btn {
+    position: relative;
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 1px solid var(--grey-focus);
+    border-radius: 50%;
+    padding: 0px;
+}
+
+.color.btn.selected::after {
+    content: "✔";
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.form-container:last-child {
+    padding-bottom: 1vh;
+}
+
+.wardrobe-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: auto;
+    gap: var(--gap-medium);
+    margin-top: 1vh;
+}
+
+.wardrobe.item-container {
+    border: 1px solid var(--grey-focus);
+    height: 16vh;
+    width: 30vw;
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-medium);
+}
+
+.wardrobe.item-container p {
+    margin-left: 4px;
+}
+
+.wardrobe.image {
+    height: 12dvh;
+    width: -moz-available;
+    object-fit: cover;
+}
+
+.outfits-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: auto;
+}
+
+.outfit-element {
+    width: 100%;
+}
+
+.outfit-element .image {
+    height: 100px;
+    width: 100px;
+    object-fit: cover;
+}
+

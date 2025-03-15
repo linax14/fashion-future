@@ -1,0 +1,128 @@
+:root[data-theme='dark'] {
+    color-scheme: dark;
+    --background-color: #1e1e1e;
+    --secondary-color: #383838;
+    --focus-color: #181717;
+    --font-color: #fff;
+    --font-size-nav: 18px;
+    --font-size-label: 16px;
+    --font-weight-label: 600;
+    --purple: #6e3aff;
+    --purple-hover: #572ec7;
+    --grey: #bdbdbd;
+    --grey-focus: #8b8b8b;
+    --font-size-btn: 14px;
+    --padding-btn: 10px 24px;
+    --padding-main: 20px;
+    --padding-small: 12px;
+    --gap-small: 2px;
+    --gap-mediumn: 6px;
+    --gap-big: 10px;
+    --margin-small: 1px;
+    --margin-medium: 4px;
+    --margin-big: 10px;
+}
+
+body {
+    background-color: var(--background-color);
+}
+
+h3 {
+    margin-top: var(--margin-small);
+    margin-bottom: var(--margin-small);
+}
+
+p {
+    margin: 0;
+}
+
+.btn {
+    background-color: var(--purple);
+    border: none;
+    color: var(--font-color);
+    padding: 10px 24px;
+    text-align: center;
+    display: inline-block;
+    font-size: var(--font-size-btn);
+}
+
+.btn:hover {
+    background-color: var(--purple-hover);
+    cursor: pointer;
+    transition: 0.5s;
+}
+
+input[type=email],
+input[type=password],
+input[type=text] {
+    background-color: var(--focus-color);
+    border: 1px solid var(--focus-color);
+    color: var(--font-color);
+    padding: var(--padding-btn);
+    text-align: left;
+    display: inline-block;
+    font-size: var(--font-size-btn);
+}
+
+input[type=file] {
+    display: none;
+}
+
+input:focus {
+    border: 1px solid var(--purple);
+}
+
+input:after {
+    background-color: var(--focus-color);
+    border: 1px solid var(--purple);
+
+}
+
+input:-webkit-autofill {
+    background-color: var(--focus-color) !important;
+    box-shadow: inset 0 0 0 32px var(--focus-color) !important;
+    -webkit-text-fill-color: var(--font-color);
+}
+
+input:-ms-input-placeholder {
+    background-color: var(--focus-color) !important;
+}
+
+input[type=date] {
+    background-color: var(--focus-color);
+    border: 1px solid var(--focus-color);
+    padding: var(--padding-btn);
+    text-align: left;
+    display: inline-block;
+    font-size: var(--font-size-btn);
+}
+
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: var(--focus-color);
+    padding: var(--padding-small) 0;
+    text-align: center;
+    z-index: 1;
+}
+
+.bottom-nav ol {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    justify-content: space-around;
+}
+
+.bottom-nav li {
+    display: inline;
+}
+
+.bottom-nav a {
+    color: var(--font-color);
+    text-decoration: none;
+    font-size: var(--font-size-nav);
+    padding: var(--padding-small);
+}
