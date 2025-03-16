@@ -121,57 +121,59 @@ async function renderCalendarDisplay() {
             .appendTo(monthHeader)
     })
 
-    let daysContainer = new CreateElement('div').setAttributes({ class: 'days-grid' }).appendTo(main)
+    let weekScrollWrapper = new CreateElement('div').setAttributes({ class: 'week-scroll-wrapper' }).appendTo(main);
 
-    let noDaysMonth = new Date(year, month + 1, 0).getDate()
-    let firstDayIndex = new Date(year, month, 1).getDay()
-    let lastDayIndex = new Date(year, month, noDaysMonth).getDay()
+    let daysContainer = new CreateElement('div').setAttributes({ class: 'days-container' }).appendTo(weekScrollWrapper);
 
-    let dayWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-    let emptyStartSlots = firstDayIndex === 0 ? 6 : firstDayIndex - 1
-    let emptyEndSlots = lastDayIndex === 0 ? 0 : 7 - lastDayIndex
+    let noDaysMonth = new Date(year, month + 1, 0).getDate();
+    let today = new Date();
 
-    dayWeek.forEach(day => {
-        let className = day === 'Sunday' ? 'day-header sunday' : 'day-header'
-        new CreateElement('div').setAttributes({ class: className }).setText(day)
-            .appendTo(daysContainer)
-    })
-
-    for (let i = 0; i < emptyStartSlots; i++) {
-        new CreateElement('div').setAttributes({ class: 'empty-slot' }).appendTo(daysContainer)
-    }
-
-    const today = new Date()
-    let dayDivs = []
+    let outfitsContainer = new CreateElement('div').setAttributes({ class: 'outfits-container' }).appendTo(calendarContainer);
+    outfitsContainer.style.display = 'none';
 
     for (let day = 1; day <= noDaysMonth; day++) {
-        let currentDate = new Date(year, month, day)
-        let formattedDate = formatDate(`${year}-${month + 1}-${day}`)
-        let isToday = currentDate.toDateString() === today.toDateString()
-        let isSunday = currentDate.getDay() === 0
-        let isLastDay = day === noDaysMonth
+        let currentDate = new Date(year, month, day);
+        let formattedDate = formatDate(`${year}-${month + 1}-${day}`);
+        let dayOfWeek = ['S', 'M', 'T', 'W', 'T', 'F', 'S'][currentDate.getDay()];
 
-        let className = 'day'
+        let dayContainerClass = 'day-container';
 
-        if (isLastDay) className += ' last-day'
-        if (isSunday) className += ' sunday'
-        if (isToday) className += ' today'
+        let className = 'day';
+        if (currentDate.toDateString() == today.toDateString()) dayContainerClass += ' today';
+        if (currentDate.getDay() === 0) dayContainerClass += ' sunday';
 
-        let dayDiv = new CreateElement('div').setAttributes({ class: className, 'data-date': formattedDate })
-        .appendTo(daysContainer)
-        new CreateElement('p').setText(day).appendTo(dayDiv)
+        let dayContainer = new CreateElement('div').setAttributes({ class: dayContainerClass }).appendTo(daysContainer);
+        new CreateElement('div').setAttributes({ class: 'day-header' }).setText(dayOfWeek).appendTo(dayContainer);
 
-        dayDivs.push({ div: dayDiv, date: formattedDate });
+        new CreateElement('div')
+            .setAttributes({ class: className, 'data-date': formattedDate })
+            .setText(day)
+            .addEventListener('click', async () => {
+
+                let selected = document.querySelector('.day-container.selected');
+                if (selected) selected.classList.remove('selected');
+                dayContainer.classList.add('selected');
+
+                outfitsContainer.innerHTML = ''
+                outfitsContainer.style.display = 'block'
+
+                await renderOutfits(formattedDate, outfitsContainer);
+            })
+            .appendTo(dayContainer);
+
     }
 
-    for (let i = 0; i < emptyEndSlots; i++) {
-        new CreateElement('div').setAttributes({ class: i == emptyEndSlots - 1 ? 'empty-slot next-month day sunday' : 'empty-slot next-month' }).appendTo(daysContainer)
-    }
+    setTimeout(() => {
+        let todayDiv = document.querySelector('.day-container.today');
+        if (todayDiv) {
+            todayDiv.parentElement.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+        }
+    }, 300);
 
-    await renderOutfits(dayDivs);
+
 }
 
-async function renderOutfits(dayDivs) {
+async function renderOutfits(formattedDate, outfitsContainer) {
     let outfits = await getDetailedOutfits();
 
     for (const element of outfits) {
@@ -179,13 +181,9 @@ async function renderOutfits(dayDivs) {
             let outfitDates = element.wornDates;
 
             outfitDates.forEach(date => {
-                let formattedDate = formatDate(date)
 
-                let dayDiv = dayDivs.find(item => item.date == formattedDate)?.div;
-
-                let outfitContainer = new CreateElement('div').setAttributes({class:'outfit'}).appendTo(dayDiv)
-
-                if (dayDiv) {
+                if (formatDate(date) == formattedDate) {
+                    let outfitContainer = new CreateElement('div').setAttributes({ class: 'outfit' }).appendTo(outfitsContainer)
                     element.clothingItems.forEach(async (item) => {
                         if (item.image) {
                             try {
@@ -210,7 +208,6 @@ async function renderOutfits(dayDivs) {
     }
 }
 
-//add items to an outfit
 async function renderClothingDisplay() {
     let clothingItems = await getClothingItems()
     let itemsToAdd = []
