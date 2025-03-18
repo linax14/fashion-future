@@ -1,4 +1,26 @@
 const supabase = window.supabase.createClient('https://idtiohrkbkotgjsbgcij.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlkdGlvaHJrYmtvdGdqc2JnY2lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzcyMTI4MjgsImV4cCI6MjA1Mjc4ODgyOH0.JVeYsapCa4SgTMqs89vfWA0Nke5oAQmHUPmjhDulea4')
+window.user = null;
+
+window.onload = async (event) => {
+    let theme = 'dark'
+    document.documentElement.setAttribute('data-theme', theme)
+}
+
+(async function () {
+    window.user = await getUser();
+    console.log("user", window.user);
+
+    document.dispatchEvent(new Event("userInitialized"));
+})();
+
+let date = new Date()
+let year = date.getFullYear()
+let month = date.getMonth()
+let months = ['january', 'february', 'march',
+    'april', 'may', 'june',
+    'july', 'august', 'september',
+    'october', 'november', 'december'
+]
 
 async function getUser() {
     const { data: { user } } = await supabase.auth.getUser()
@@ -11,48 +33,29 @@ async function getUser() {
     return user
 }
 
-async function getUserOutfits() {
-    let user = await getUser()
-
-    const { data: outfits, error: outfitsError } = await supabase
-        .from('outfit')
+async function selectUserTable(user, tableName) {
+    const { data, error } = await supabase
+        .from(tableName)
         .select()
+        .eq('user_id', user.id)
+
+    if (error) throw error
+
+    return data
+}
+
+async function updateUserTable(user, tableName, updates) {
+    const { data, error } = await supabase
+        .from(tableName)
+        .update(updates)
         .eq('user_id', user.id);
 
-    if (outfitsError) throw outfitsError;
-
-    return outfits
+    if (error) throw error
+    return data
 }
 
 function capitalise(str) {
     return str.charAt(0).toUpperCase() + str.slice(1)
-}
-
-class CreateElement {
-
-    constructor(type) {
-        this.element = document.createElement(type)
-    }
-
-    setAttributes(attributes = {}) {
-        Object.entries(attributes).forEach(([attribute, value]) => this.element.setAttribute(attribute, value))
-        return this
-    }
-
-    setText(content) {
-        this.element.textContent = content
-        return this
-    }
-
-    addEventListener(event, handler) {
-        this.element.addEventListener(event, handler)
-        return this
-    }
-
-    appendTo(container) {
-        if (container) container.appendChild(this.element)
-        return this.element
-    }
 }
 
 function renderNavigation() {
@@ -85,6 +88,33 @@ function renderNavigation() {
                 .appendTo(listItem)
         }
     })
+}
+
+class CreateElement {
+
+    constructor(type) {
+        this.element = document.createElement(type)
+    }
+
+    setAttributes(attributes = {}) {
+        Object.entries(attributes).forEach(([attribute, value]) => this.element.setAttribute(attribute, value))
+        return this
+    }
+
+    setText(content) {
+        this.element.textContent = content
+        return this
+    }
+
+    addEventListener(event, handler) {
+        this.element.addEventListener(event, handler)
+        return this
+    }
+
+    appendTo(container) {
+        if (container) container.appendChild(this.element)
+        return this.element
+    }
 }
 
 class FormField {
@@ -238,9 +268,159 @@ class SelectColours extends FormField {
     }
 }
 
-window.onload = (event) => {
-    let theme = 'dark'
-    document.documentElement.setAttribute('data-theme', theme)
+function formatDate(dateString) {
+    const [year, month, day] = dateString.split('-');
+    const paddedDay = day.padStart(2, '0');
+    const paddedMonth = month.padStart(2, '0');
+
+    return `${paddedDay}-${paddedMonth}-${year}`;
+}
+
+async function getChallenges() {
+    try {
+        const { data, error } = await supabase.from('challenges').select()
+        if (error) throw error
+        return data
+
+    } catch (error) { console.error(error) }
+}
+
+function mergeChallenges(existingChallenges, newChallenges) {
+    const existingIds = new Set(existingChallenges.map(c => c.id))
+    return [...existingChallenges, ...newChallenges.filter(c => !existingIds.has(c.id))]
+}
+
+async function initializeUserChallenges(user) {
+
+    let data = await selectUserTable(window.user, 'user_details')
+
+    if (!data || data.length == 0) {
+        await supabase
+            .from('user_details')
+            .insert({ user_id: user.id, challenges_progress: [] })
+            .eq('user_id', user.id)
+
+        data = await selectUserTable(window.user, 'user_details');
+    }
+
+    let existingChallenges = data[0]?.challenges_progress || []
+
+    let newChallenges = await getChallenges()
+
+    if (!newChallenges || newChallenges.length === 0) {
+        console.warn("No new challenges found.")
+        return data
+    }
+
+    let updatedChallenges = mergeChallenges(existingChallenges, newChallenges)
+
+    await updateUserTable(window.user, 'user_details', { challenges_progress: updatedChallenges })
+    data = await selectUserTable(window.user, 'user_details')
+
+    return data
+}
+
+async function initializeUserCalendar(user) {
+
+    let data = await selectUserTable(window.user, 'user_details')
+    let userData = data[0]
+
+    if (!userData.year) {
+        await updateUserTable(window.user, 'user_details', { 'year': year });
+    }
+
+    let calendar = {}
+    months.forEach((month, index) => {
+        let daysInMonth = new Date(year, index + 1, 0).getDate()
+        calendar[month] = {};
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            calendar[month][day] = { challenges: [] };
+        }
+    })
+
+    if (!userData.calendar) {
+        await updateUserTable(window.user, 'user_details', { 'calendar': calendar })
+        data = await selectUserTable(window.user, 'user_details')
+    }
+
+    return data
+}
+
+async function addItemsOutfit(user, outfitId, clothingIds) {
+
+    if (clothingIds && !Array.isArray(clothingIds)) {
+        clothingIds = [clothingIds];
+    }
+
+    if (!clothingIds || clothingIds.length == 0) {
+        throw new Error("At least one clothing item is required to create an outfit.");
+    }
+
+    const { data: outfitItems, error: outfitItemsError } = await supabase
+        .from('outfit_items')
+        .insert(
+            clothingIds.map(clothingId => ({
+                'outfit_id': outfitId,
+                'clothing_item_id': clothingId,
+                'user_id': user.id
+            }))
+        )
+        .eq('user_id', user.id)
+        .select()
+
+    if (outfitItemsError) throw outfitItemsError
+
+    return outfitItems
+}
+
+async function generateOutfit(user) {
+
+    const { data, error } = await supabase
+        .from('outfit')
+        .insert({ 'user_id': user.id })
+        .eq('user_id', user.id)
+        .select()
+
+    if (error) throw error
+
+    let outfitId = data[0].id
+    return outfitId
+}
+
+async function updateOutfit(user, outfitId, wearDate) {
+    let dates = Array.isArray(wearDate) ? wearDate : [wearDate];
+
+    const { data, error } = await supabase
+        .from('outfit')
+        .update({
+            wear_dates: dates,
+        })
+        .eq('id', outfitId)
+        .select()
+
+    if (error) throw error
+    return data
+}
+
+async function getOutfitItems(outfitIds) {
+    const { data: outfitItems, error: outfitItemsError } = await supabase
+        .from('outfit_items')
+        .select('outfit_id, clothing_item_id')
+        .in('outfit_id', outfitIds);
+
+    if (outfitItemsError) throw outfitItemsError;
+
+    let group = {};
+
+    outfitItems.forEach(item => {
+        if (!group[item.outfit_id]) {
+            group[item.outfit_id] = [];
+        }
+        group[item.outfit_id].push(item.clothing_item_id);
+    });
+
+    return group;
 }
 
 renderNavigation()
