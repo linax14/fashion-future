@@ -11,6 +11,8 @@
     --purple-hover: #572ec7;
     --grey: #bdbdbd;
     --grey-focus: #8b8b8b;
+    --green-muted:#156134;
+    --green-focus:#153a24;
     --font-size-btn: 14px;
     --padding-btn: 10px 24px;
     --padding-main: 20px;
@@ -97,6 +99,46 @@ input[type=date] {
     font-size: var(--font-size-btn);
 }
 
+ input[type="checkbox"] {
+    appearance: none; 
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--focus-color);
+    background-color: var(--grey); 
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+
+ input[type="checkbox"]::before {
+    content: "\2713"; 
+    font-size: 10px;
+    color: transparent; 
+    transition: color 0.3s ease-in-out;
+}
+
+ input[type="checkbox"]:hover,
+ input[type="checkbox"]:checked {
+    transform: scale(1.1);
+}
+
+ input[type="checkbox"]:checked {
+    background-color: var(--focus-color); 
+    border-color: var(--focus-color);
+}
+
+ input[type="checkbox"]:checked::before {
+    border-color: var(--focus-color);
+    color: white;
+}
+
 .bottom-nav {
     position: fixed;
     bottom: 0;
@@ -125,4 +167,17 @@ input[type=date] {
     text-decoration: none;
     font-size: var(--font-size-nav);
     padding: var(--padding-small);
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: left;
+    font-weight: bold;
+}
+
+li {
+    display: inline;
 }
