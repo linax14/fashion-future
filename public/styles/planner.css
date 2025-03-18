@@ -1,7 +1,9 @@
-.calendar.header {
-    color: var(--secondary-color);
+#calendar {
+    display: flex;
+    flex-direction: column;
     margin-bottom: 0;
     padding-bottom: 0;
+    gap: 10px;
 }
 
 .month.header {
@@ -38,11 +40,12 @@
     width: 100%;
     white-space: nowrap;
     padding-top: 10px;
+    padding-bottom: 10px;
 }
 
 .days-container {
     display: flex;
-    /* gap: 2px; */
+    gap: 2px;
 }
 
 .day-container {
@@ -59,8 +62,15 @@
     background-color: var(--focus-color);
 }
 
-.day-container.today {
-    background-color: rgb(18, 63, 18);
+.days-container .day-container.selected {
+    margin-left: 5px;
+    margin-right: 5px;
+}
+
+.day-container.selected {
+    background-color: var(--green-focus);
+    border-color: var(--grey-focus);
+    scale: 1.1;
 }
 
 .day-header {
@@ -80,13 +90,35 @@
     width: 100%;
 }
 
+.outfits-container .create-outfit {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    position: relative;
+    background-color: var(--focus-color);
+    border-radius: 10px;
+    padding: var(--padding-main);
+    gap: var(--gap-big);
+}
+
+
+.outfits-container .create-outfit img {
+    width: 100px;
+    opacity: 0.8;
+}
+
+.outfits-container .create-outfit h2 {
+    text-align: center;
+    text-transform: uppercase;
+    text-decoration: underline;
+}
+
 .outfit {
-    margin-top: 10px;
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     border: 1px solid grey;
     border-radius: 10px;
-    overflow: hidden; 
+    overflow: hidden;
 }
 
 .outfit img {
@@ -147,8 +179,8 @@
     flex-direction: column;
     border: 1px solid var(--grey);
     height: 160px;
-    padding: 4px;
     align-items: flex-start;
+    overflow: clip;
 }
 
 .clothing-list .item input[type='checkbox'] {
@@ -165,9 +197,8 @@
     height: 70%;
     width: 100%;
     position: relative;
-    top: -20px;
-    left: 0;
     object-fit: cover;
+    transform: translateY(-25%);
 }
 
 /* filters */
@@ -286,4 +317,114 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+}
+
+/* challenges */
+
+.challenges-container {
+    display: none;
+}
+
+.challenges {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    background-color: var(--secondary-color);
+    border-radius: 10px;
+    padding: var(--padding-main);
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease-in-out;
+}
+
+.challenges>:first-child {
+    grid-row: span 5;
+    text-transform: uppercase;
+}
+
+.challenges.expanded {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    padding: var(--padding-main);
+    gap: var(--gap-big);
+}
+
+.challenges .elements {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: 20px;
+    align-items: center;
+    gap: 4px;
+}
+
+
+.challenges.expanded .elements {
+    grid-template-rows: auto;
+}
+
+.challenges .elements input {
+    grid-column: 1;
+}
+
+.challenges .elements li {
+    font-weight: 500;
+    grid-column: 2;
+}
+
+.challenges li,
+.challenges ul {
+    margin: 0;
+}
+
+.challenges .elements li,
+.challenges .elements input[type='checkbox'] {
+    max-height: 0;
+    opacity: 0;
+    transform: scaleY(0);
+    transition: max-height 0.6s ease-in-out, opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+
+.challenges.expanded .elements li,
+.challenges.expanded .elements input[type='checkbox'] {
+    max-height: 50px;
+    opacity: 1;
+    transform: scaleY(1);
+}
+
+.challenges input[type="checkbox"] {
+    width: 0px;
+    height: 0px;
+    background-color: transparent;
+    border: 2px solid transparent;
+}
+
+.challenges input[type="checkbox"]::before {
+    font-size: 20px;
+}
+
+.challenges input[type="checkbox"]:checked {
+    background-color: transparent;
+    border-color: transparent;
+}
+
+.challenges input[type="checkbox"]:checked::before {
+    border-color: transparent;
+    color: transparent;
+}
+
+.challenges.expanded input[type="checkbox"] {
+    width: 30px;
+    height: 30px;
+    background-color: transparent;
+    border: 2px solid var(--green-muted);
+}
+
+.challenges.expanded input[type="checkbox"]:checked {
+    background-color: var(--green-muted);
+    border-color: var(--green-muted);
+}
+
+.challenges.expanded input[type="checkbox"]:checked::before {
+    border-color: var(--green-muted);
+    color: white;
 }

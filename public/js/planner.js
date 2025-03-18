@@ -1,104 +1,8 @@
-async function addItemsOutfit(outfitId, clothingIds) {
-    let user = await getUser()
-
-    if (clothingIds && !Array.isArray(clothingIds)) {
-        clothingIds = [clothingIds];
-    }
-
-    if (!clothingIds || clothingIds.length == 0) {
-        throw new Error("At least one clothing item is required to create an outfit.");
-    }
-
-    const { data: outfitItems, error: outfitItemsError } = await supabase
-        .from('outfit_items')
-        .insert(
-            clothingIds.map(clothingId => ({
-                'outfit_id': outfitId,
-                'clothing_item_id': clothingId,
-                'user_id': user.id
-            }))
-        )
-        .eq('user_id', user.id)
-        .select()
-
-    if (outfitItemsError) throw outfitItemsError
-
-    return outfitItems
-}
-
-async function generateOutfit() {
-    let user = await getUser()
-
-    const { data, error } = await supabase
-        .from('outfit')
-        .insert({ 'user_id': user.id })
-        .eq('user_id', user.id)
-        .select()
-
-    if (error) throw error
-
-    let outfitId = data[0].id
-    return outfitId
-}
-
-async function updateOutfit(outfitId, wearDate) {
-    let user = await getUser()
-    let dates = Array.isArray(wearDate) ? wearDate : [wearDate];
-    const { data, error } = await supabase
-        .from('outfit')
-        .update({
-            wear_dates: dates,
-        })
-        .eq('id', outfitId)
-        .select()
-
-    if (error) throw error
-    return data
-}
-
-async function getClothingItems() {
-    let user = await getUser()
-
-    const { data: clothingItems, error } = await supabase
-        .from('clothing_items')
-        .select()
-        .eq('user_id', user.id)
-
-    if (error) throw error
-
-    return clothingItems
-}
-
-async function getOutfitItems(outfitIds) {
-    const { data: outfitItems, error: outfitItemsError } = await supabase
-        .from('outfit_items')
-        .select('outfit_id, clothing_item_id')
-        .in('outfit_id', outfitIds);
-
-    if (outfitItemsError) throw outfitItemsError;
-
-    let group = {};
-
-    outfitItems.forEach(item => {
-        if (!group[item.outfit_id]) {
-            group[item.outfit_id] = [];
-        }
-        group[item.outfit_id].push(item.clothing_item_id);
-    });
-
-    return group;
-}
+document.addEventListener("userInitialized", async () => {
+    renderCalendarDisplay()
+});
 
 let calendarContainer = new CreateElement('div').setAttributes({ id: 'calendar' }).appendTo(document.body)
-
-let date = new Date()
-let year = date.getFullYear()
-let month = date.getMonth()
-let months = ['january', 'february', 'march',
-    'april', 'may', 'june',
-    'july', 'august', 'september',
-    'october', 'november', 'december'
-]
 
 let clothingContainer = new CreateElement('div').setAttributes({ class: 'clothing-container' })
     .appendTo(document.body)
@@ -126,27 +30,39 @@ async function renderCalendarDisplay() {
     let daysContainer = new CreateElement('div').setAttributes({ class: 'days-container' }).appendTo(weekScrollWrapper);
 
     let noDaysMonth = new Date(year, month + 1, 0).getDate();
-    let today = new Date();
 
     let outfitsContainer = new CreateElement('div').setAttributes({ class: 'outfits-container' }).appendTo(calendarContainer);
     outfitsContainer.style.display = 'none';
 
+    let createOutfit = new CreateElement('div').setAttributes({ class: 'create-outfit' }).appendTo(outfitsContainer)
+    createOutfit.addEventListener('click', () => {
+        calendarContainer.style.display = 'none'
+        clothingContainer.style.display = 'block'
+        renderClothingDisplay()
+    })
+    new CreateElement('h2').setText('add an outfit').appendTo(createOutfit)
+    new CreateElement('img').setAttributes({ src: '../assets/createOutfit.png' }).appendTo(createOutfit)
+
+    let challengesContainer = new CreateElement('div').setAttributes({ class: 'challenges-container' }).appendTo(calendarContainer);
+    challengesContainer.style.display = 'none';
+
     for (let day = 1; day <= noDaysMonth; day++) {
         let currentDate = new Date(year, month, day);
         let formattedDate = formatDate(`${year}-${month + 1}-${day}`);
+        let dataDate = `${year}-${month + 1}-${day}`
         let dayOfWeek = ['S', 'M', 'T', 'W', 'T', 'F', 'S'][currentDate.getDay()];
 
         let dayContainerClass = 'day-container';
 
         let className = 'day';
-        if (currentDate.toDateString() == today.toDateString()) dayContainerClass += ' today';
+        if (currentDate.toDateString() == date.toDateString()) dayContainerClass += ' today';
         if (currentDate.getDay() === 0) dayContainerClass += ' sunday';
 
         let dayContainer = new CreateElement('div').setAttributes({ class: dayContainerClass }).appendTo(daysContainer);
         new CreateElement('div').setAttributes({ class: 'day-header' }).setText(dayOfWeek).appendTo(dayContainer);
 
         new CreateElement('div')
-            .setAttributes({ class: className, 'data-date': formattedDate })
+            .setAttributes({ class: className, 'data-date': dataDate })
             .setText(day)
             .addEventListener('click', async () => {
 
@@ -154,22 +70,39 @@ async function renderCalendarDisplay() {
                 if (selected) selected.classList.remove('selected');
                 dayContainer.classList.add('selected');
 
-                outfitsContainer.innerHTML = ''
                 outfitsContainer.style.display = 'block'
+                challengesContainer.innerHTML = ''
+                challengesContainer.style.display = 'block'
+                document.querySelectorAll('.outfit').forEach(el => el.parentNode.removeChild(el));
 
                 await renderOutfits(formattedDate, outfitsContainer);
+                await getDailyChallenges(window.user, dataDate, challengesContainer)
             })
             .appendTo(dayContainer);
 
     }
 
-    setTimeout(() => {
+    setTimeout(async () => {
         let todayDiv = document.querySelector('.day-container.today');
         if (todayDiv) {
             todayDiv.parentElement.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+            todayDiv.classList.add('selected')
+
+            let div = todayDiv.childNodes[1]
+
+            let hasDate = div.hasAttribute('data-date')
+            if (hasDate) {
+                let date = div.getAttribute('data-date')
+
+                outfitsContainer.style.display = 'block'
+                challengesContainer.innerHTML = ''
+                challengesContainer.style.display = 'block'
+
+                await renderOutfits(date, outfitsContainer);
+                await getDailyChallenges(window.user, date, challengesContainer)
+            }
         }
     }, 300);
-
 
 }
 
@@ -209,7 +142,7 @@ async function renderOutfits(formattedDate, outfitsContainer) {
 }
 
 async function renderClothingDisplay() {
-    let clothingItems = await getClothingItems()
+    let clothingItems = await selectUserTable(window.user, 'clothing_items')
     let itemsToAdd = []
 
     let closeBtn = new CreateElement('button')
@@ -270,13 +203,12 @@ async function renderClothingDisplay() {
                 return
             }
 
-            let outfitId = await generateOutfit()
+            let outfitId = await generateOutfit(window.user)
 
-            await addItemsOutfit(outfitId, itemsToAdd)
-            console.log(itemsToAdd);
+            await addItemsOutfit(window.user, outfitId, itemsToAdd)
 
             if (date.value) {
-                await updateOutfit(outfitId, date.value)
+                await updateOutfit(window.user, outfitId, date.value)
             }
 
             itemsToAdd = []
@@ -326,7 +258,7 @@ async function renderClothingItem(item, container, itemsToAdd) {
 }
 
 async function renderModal(clothingContainer, clothingList, itemsToAdd) {
-    let clothingItems = await getClothingItems()
+    let clothingItems = await selectUserTable(window.user, 'clothing_items')
 
     let modal = new CreateElement('div').setAttributes({ class: 'mini modal' }).appendTo(clothingContainer)
     let closeModalBtn = new CreateElement('button').setAttributes({ class: 'close btn' }).setText('x')
@@ -368,7 +300,7 @@ async function renderModal(clothingContainer, clothingList, itemsToAdd) {
 }
 
 async function filters(container) {
-    let clothingItems = await getClothingItems()
+    let clothingItems = await selectUserTable(window.user, 'clothing_items')
     let filtersContainer = new CreateElement('div').setAttributes({ class: 'filter' }).appendTo(container)
 
     let colourOptions = {
@@ -444,13 +376,13 @@ async function filters(container) {
 }
 
 async function getDetailedOutfits() {
-    const outfits = await getUserOutfits()
+    const outfits = await selectUserTable(window.user, 'outfit')
     const outfitIds = outfits.map(outfit => outfit.id)
 
     const outfitItems = await getOutfitItems(outfitIds)
 
     const clothingItemIds = [].concat(...Object.values(outfitItems))
-    const clothingItems = await getClothingItems(clothingItemIds)
+    const clothingItems = await selectUserTable(window.user, 'clothing_items', clothingItemIds)
 
     let outfitDetails = outfits.map(outfit => {
         const outfitItemIds = outfitItems[outfit.id] || [];
@@ -465,17 +397,107 @@ async function getDetailedOutfits() {
     });
 
     return outfitDetails
-
 }
 
-function formatDate(dateString) {
-    const [year, month, day] = dateString.split('-');
-    const paddedDay = day.padStart(2, '0');
-    const paddedMonth = month.padStart(2, '0');
+async function getDailyChallenges(user, challengeDate, challengesContainer) {
 
-    return `${paddedDay}-${paddedMonth}-${year}`;
+    let userChallenges = await initializeUserChallenges(window.user)
+    let userDetails = await selectUserTable(window.user, 'user_details')
+    let [year, month, day] = challengeDate.split('-')
+
+    let challengesProgress = userChallenges[0].challenges_progress
+
+    let randomChallenges = challengesProgress
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 5)
+
+    let currentMonth = months[month - 1].toLowerCase()
+
+    for (const element of userDetails) {
+        if (element.year == year) {
+            let targetMonth = element.calendar[currentMonth]
+
+            if (targetMonth) {
+                let target = targetMonth[day]
+
+                if (target.challenges.length == 0) {
+                    target.challenges.push(...randomChallenges)
+
+                    await updateUserTable(window.user, 'user_details', { calendar: element.calendar })
+
+                } else {
+                    await renderChallenges(window.user, target.challenges, challengesContainer, challengeDate)
+                }
+            }
+
+        }
+    }
 }
 
-renderCalendarDisplay()
-// renderClothingDisplay()
-getUser()
+async function renderChallenges(user, randomChallenges, challengesContainer, challengeDate) {
+
+    let challenges = new CreateElement('div')
+        .setAttributes({ class: 'challenges' })
+        .addEventListener('click', async () => {
+            challenges.classList.toggle('expanded');
+        })
+        .appendTo(challengesContainer)
+
+    new CreateElement('h2')
+        .setText('challenges')
+        .appendTo(challenges)
+
+    let data = await selectUserTable(window.user, 'user_details')
+
+    let updateChallengesProgress = data[0].challenges_progress
+    let updateCalendar = data[0].calendar
+    let [year, month, day] = challengeDate.split('-')
+    let currentMonth = months[month - 1].toLowerCase()
+    let challengesToday = data[0].calendar[currentMonth][day].challenges;
+
+    randomChallenges.forEach(value => {
+
+        let elements = new CreateElement('div').setAttributes({ class: 'elements' }).appendTo(challenges)
+
+        let checkbox = new CreateElement('input')
+            .setAttributes({ type: 'checkbox', id: value.id, class: 'challenges' })
+            .addEventListener('click', (event) => {
+                event.stopPropagation()
+            })
+            .addEventListener('change', async (event) => {
+                event.preventDefault()
+
+                let updateChallenge = updateChallengesProgress.find(item => item.id == checkbox.id)
+                let updateCalendarChallenge = challengesToday.find(item => item.id == checkbox.id)
+
+                if (checkbox.checked) {
+
+                    if (updateCalendarChallenge) {
+                        updateCalendarChallenge.completed = true;
+                    }
+
+                    if (updateChallenge) {
+                        updateChallenge.complete_count += 1;
+                    }
+
+                } else {
+                    if (updateCalendarChallenge) {
+                        updateCalendarChallenge.completed = false;
+                    }
+
+                    if (updateChallenge) {
+                        updateChallenge.complete_count = Math.max(0, updateChallenge.complete_count - 1);
+                    }
+                }
+
+                await updateUserTable(window.user, 'user_details', { user_id: user.id, challenges_progress: updateChallengesProgress, calendar: updateCalendar })
+
+            })
+            .appendTo(elements)
+
+        let ul = new CreateElement('ul').setText(value.title).appendTo(elements)
+        new CreateElement('li').setText(value.details).appendTo(ul)
+
+        checkbox.checked = challengesToday.some(item => item.id === value.id && item.completed);
+    });
+}
