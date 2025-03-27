@@ -11,18 +11,20 @@
     --purple-hover: #572ec7;
     --grey: #bdbdbd;
     --grey-focus: #8b8b8b;
-    --green-muted:#156134;
-    --green-focus:#153a24;
+    --green-muted: #156134;
+    --green-focus: #153a24;
     --font-size-btn: 14px;
     --padding-btn: 10px 24px;
     --padding-main: 20px;
     --padding-small: 12px;
-    --gap-small: 2px;
-    --gap-mediumn: 6px;
-    --gap-big: 10px;
+    --gap-small: 4px;
+    --gap-medium: 8px;
+    --gap-big: 12px;
     --margin-small: 1px;
     --margin-medium: 4px;
-    --margin-big: 10px;
+    --margin-big: 8px;
+    --border-radius-medium: 10px;
+    --border-radius-small: 6px;
 }
 
 body {
@@ -46,12 +48,42 @@ p {
     text-align: center;
     display: inline-block;
     font-size: var(--font-size-btn);
+    text-transform: capitalize;
 }
 
 .btn:hover {
     background-color: var(--purple-hover);
     cursor: pointer;
     transition: 0.5s;
+}
+
+.btn-container {
+    display: flex;
+    flex-direction: row;
+    margin-top: var(--margin-big);
+    justify-content: center;
+    gap: 4px;
+}
+
+.tab-btn {
+    background-color: var(--background-color);
+    border: none;
+    color: var(--font-color);
+    padding: 6px 12px;
+    text-align: center;
+    display: inline-block;
+    font-size: var(--font-size-btn);
+    text-transform: capitalize;
+}
+
+.tab-btn:hover {
+    background-color: var(--purple-hover);
+    cursor: pointer;
+    transition: 0.5s;
+}
+
+.tab-btn.selected {
+    border-bottom: 1px solid white;
 }
 
 input[type=email],
@@ -64,6 +96,7 @@ input[type=text] {
     text-align: left;
     display: inline-block;
     font-size: var(--font-size-btn);
+    border-radius: 10px;
 }
 
 input[type=file] {
@@ -99,14 +132,14 @@ input[type=date] {
     font-size: var(--font-size-btn);
 }
 
- input[type="checkbox"] {
-    appearance: none; 
+input[type="checkbox"] {
+    appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
     width: 20px;
     height: 20px;
     border: 2px solid var(--focus-color);
-    background-color: var(--grey); 
+    background-color: var(--focus-color);
     border-radius: 5px;
     cursor: pointer;
     transition: all 0.3s ease-in-out;
@@ -117,24 +150,23 @@ input[type=date] {
 }
 
 
- input[type="checkbox"]::before {
-    content: "\2713"; 
-    font-size: 10px;
-    color: transparent; 
+input[type="checkbox"]::before {
+    content: "✔";
+    font-size: 20px;
+    color: transparent;
     transition: color 0.3s ease-in-out;
 }
 
- input[type="checkbox"]:hover,
- input[type="checkbox"]:checked {
+input[type="checkbox"]:hover,
+input[type="checkbox"]:checked {
     transform: scale(1.1);
 }
 
- input[type="checkbox"]:checked {
-    background-color: var(--focus-color); 
+input[type="checkbox"]:checked {
     border-color: var(--focus-color);
 }
 
- input[type="checkbox"]:checked::before {
+input[type="checkbox"]:checked::before {
     border-color: var(--focus-color);
     color: white;
 }
@@ -180,4 +212,115 @@ ul {
 
 li {
     display: inline;
+}
+
+.dropdown-options {
+    visibility: hidden;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    background: var(--background-color);
+    z-index: 10;
+    width: 100%;
+    grid-column: span 3;
+    max-height: 0;
+    margin-top: var(--margin-big);
+    opacity: 0;
+    transform: scaleY(0);
+    transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out, transform 0.3s ease-in-out, visibility 0.3s;
+}
+
+.dropdown-options.open {
+    visibility: visible;
+    max-height: 100%;
+    opacity: 1;
+    transform: scaleY(1);
+}
+
+/* filters */
+.mini.modal {
+    position: fixed;
+    width: 100%;
+    height: 60%;
+    bottom: 0;
+    left: 0;
+    display: none;
+    z-index: 3;
+    background-color: var(--focus-color);
+}
+
+.filters-body {
+    display: flex;
+    flex-direction: column;
+    padding: var(--padding-main);
+}
+
+.mini.modal .form-group.brand label {
+    display: grid !important;
+}
+
+.mini.modal.form-group label {
+    align-content: center;
+    font-size: var(--font-size-label);
+    font-variant: small-caps;
+    font-weight: var(--font-weight-label);
+}
+
+.mini.modal .form-group .close {
+    font-size: 20px;
+    font-weight: var(--font-weight-label);
+}
+
+.mini.modal .form-group>:first-child {
+    margin-top: var(--margin-big);
+    margin-bottom: var(--margin-big);
+}
+
+.mini.modal .form-group>:not(:first-child) {
+    text-align: center;
+    gap: 5px;
+}
+
+.mini.modal .form-group .element {
+    padding-left: 4px;
+    padding-right: 4px;
+    border: 1px solid var(--focus-color);
+    border-radius: 10px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 1px 1px 2px var(--secondary-color), -1px -1px 2px var(--focus-color);
+    /* background-color: var(--focus-color); */
+}
+
+.mini.modal .form-group .element.selected {
+    border: 1px solid var(--font-color);
+    box-shadow: inset 1px 1px 12px var(--focus-color), inset -1px -1px 12px var(--focus-color);
+}
+
+.mini.modal .form-group:not(.colour) {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr);
+    justify-content: space-between;
+    gap: 4px;
+    margin-bottom: var(--margin-big);
+}
+
+.mini.modal .form-group.season {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr) !important;
+}
+
+.mini.modal .form-group.season label {
+    grid-column: span 4 !important;
+}
+
+.mini.modal .form-group:not(.colour)>:first-child {
+    grid-column: span 4;
+}
+
+.mini.modal .submit.btn {
+    position: absolute;
+    bottom: 2vh;
+    right: 2vh;
 }
