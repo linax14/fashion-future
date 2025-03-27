@@ -8,7 +8,7 @@ window.onload = async (event) => {
 
 (async function () {
     window.user = await getUser();
-    console.log("user", window.user);
+    // console.log("user", window.user);
 
     document.dispatchEvent(new Event("userInitialized"));
 })();
@@ -76,10 +76,6 @@ function renderNavigation() {
         if (key == 'addOutfit') {
             new CreateElement(value.link.type)
                 .setText(value.link.text)
-                .addEventListener('click', () => {
-                    let addClothingModal = document.querySelector('.modal')
-                    addClothingModal.style.display = 'block'
-                })
                 .appendTo(listItem)
         } else {
             new CreateElement(value.link.type)
@@ -124,7 +120,7 @@ class FormField {
         this.container = container
 
         this.wrapper = new CreateElement('div')
-            .setAttributes({ class: `modal-group ${name}` })
+            .setAttributes({ class: `form-group ${name}` })
             .appendTo(this.container)
 
         let label = new CreateElement('label')
@@ -151,13 +147,34 @@ class CheckboxGroup extends FormField {
     constructor(name, config, container) {
         super(name, config, container)
 
+        let hiddenInput = new CreateElement('input')
+            .setAttributes({ type: 'hidden', name: name })
+            .appendTo(this.wrapper)
+
+        let selected = ''
+
         config.options.forEach(option => {
             let checkboxWrapper = new CreateElement('div')
                 .setAttributes({ class: 'checkbox-wrapper' })
                 .appendTo(this.wrapper)
 
-            new CreateElement('input')
+            let checkbox = new CreateElement('input')
                 .setAttributes({ type: 'checkbox', name: name, value: option })
+                .addEventListener('change', () => {
+
+                    let selectedArray = selected ? selected.split(',') : [];
+
+                    if (checkbox.checked) {
+                        if (!selectedArray.includes(option)) {
+                            selectedArray.push(option);
+                        }
+                    } else {
+                        selectedArray = selectedArray.filter(c => c !== option);
+                    }
+
+                    selected = selectedArray.join(',');
+                    hiddenInput.value = selected;
+                })
                 .appendTo(checkboxWrapper)
 
             new CreateElement('label')
@@ -171,22 +188,49 @@ class CheckboxGroup extends FormField {
 class ImageUpload extends FormField {
     constructor(name, config, container) {
         super(name, config, container)
+        this.selectedFile = null
 
-        new CreateElement('button')
-            .setAttributes({ type: 'button', class: 'btn' })
+        let formContainer = document.querySelector('.newItem-container');
+
+        let addImage = new CreateElement('img')
+            .setAttributes({ src: '../assets/createOutfit.png' })
             .addEventListener('click', () => {
-                let img = new CreateElement('input')
-                    .setAttributes({
-                        class: config.class,
-                        type: config.inputType,
-                        accept: config.accept,
-                        capture: config.capture,
-                        name: name
-                    })
-                    .appendTo(this.wrapper)
+
+                let img = formContainer.querySelector(config.class);
+
+                if (!img) {
+                    img = new CreateElement('input')
+                        .setAttributes({
+                            class: config.class,
+                            type: config.inputType,
+                            accept: config.accept,
+                            capture: config.capture,
+                            name: name
+                        })
+                        .addEventListener('change', (event) => {
+                            let file = event.target.files[0]
+                            this.selectedFile = file
+
+                            if (file) {
+                                let url = URL.createObjectURL(file)
+                                console.log(url);
+
+                                addImage.setAttribute('src', url)
+                                addImage.classList.remove('create-outfit')
+                                addImage.classList.add('preview')
+                            }
+                        })
+                        .appendTo(this.wrapper)
+                    img.click()
+                }
+
                 img.click()
             })
-            .setText('Add Image').appendTo(this.wrapper)
+            .appendTo(this.wrapper)
+    }
+
+    getFile() {
+        return this.selectedFile
     }
 }
 
@@ -194,37 +238,80 @@ class SelectOption extends FormField {
     constructor(name, config, container) {
         super(name, config, container)
 
-        let hiddenInput = new CreateElement('input')
+        this.hiddenInput = new CreateElement('input')
             .setAttributes({ type: 'hidden', name: name })
             .appendTo(this.wrapper)
 
+        this.isDropdown = config.dropdown ?? false;
+        this.allowMultiple = config.multiple ?? true;
+        this.selected = this.allowMultiple ? [] : null;
 
-        let selected = null
+        let dropdown = null;
+        let close = null;
 
-        config.options.sort().forEach(category => {
+        if (this.isDropdown) {
+            close = new CreateElement('span')
+                .setAttributes({ class: 'close' })
+                .setText('+')
+                .appendTo(this.wrapper);
+        }
+
+        if (this.isDropdown) {
+            dropdown = new CreateElement('div')
+                .setAttributes({ class: 'dropdown-options' })
+                .appendTo(this.wrapper);
+        }
+
+        let optionsContainer = this.isDropdown ? dropdown : this.wrapper;
+
+        config.options.sort().forEach(option => {
             let element = new CreateElement(config.type)
-                .setAttributes({ value: category, class: 'element' })
-                .addEventListener('click', () => {
-
-                    if (selected == element) {
-                        selected.classList.remove('selected')
-                        selected = null
-                        hiddenInput.value = ''
-
-                    } else {
-
-                        if (selected) {
-                            selected.classList.remove('selected')
+                .setAttributes({ value: option, class: 'element' })
+                .addEventListener('click', (event) => {
+                    event.stopPropagation()
+                    if (this.allowMultiple) {
+                        if (this.selected.includes(option)) {
+                            this.selected = this.selected.filter(c => c !== option);
+                            element.classList.remove('selected');
+                        } else {
+                            this.selected.push(option);
+                            element.classList.add('selected');
                         }
 
-                        selected = element
-                        element.classList.add('selected')
-                        hiddenInput.value = category
+                        this.hiddenInput.value = this.selected.join(',');
+                    } else {
+                        if (this.selected === option) {
+                            this.selected = null;
+                            element.classList.remove('selected');
+                            this.hiddenInput.value = '';
+                        } else {
+                            optionsContainer.querySelectorAll('.selected').forEach(el => {
+                                el.classList.remove('selected');
+                            });
+
+                            this.selected = option;
+                            element.classList.add('selected');
+                            this.hiddenInput.value = option;
+                        }
                     }
                 })
-                .setText(capitalise(category))
-                .appendTo(this.wrapper)
+                .setText(capitalise(option))
+                .appendTo(optionsContainer)
         })
+
+        if (this.isDropdown) {
+            this.wrapper.addEventListener('click', (event) => {
+                event.stopPropagation();
+                dropdown.classList.toggle('open');
+            });
+
+
+            document.addEventListener('click', (event) => {
+                if (!this.wrapper.contains(event.target)) {
+                    dropdown.classList.remove('open');
+                }
+            });
+        }
     }
 }
 
@@ -232,7 +319,7 @@ class SelectColours extends FormField {
     constructor(name, config, container) {
         super(name, config, container)
 
-        let hiddenColorInput = new CreateElement('input')
+        let hiddenInput = new CreateElement('input')
             .setAttributes({ type: 'hidden', name: name })
             .appendTo(this.wrapper)
 
@@ -240,11 +327,11 @@ class SelectColours extends FormField {
 
         Object.entries(config.options).forEach(([option, value]) => {
             let element = new CreateElement('div')
-                .setAttributes({ class: 'colors', name: option })
+                .setAttributes({ class: 'element', name: option })
                 .appendTo(this.wrapper)
 
             let color = new CreateElement('span')
-                .setAttributes({ style: `background-color:${value}`, class: 'color btn' })
+                .setAttributes({ style: `background-color:${value}`, class: config.class })
                 .addEventListener('click', () => {
 
                     if (selected.includes(option)) {
@@ -256,14 +343,65 @@ class SelectColours extends FormField {
                         color.classList.add('selected')
                     }
 
-                    hiddenColorInput.value = selected.join(',')
+                    hiddenInput.value = selected.join(',')
                 })
                 .appendTo(element)
 
 
-            new CreateElement('label')
-                .setAttributes({ for: option }).setText(capitalise(option))
+            // new CreateElement('label')
+            //     .setAttributes({ for: option }).setText(capitalise(option))
+            //     .appendTo(element)
+        })
+    }
+}
+
+class SelectMultiple extends FormField {
+    constructor(name, config, container) {
+        super(name, config, container)
+
+        let hiddenInput = new CreateElement('input')
+            .setAttributes({ type: 'hidden', name: name })
+            .appendTo(this.wrapper)
+
+        let selected = []
+
+        Object.entries(config.options).forEach(([option, value]) => {
+            let element = new CreateElement('div')
+                .setAttributes({ class: 'element', name: option })
+                .appendTo(this.wrapper)
+
+            let item = new CreateElement('span')
+                .setAttributes({ class: config.class })
+                .addEventListener('click', () => {
+
+                    if (selected.includes(option)) {
+                        selected = selected.filter(c => c !== option)
+                        item.innerHTML = ''
+                        item.classList.remove('selected')
+                    } else {
+                        selected.push(option)
+                        item.classList.add('selected')
+                    }
+
+                    hiddenInput.value = selected.join(',')
+                })
                 .appendTo(element)
+
+
+            // new CreateElement('label')
+            //     .setAttributes({ for: option }).setText(capitalise(option))
+            //     .appendTo(element)
+        })
+    }
+}
+
+class Colours extends SelectMultiple {
+    constructor(name, config, container, item) {
+        super(name, config, container, item)
+
+        Object.entries(config.options).forEach(([option, value]) => {
+            let item = container.querySelector(`.element[name="${option}"] span`);
+            if (item) item.style.backgroundColor = value;
         })
     }
 }
@@ -422,5 +560,167 @@ async function getOutfitItems(outfitIds) {
 
     return group;
 }
+
+async function filters(container) {
+    let clothingItems = await selectUserTable(window.user, 'clothing_items')
+    let filtersBody = new CreateElement('div').setAttributes({ class: 'filters-body' }).appendTo(container)
+
+    let colourOptions = {
+        'red': '#e53935', 'pink': '#d81b60', 'purple': '#8e24aa', 'Deep Purple': '#5e35b1',
+        'indigo': '#3949ab', 'blue': '#1e88e5', 'Light Blue': '#039be5', 'cyan': '#00acc1',
+        'teal': '#00897b', 'green': '#43a047', 'Light Green': '#7cb342', 'lime': '#c0ca33',
+        'yellow': '#fdd835', 'amber': '#fbb300', 'orange': '#fb8c00', 'Deep Orange': '#f4511e',
+        'brown': '#6d4c41', 'Light Grey': '#757575', 'Blue Grey': '#546e7a',
+        'Deep Grey': '#212121', 'black': '#000000', 'white': '#ffffff'
+    }
+
+    let filters = { brand: 'unique', category: 'unique', colour: 'multiple', occasion: 'multiple' }
+    let filterSets = {};
+    filterSets['season'] = new Set(['spring', 'summer', 'autumn', 'winter'])
+
+    for (const [key, value] of Object.entries(filters)) {
+        filterSets[key] = new Set();
+    }
+
+    for (const element of clothingItems) {
+        for (const [key, value] of Object.entries(filters)) {
+
+            if (element[key]) {
+                switch (value) {
+                    case 'unique':
+                        filterSets[key].add(element[key])
+                        break;
+
+                    case 'multiple':
+                        element[key].split(',').forEach(e => filterSets[key].add(e));
+                        break;
+                }
+            }
+        }
+    }
+
+    let selectedSets = {}
+    for (const key in filters) {
+        selectedSets[key] = new Set();
+    }
+    selectedSets['season'] = new Set()
+
+    for (const [key, value] of Object.entries(filterSets)) {
+
+        let filter = new CreateElement('div').setAttributes({ class: `form-group ${key}` }).appendTo(filtersBody)
+        new CreateElement('label').setText(key).appendTo(filter)
+
+        value.forEach(i => {
+            let element
+            if (key === 'colour' && colourOptions[i]) {
+                element = new CreateElement('span')
+                    .setAttributes({ style: `background-color:${colourOptions[i]}`, class: 'color btn' })
+                    .appendTo(filter);
+            } else {
+                element = new CreateElement('span')
+                    .setAttributes({ value: i, class: 'element' })
+                    .setText(i)
+                    .appendTo(filter);
+            }
+
+            element.addEventListener('click', () => {
+                if (selectedSets[key].has(i)) {
+                    selectedSets[key].delete(i);
+                    element.classList.remove('selected');
+                } else {
+                    selectedSets[key].add(i);
+                    element.classList.add('selected');
+                }
+            })
+        })
+    }
+    return selectedSets
+}
+
+async function renderFiltersModal(appendTo, currentDisplay, onFilter, closeBtn = false) {
+    let clothingItems = await selectUserTable(window.user, 'clothing_items');
+
+    let modal = new CreateElement('div').setAttributes({ class: 'mini modal' }).appendTo(appendTo);
+    modal.style.display = 'block';
+
+    if (closeBtn) {
+
+        let closeModalBtn = new CreateElement('button').setAttributes({ class: 'close btn' }).setText('x')
+            .addEventListener('click', () => {
+                modal.style.display = 'none';
+                appendTo.classList.remove('unfocused')
+                onFilter(clothingItems);
+            })
+            .appendTo(modal);
+    }
+
+    let body = new CreateElement('div').appendTo(modal);
+    let selectedSets = await filters(body);
+
+    let filterBtn = new CreateElement('button').setAttributes({ class: 'submit btn' }).setText('Filter')
+        .addEventListener('click', () => {
+            let filteredItems = clothingItems.filter(e => {
+                for (const [key, selectedValues] of Object.entries(selectedSets)) {
+                    if (selectedValues.size === 0) continue;
+                    let itemValue = e[key];
+
+                    console.log(e);
+
+                    if (key === "colour" || key === "season" || key == "occasion") {
+
+                        try {
+                            valuesArray = JSON.parse(itemValue)
+                            if (!Array.isArray(valuesArray)) {
+                                throw new Error("Parsed value is not an array");
+                            }
+                        } catch (error) {
+                            valuesArray = itemValue.split(",").map(v => v.trim());
+                        }
+
+                        if (!valuesArray.some(value => selectedValues.has(value))) {
+                            return false;
+                        }
+                    } else {
+                        if (!selectedValues.has(itemValue)) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            });
+
+            console.log('Filtered Items:', filteredItems);
+            currentDisplay.innerHTML = '';
+
+            onFilter(filteredItems);
+
+            modal.style.display = 'none';
+        })
+        .appendTo(modal);
+
+    let resetBtn = new CreateElement('button').setAttributes({ class: 'reset btn' }).setText('Reset')
+        .addEventListener('click', () => {
+            for (const key in selectedSets) {
+                selectedSets[key].clear()
+                console.log(selectedSets);
+            }
+            let allElements = modal.querySelectorAll('.element, .color');
+            allElements.forEach(element => {
+                element.classList.remove('selected');
+            }); currentDisplay.innerHTML = '';
+            onFilter(clothingItems);
+        })
+        .appendTo(modal);
+    return modal
+}
+
+let setDisplay = (elements, displayType) =>
+    elements.forEach(element => element.style.display = displayType)
+
+let fontAwesome = new CreateElement('link').setAttributes({
+    rel: 'stylesheet', href: "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css",
+    integrity: "sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==",
+    crossorigin: "anonymous", referrerpolicy: "no-referrer"
+}).appendTo(document.head)
 
 renderNavigation()
