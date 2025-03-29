@@ -406,12 +406,20 @@ class Colours extends SelectMultiple {
     }
 }
 
-function formatDate(dateString) {
+function formatDatePadded(dateString) {
     const [year, month, day] = dateString.split('-');
     const paddedDay = day.padStart(2, '0');
     const paddedMonth = month.padStart(2, '0');
 
     return `${paddedDay}-${paddedMonth}-${year}`;
+}
+
+function formatDateUnpadded(dateString) {
+    const [year, month, day] = dateString.split('-');
+    const unpaddedDay = parseInt(day, 10);
+    const unpaddedMonth = parseInt(month, 10);
+
+    return `${year}-${unpaddedMonth}-${unpaddedDay}`;
 }
 
 async function getChallenges() {
@@ -722,5 +730,82 @@ let fontAwesome = new CreateElement('link').setAttributes({
     integrity: "sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==",
     crossorigin: "anonymous", referrerpolicy: "no-referrer"
 }).appendTo(document.head)
+
+editItemHandler = (newItemContainer = null, appendTo, container, element) => {
+    if (newItemContainer) {
+        renderEditClothingItem(newItemContainer, appendTo, element)
+    }
+    console.log('editing:', element.id)
+}
+
+async function displayClothingItems(newItemContainer = null, appendTo, filteredData = null, itemsToAdd = null) {
+    let data = filteredData ? filteredData : await selectUserTable(window.user, 'clothing_items')
+
+    let itemElements = await Promise.all(data.map(async (element) => {
+        let container = new CreateElement('div')
+            .setAttributes({ class: 'wardrobe item-container', id: element.id })
+            .appendTo(appendTo)
+
+        //itemClickHandler is removed when the user is deleting clothing items
+        let itemClickHandler = () => editItemHandler(newItemContainer, appendTo, container, element)
+        container.itemClickHandler = itemClickHandler
+        container.addEventListener('click', itemClickHandler)
+
+        //for delete functionality
+        let checkbox = new CreateElement('input')
+            .setAttributes({ type: 'checkbox', class: 'wardrobe-checkbox', style: 'display:none' })
+            .appendTo(container)
+
+        if (itemsToAdd) {
+            setDisplay([checkbox], 'block')
+            checkbox.addEventListener('change', async (event) => {
+                event.preventDefault()
+
+                if (event.target.checked) {
+                    if (!itemsToAdd.includes(element.id)) {
+                        itemsToAdd.push(element.id)
+                    }
+                } else {
+                    itemsToAdd = itemsToAdd.filter(id => id !== element.id);
+                }
+            })
+        }
+
+        if (element.image) {
+            try {
+                const { data: signedUrlData, error: urlError } = await supabase.storage
+                    .from('fashion-future')
+                    .createSignedUrl(`${element.user_id}/${element.image}`, 60)
+
+                if (urlError) throw urlError
+                if (signedUrlData.signedUrl) {
+                    new CreateElement('img')
+                        .setAttributes({ class: 'wardrobe image', src: signedUrlData.signedUrl, alt: `Image for ${element.category}` })
+                        .appendTo(container)
+                }
+            } catch (urlError) {
+                console.error(`Error fetching image: ${urlError}`)
+                new CreateElement('img')
+                    .setAttributes({
+                        class: 'wardrobe image fallback', src: '../assets/createOutfit.png',
+                        alt: `Fallback image representing a variety of clothing items when no specific image is available`
+                    })
+                    .appendTo(container)
+            }
+        } else {
+            new CreateElement('img')
+                .setAttributes({
+                    class: 'wardrobe image fallback', src: '../assets/createOutfit.png',
+                    alt: `Fallback image representing a variety of clothing items when no specific image is available`
+                })
+                .appendTo(container)
+        }
+
+        new CreateElement('p').setText(element.brand).appendTo(container)
+
+        return { container, checkbox, itemClickHandler, id: element.id }
+    }))
+    return itemElements
+}
 
 renderNavigation()

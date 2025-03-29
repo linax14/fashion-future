@@ -47,62 +47,6 @@ async function uploadFile(user, filepath, file) {
     }
 }
 
-//retrieve clothing items from sb and display them 
-async function displayClothingItems(newItemContainer, appendTo, filteredData = null) {
-    let data = filteredData ? filteredData : await selectUserTable(window.user, 'clothing_items')
-
-    let itemElements = await Promise.all(data.map(async (element) => {
-        let container = new CreateElement('div')
-            .setAttributes({ class: 'wardrobe item-container', id: element.id })
-            .appendTo(appendTo)
-
-        //itemClickHandler is removed when the user is deleting clothing items
-        let itemClickHandler = () => editItemHandler(newItemContainer, appendTo, container, element)
-        container.itemClickHandler = itemClickHandler
-        container.addEventListener('click', itemClickHandler)
-
-        //for delete functionality
-        let checkbox = new CreateElement('input')
-            .setAttributes({ type: 'checkbox', class: 'wardrobe-checkbox', style: 'display:none' })
-            .appendTo(container)
-
-        if (element.image) {
-            try {
-                const { data: signedUrlData, error: urlError } = await supabase.storage
-                    .from('fashion-future')
-                    .createSignedUrl(`${element.user_id}/${element.image}`, 60)
-
-                if (urlError) throw urlError
-                if (signedUrlData.signedUrl) {
-                    new CreateElement('img')
-                        .setAttributes({ class: 'wardrobe image', src: signedUrlData.signedUrl, alt: `Image for ${element.category}` })
-                        .appendTo(container)
-                }
-            } catch (urlError) {
-                console.error(`Error fetching image: ${urlError}`)
-                new CreateElement('img')
-                    .setAttributes({
-                        class: 'wardrobe image fallback', src: '../assets/createOutfit.png',
-                        alt: `Fallback image representing a variety of clothing items when no specific image is available`
-                    })
-                    .appendTo(container)
-            }
-        } else {
-            new CreateElement('img')
-                .setAttributes({
-                    class: 'wardrobe image fallback', src: '../assets/createOutfit.png',
-                    alt: `Fallback image representing a variety of clothing items when no specific image is available`
-                })
-                .appendTo(container)
-        }
-
-        new CreateElement('p').setText(element.brand).appendTo(container)
-
-        return { container, checkbox, itemClickHandler, id: element.id }
-    }))
-    return itemElements
-}
-
 function handleFormSubmit(newItemContainer, wardrobeContainer, form, onSubmitCallback, itemId = null) {
     let isDirty = false
 
@@ -394,11 +338,6 @@ async function updateClothingItem(itemId, formContainer, newItemContainer, wardr
     } catch (error) {
         console.error('error updating', error)
     }
-}
-
-editItemHandler = (newItemContainer, wardrobeContainer, container, item) => {
-    renderEditClothingItem(newItemContainer, wardrobeContainer, item)
-    console.log('editing:', item.id)
 }
 
 async function renderWardrobe() {

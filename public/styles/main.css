@@ -324,3 +324,88 @@ li {
     bottom: 2vh;
     right: 2vh;
 }
+
+/* clothing items */
+
+
+.clothing-list {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: auto;
+    gap: var(--gap-medium);
+    margin-top: 1vh;
+}
+
+.wardrobe.item-container input[type="checkbox"]:checked,
+.clothing-list .item-container input[type="checkbox"]:checked {
+    border-color: var(--secondary-color);
+}
+
+.wardrobe.item-container input[type="checkbox"]:checked::before,
+.clothing-list .item-container input[type="checkbox"]:checked::before {
+    border-color: var(--secondary-color);
+    color: var(--focus-color);
+}
+
+.wardrobe.item-container [type="checkbox"]::before,
+.clothing-list .item-container [type="checkbox"]::before {
+    font-size: 12px;
+    margin-left: 3px;
+}
+
+.wardrobe.item-container input[type="checkbox"],
+.clothing-list .item-container input[type="checkbox"] {
+    background-color: var(--font-color);
+    border-color: var(--secondary-color);
+    border-radius: var(--border-radius-small);
+    position: absolute;
+    z-index: 1;
+}
+
+.wardrobe.item-container input[type="checkbox"]:checked,
+.clothing-list .item-container input[type="checkbox"]:checked {
+    border-color: var(--secondary-color);
+}
+
+.wardrobe.item-container input[type="checkbox"]:checked::before,
+.clothing-list .item-container input[type="checkbox"]:checked::before {
+    border-color: var(--secondary-color);
+    color: var(--focus-color);
+}
+
+.wardrobe.item-container [type="checkbox"]::before,
+.clothing-list .item-container [type="checkbox"]::before {
+    font-size: 12px;
+    margin-left: 3px;
+}
+
+.wardrobe.item-container,
+.clothing-list .item-container {
+    border: 1px solid var(--secondary-color);
+    background-color: var(--focus-color);
+    border-radius: var(--border-radius-medium);
+    height: 16vh;
+    width: 30vw;
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-medium);
+    overflow: hidden;
+
+}
+
+.wardrobe.item-container p,
+.clothing-list .item-container p {
+    margin-left: 8px;
+}
+
+.clothing-list .item-container img{
+    height: 12vh;
+    overflow: hidden;
+}
+
+.image.fallback {
+    height: 12dvh;
+    width: -moz-available;
+    object-fit: cover;
+    opacity: 10%;
+}

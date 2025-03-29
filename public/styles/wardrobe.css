@@ -297,13 +297,6 @@
     object-fit: cover;
 }
 
-.wardrobe.image.fallback {
-    height: 12dvh;
-    width: -moz-available;
-    object-fit: cover;
-    opacity: 10%;
-}
-
 .outfits-container {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
