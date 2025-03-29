@@ -1,5 +1,6 @@
 document.addEventListener("userInitialized", async () => {
     renderCalendarDisplay()
+    // renderClothingDisplay()
 });
 
 let calendarContainer = new CreateElement('div').setAttributes({ id: 'calendar' }).appendTo(document.body)
@@ -32,24 +33,25 @@ async function renderCalendarDisplay() {
     let noDaysMonth = new Date(year, month + 1, 0).getDate();
 
     let outfitsContainer = new CreateElement('div').setAttributes({ class: 'outfits-container' }).appendTo(calendarContainer);
-    outfitsContainer.style.display = 'none';
+    setDisplay([outfitsContainer], 'none')
 
+    let createOutfitDate = null
     let createOutfit = new CreateElement('div').setAttributes({ class: 'create-outfit' }).appendTo(outfitsContainer)
     createOutfit.addEventListener('click', () => {
-        calendarContainer.style.display = 'none'
-        clothingContainer.style.display = 'block'
-        renderClothingDisplay()
+        setDisplay([calendarContainer], 'none')
+        renderClothingDisplay(createOutfitDate)
     })
     new CreateElement('h2').setText('add an outfit').appendTo(createOutfit)
     new CreateElement('img').setAttributes({ src: '../assets/createOutfit.png' }).appendTo(createOutfit)
 
     let challengesContainer = new CreateElement('div').setAttributes({ class: 'challenges-container' }).appendTo(calendarContainer);
-    challengesContainer.style.display = 'none';
+    setDisplay([challengesContainer], 'none')
 
     for (let day = 1; day <= noDaysMonth; day++) {
         let currentDate = new Date(year, month, day);
-        let formattedDate = formatDate(`${year}-${month + 1}-${day}`);
+        let formattedDate = formatDatePadded(`${year}-${month + 1}-${day}`);
         let dataDate = `${year}-${month + 1}-${day}`
+
         let dayOfWeek = ['S', 'M', 'T', 'W', 'T', 'F', 'S'][currentDate.getDay()];
 
         let dayContainerClass = 'day-container';
@@ -70,43 +72,47 @@ async function renderCalendarDisplay() {
                 if (selected) selected.classList.remove('selected');
                 dayContainer.classList.add('selected');
 
-                outfitsContainer.style.display = 'block'
+                createOutfitDate = dataDate
+
                 challengesContainer.innerHTML = ''
-                challengesContainer.style.display = 'block'
+                setDisplay([outfitsContainer, challengesContainer], 'block')
                 document.querySelectorAll('.outfit').forEach(el => el.parentNode.removeChild(el));
 
-                await renderOutfits(formattedDate, outfitsContainer);
+                await renderOutfits(dataDate, outfitsContainer);
                 await getDailyChallenges(window.user, dataDate, challengesContainer)
             })
             .appendTo(dayContainer);
-
     }
 
     setTimeout(async () => {
         let todayDiv = document.querySelector('.day-container.today');
         if (todayDiv) {
-            todayDiv.parentElement.scrollIntoView({ behavior: 'smooth', inline: 'center' });
-            todayDiv.classList.add('selected')
 
+            let scrollContainer = document.querySelector('.week-scroll-wrapper')
+
+            let scrollPosition = todayDiv.offsetLeft - (scrollContainer.clientWidth / 2) + (todayDiv.clientWidth / 2);
+            scrollContainer.scrollTo({
+                left: scrollPosition,
+                behavior: 'smooth'
+            });
+            todayDiv.classList.add('selected')
             let div = todayDiv.childNodes[1]
 
             let hasDate = div.hasAttribute('data-date')
             if (hasDate) {
                 let date = div.getAttribute('data-date')
 
-                outfitsContainer.style.display = 'block'
                 challengesContainer.innerHTML = ''
-                challengesContainer.style.display = 'block'
+                setDisplay([outfitsContainer, challengesContainer], 'block')
 
                 await renderOutfits(date, outfitsContainer);
                 await getDailyChallenges(window.user, date, challengesContainer)
             }
         }
-    }, 300);
-
+    }, 0);
 }
 
-async function renderOutfits(formattedDate, outfitsContainer) {
+async function renderOutfits(dataDate, outfitsContainer) {
     let outfits = await getDetailedOutfits();
 
     for (const element of outfits) {
@@ -115,7 +121,7 @@ async function renderOutfits(formattedDate, outfitsContainer) {
 
             outfitDates.forEach(date => {
 
-                if (formatDate(date) == formattedDate) {
+                if (formatDateUnpadded(date) == dataDate) {                    
                     let outfitContainer = new CreateElement('div').setAttributes({ class: 'outfit' }).appendTo(outfitsContainer)
                     element.clothingItems.forEach(async (item) => {
                         if (item.image) {
@@ -141,16 +147,17 @@ async function renderOutfits(formattedDate, outfitsContainer) {
     }
 }
 
-async function renderClothingDisplay() {
-    let clothingItems = await selectUserTable(window.user, 'clothing_items')
+async function renderClothingDisplay(createOutfitDate) {
+    setDisplay([clothingContainer], 'block')
+
     let itemsToAdd = []
 
     let closeBtn = new CreateElement('button')
         .setAttributes({ class: 'close' })
         .setText('×')
         .addEventListener('click', () => {
-            calendarContainer.style.display = 'block'
-            clothingContainer.style.display = 'none'
+            setDisplay([calendarContainer], 'block')
+            setDisplay([clothingContainer], 'none')
         })
         .appendTo(clothingContainer)
 
@@ -162,34 +169,29 @@ async function renderClothingDisplay() {
         .setAttributes({ class: 'filters' })
         .appendTo(clothingContainer)
 
-    new CreateElement('h2').setText('Filters')
-        .appendTo(filtersContainer).getElement
-
-    let dateContainer = new CreateElement('div').appendTo(clothingContainer)
-    new CreateElement('h2').setText('Schedule Outfit').appendTo(dateContainer)
-    let date = new CreateElement('input').setAttributes({ type: 'date' }).addEventListener('change', () => {
-        console.log(date.value);
-    }).appendTo(dateContainer)
-
-    new CreateElement('span').setText('+')
-        .setAttributes({ class: 'filters btn' })
-        .addEventListener('click', () => {
-
-            let modal = document.querySelector('.mini.modal')
-            if (!modal) {
-                renderModal(clothingContainer, clothingList, itemsToAdd)
-            } else {
-                modal.style.display = 'block'
-            }
-
-        }).appendTo(filtersContainer)
+    let filtersHeader = new CreateElement('h2').setText('Filters')
+        .appendTo(filtersContainer)
 
     let clothingList = new CreateElement('div')
         .setAttributes({ class: 'clothing-list' })
         .appendTo(clothingContainer)
 
-    clothingItems.forEach(e => {
-        renderClothingItem(e, clothingList, itemsToAdd)
+    let clothingItemElements = await displayClothingItems(null, clothingList, null, itemsToAdd)
+
+    filtersHeader.addEventListener('click', () => {
+        let miniModal = document.querySelector('.mini.modal')
+
+        if (!miniModal) {
+            renderFiltersModal(wardrobeHeader, wardrobeContainer, (filteredItems) => {
+                wardrobeContainer.innerHTML = ''
+                filteredItems.forEach(e => displayClothingItems(null, clothingList, [e], itemsToAdd))
+                console.log(filteredItems);
+            }, true)
+            miniModal = document.querySelector('.mini.modal');
+        }
+
+        if (miniModal) setDisplay([miniModal], filterMode ? 'block' : 'none')
+        editWardrobe.disabled = filterMode
     })
 
     new CreateElement('button')
@@ -207,172 +209,17 @@ async function renderClothingDisplay() {
 
             await addItemsOutfit(window.user, outfitId, itemsToAdd)
 
-            if (date.value) {
-                await updateOutfit(window.user, outfitId, date.value)
+            if (createOutfitDate) {
+                await updateOutfit(window.user, outfitId, createOutfitDate)
             }
 
             itemsToAdd = []
 
-            calendarContainer.style.display = 'block'
-            clothingContainer.style.display = 'none'
+            setDisplay([calendarContainer], 'block')
+            setDisplay([clothingContainer], 'none')
 
         })
         .appendTo(clothingContainer)
-}
-
-async function renderClothingItem(item, container, itemsToAdd) {
-
-    let itemContainer = new CreateElement('div').setAttributes({ class: 'item' }).appendTo(container)
-
-    let checkbox = new CreateElement('input')
-        .setAttributes({ type: 'checkbox', id: item.id })
-        .addEventListener('change', async (event) => {
-            event.preventDefault()
-
-            if (event.target.checked) {
-                if (!itemsToAdd.includes(item.id)) {
-                    itemsToAdd.push(item.id)
-                }
-            } else {
-                itemsToAdd = itemsToAdd.filter(id => id !== item.id);
-            }
-        })
-        .appendTo(itemContainer)
-
-    if (item.image) {
-        const { data: signedUrlData, error: urlError } = await supabase.storage
-            .from('fashion-future')
-            .createSignedUrl(`${item.user_id}/${item.image}`, 60)
-
-        if (urlError) {
-            console.error(urlError)
-        }
-
-        if (signedUrlData.signedUrl) {
-            let img = new CreateElement('img').setAttributes({ src: signedUrlData.signedUrl }).appendTo(itemContainer)
-        }
-    }
-
-    new CreateElement('p').setText(item.brand).appendTo(itemContainer)
-
-}
-
-async function renderModal(clothingContainer, clothingList, itemsToAdd) {
-    let clothingItems = await selectUserTable(window.user, 'clothing_items')
-
-    let modal = new CreateElement('div').setAttributes({ class: 'mini modal' }).appendTo(clothingContainer)
-    let closeModalBtn = new CreateElement('button').setAttributes({ class: 'close btn' }).setText('x')
-        .addEventListener('click', () => {
-            modal.style.display = 'none'
-        })
-        .appendTo(modal)
-    let body = new CreateElement('div').appendTo(modal)
-    let selectedSets = await filters(body)
-
-    let filterBtn = new CreateElement('button').setAttributes({ class: 'submit btn' }).setText('Filter').addEventListener('click', () => {
-
-        let filteredItems = clothingItems.filter(e => {
-            for (const [key, selectedValues] of Object.entries(selectedSets)) {
-                if (selectedValues.size === 0) continue;
-                let itemValue = e[key];
-
-                if (key === "colour" || key === "season") {
-                    let valuesArray = key === "colour"
-                        ? itemValue.split(",").map(v => v.trim())
-                        : JSON.parse(itemValue);
-                    if (!valuesArray.some(value => selectedValues.has(value))) {
-                        return false;
-                    }
-                } else {
-                    if (!selectedValues.has(itemValue)) {
-                        return false;
-                    }
-                }
-            }
-            return true;
-        });
-
-        console.log('Filtered Items:', filteredItems);
-        clothingList.innerHTML = '';
-        filteredItems.forEach(e => renderClothingItem(e, clothingList, itemsToAdd));
-        modal.style.display = 'none'
-    }).appendTo(modal)
-}
-
-async function filters(container) {
-    let clothingItems = await selectUserTable(window.user, 'clothing_items')
-    let filtersContainer = new CreateElement('div').setAttributes({ class: 'filter' }).appendTo(container)
-
-    let colourOptions = {
-        'red': '#e53935', 'pink': '#d81b60', 'purple': '#8e24aa', 'Deep Purple': '#5e35b1',
-        'indigo': '#3949ab', 'blue': '#1e88e5', 'Light Blue': '#039be5', 'cyan': '#00acc1',
-        'teal': '#00897b', 'green': '#43a047', 'Light Green': '#7cb342', 'lime': '#c0ca33',
-        'yellow': '#fdd835', 'amber': '#fbb300', 'orange': '#fb8c00', 'Deep Orange': '#f4511e',
-        'brown': '#6d4c41', 'Light Grey': '#757575', 'Blue Grey': '#546e7a',
-        'Deep Grey': '#212121', 'black': '#000000', 'white': '#ffffff'
-    }
-
-    let filters = { brand: 'unique', category: 'unique', colour: 'multiple', occasion: 'unique' }
-    let filterSets = {};
-    filterSets['season'] = new Set(['spring', 'summer', 'autumn', 'winter'])
-
-    for (const [key, value] of Object.entries(filters)) {
-        filterSets[key] = new Set();
-    }
-
-    for (const element of clothingItems) {
-        for (const [key, value] of Object.entries(filters)) {
-
-            if (element[key]) {
-                switch (value) {
-                    case 'unique':
-                        filterSets[key].add(element[key])
-                        break;
-
-                    case 'multiple':
-                        element[key].split(',').forEach(e => filterSets[key].add(e));
-                        break;
-                }
-            }
-        }
-    }
-
-    let selectedSets = {}
-    for (const key in filters) {
-        selectedSets[key] = new Set();
-    }
-    selectedSets['season'] = new Set()
-
-    for (const [key, value] of Object.entries(filterSets)) {
-
-        let filter = new CreateElement('div').setAttributes({ class: `modal-group ${key}` }).appendTo(filtersContainer)
-        new CreateElement('label').setText(key).appendTo(filter)
-
-        value.forEach(i => {
-            let element
-            if (key === 'colour' && colourOptions[i]) {
-                element = new CreateElement('span')
-                    .setAttributes({ style: `background-color:${colourOptions[i]}`, class: 'color btn' })
-                    .appendTo(filter);
-            } else {
-                element = new CreateElement('span')
-                    .setAttributes({ value: i, class: 'element' })
-                    .setText(i)
-                    .appendTo(filter);
-            }
-
-            element.addEventListener('click', () => {
-                if (selectedSets[key].has(i)) {
-                    selectedSets[key].delete(i);
-                    element.classList.remove('selected');
-                } else {
-                    selectedSets[key].add(i);
-                    element.classList.add('selected');
-                }
-            })
-        })
-    }
-    return selectedSets
 }
 
 async function getDetailedOutfits() {
@@ -472,22 +319,12 @@ async function renderChallenges(user, randomChallenges, challengesContainer, cha
 
                 if (checkbox.checked) {
 
-                    if (updateCalendarChallenge) {
-                        updateCalendarChallenge.completed = true;
-                    }
-
-                    if (updateChallenge) {
-                        updateChallenge.complete_count += 1;
-                    }
+                    if (updateCalendarChallenge) updateCalendarChallenge.completed = true;
+                    if (updateChallenge) updateChallenge.complete_count += 1;
 
                 } else {
-                    if (updateCalendarChallenge) {
-                        updateCalendarChallenge.completed = false;
-                    }
-
-                    if (updateChallenge) {
-                        updateChallenge.complete_count = Math.max(0, updateChallenge.complete_count - 1);
-                    }
+                    if (updateCalendarChallenge) updateCalendarChallenge.completed = false;
+                    if (updateChallenge) updateChallenge.complete_count = Math.max(0, updateChallenge.complete_count - 1);
                 }
 
                 await updateUserTable(window.user, 'user_details', { user_id: user.id, challenges_progress: updateChallengesProgress, calendar: updateCalendar })
