@@ -11,6 +11,8 @@ window.onload = async (event) => {
     // console.log("user", window.user);
 
     document.dispatchEvent(new Event("userInitialized"));
+    initializeUserCalendar(user)
+
 })();
 
 let date = new Date()
@@ -422,58 +424,36 @@ function formatDateUnpadded(dateString) {
     return `${year}-${unpaddedMonth}-${unpaddedDay}`;
 }
 
-async function getChallenges() {
-    try {
-        const { data, error } = await supabase.from('challenges').select()
-        if (error) throw error
-        return data
-
-    } catch (error) { console.error(error) }
+let mergeData = (existingData, newData) => {
+    const existingIds = new Set(existingData.map(c => c.id))
+    return [...existingData, ...newData.filter(c => !existingIds.has(c.id))]
 }
 
-function mergeChallenges(existingChallenges, newChallenges) {
-    const existingIds = new Set(existingChallenges.map(c => c.id))
-    return [...existingChallenges, ...newChallenges.filter(c => !existingIds.has(c.id))]
-}
+let initializeUserDetails = async (fromTable, initializeColumn) => {
 
-async function initializeUserChallenges(user) {
+    let { data } = await supabase.from(fromTable).select()
+    let userData = await selectUserTable(window.user, 'user_details')
+    if (!userData || userData.length <= 0) await supabase.from('user_details').insert({ user_id: user.id })
 
-    let data = await selectUserTable(window.user, 'user_details')
+    let currentData = userData[0]?.[initializeColumn] || []
+    let newData = data
+    let updatedData = mergeData(currentData, newData)
 
-    if (!data || data.length == 0) {
-        await supabase
-            .from('user_details')
-            .insert({ user_id: user.id, challenges_progress: [] })
-            .eq('user_id', user.id)
-
-        data = await selectUserTable(window.user, 'user_details');
-    }
-
-    let existingChallenges = data[0]?.challenges_progress || []
-
-    let newChallenges = await getChallenges()
-
-    if (!newChallenges || newChallenges.length === 0) {
-        console.warn("No new challenges found.")
-        return data
-    }
-
-    let updatedChallenges = mergeChallenges(existingChallenges, newChallenges)
-
-    await updateUserTable(window.user, 'user_details', { challenges_progress: updatedChallenges })
+    await updateUserTable(window.user, 'user_details', { [initializeColumn]: updatedData })
     data = await selectUserTable(window.user, 'user_details')
-
     return data
 }
 
 async function initializeUserCalendar(user) {
+    let data = await selectUserTable(window.user, 'user_calendar')
 
-    let data = await selectUserTable(window.user, 'user_details')
-    let userData = data[0]
-
-    if (!userData.year) {
-        await updateUserTable(window.user, 'user_details', { 'year': year });
+    if (data.length == 0) {
+        await supabase.from('user_calendar').insert({ user_id: user.id })
+        data = await selectUserTable(window.user, 'user_calendar')
     }
+
+    data = data[0]
+    if (!data.year) await updateUserTable(window.user, 'user_calendar', { 'year': year });
 
     let calendar = {}
     months.forEach((month, index) => {
@@ -481,13 +461,13 @@ async function initializeUserCalendar(user) {
         calendar[month] = {};
 
         for (let day = 1; day <= daysInMonth; day++) {
-            calendar[month][day] = { challenges: [] };
+            calendar[month][day] = { challenges: [], quiz: [] };
         }
     })
 
-    if (!userData.calendar) {
-        await updateUserTable(window.user, 'user_details', { 'calendar': calendar })
-        data = await selectUserTable(window.user, 'user_details')
+    if (!data.calendar) {
+        await updateUserTable(window.user, 'user_calendar', { 'calendar': calendar })
+        data = await selectUserTable(window.user, 'user_calendar')
     }
 
     return data
@@ -582,7 +562,7 @@ async function filters(container) {
         'Deep Grey': '#212121', 'black': '#000000', 'white': '#ffffff'
     }
 
-    let filters = { brand: 'unique', category: 'unique', colour: 'multiple', occasion: 'multiple' }
+    let filters = { brand: 'unique', category: 'unique', colour: 'multiple', occasion: 'multiple', origin: 'multiple' }
     let filterSets = {};
     filterSets['season'] = new Set(['spring', 'summer', 'autumn', 'winter'])
 
@@ -616,7 +596,10 @@ async function filters(container) {
     for (const [key, value] of Object.entries(filterSets)) {
 
         let filter = new CreateElement('div').setAttributes({ class: `form-group ${key}` }).appendTo(filtersBody)
-        new CreateElement('label').setText(key).appendTo(filter)
+        let label = new CreateElement('label').setText(key).appendTo(filter)
+        filter.addEventListener('click', () => {
+            filter.classList.toggle('expanded')
+        })
 
         value.forEach(i => {
             let element
@@ -641,31 +624,25 @@ async function filters(container) {
                 }
             })
         })
+
+        if (filter.childNodes.length <= 1) {
+            setDisplay([label], 'none')
+        }
+
     }
     return selectedSets
 }
 
-async function renderFiltersModal(appendTo, currentDisplay, onFilter, closeBtn = false) {
+async function renderFilters(appendTo, currentDisplay, onFilter) {
     let clothingItems = await selectUserTable(window.user, 'clothing_items');
 
-    let modal = new CreateElement('div').setAttributes({ class: 'mini modal' }).appendTo(appendTo);
-    modal.style.display = 'block';
+    let div = new CreateElement('div').setAttributes({ class: 'filters' }).appendTo(appendTo);
 
-    if (closeBtn) {
-
-        let closeModalBtn = new CreateElement('button').setAttributes({ class: 'close btn' }).setText('x')
-            .addEventListener('click', () => {
-                modal.style.display = 'none';
-                appendTo.classList.remove('unfocused')
-                onFilter(clothingItems);
-            })
-            .appendTo(modal);
-    }
-
-    let body = new CreateElement('div').appendTo(modal);
+    let body = new CreateElement('div').appendTo(div);
     let selectedSets = await filters(body);
-
-    let filterBtn = new CreateElement('button').setAttributes({ class: 'submit btn' }).setText('Filter')
+    setDisplay([currentDisplay], 'none')
+    let btns = new CreateElement('div').setAttributes({ class: 'btn-container' }).appendTo(div)
+    new CreateElement('button').setAttributes({ class: 'submit btn' }).setText('Filter')
         .addEventListener('click', () => {
             let filteredItems = clothingItems.filter(e => {
                 for (const [key, selectedValues] of Object.entries(selectedSets)) {
@@ -674,7 +651,7 @@ async function renderFiltersModal(appendTo, currentDisplay, onFilter, closeBtn =
 
                     console.log(e);
 
-                    if (key === "colour" || key === "season" || key == "occasion") {
+                    if (key === "colour" || key === "season" || key == "occasion" || key == "origin") {
 
                         try {
                             valuesArray = JSON.parse(itemValue)
@@ -699,31 +676,32 @@ async function renderFiltersModal(appendTo, currentDisplay, onFilter, closeBtn =
 
             console.log('Filtered Items:', filteredItems);
             currentDisplay.innerHTML = '';
+            setDisplay([currentDisplay], 'grid')
 
             onFilter(filteredItems);
 
-            modal.style.display = 'none';
+            div.style.display = 'none';
         })
-        .appendTo(modal);
+        .appendTo(btns);
 
-    let resetBtn = new CreateElement('button').setAttributes({ class: 'reset btn' }).setText('Reset')
+    new CreateElement('button').setAttributes({ class: 'reset btn' }).setText('Reset')
         .addEventListener('click', () => {
             for (const key in selectedSets) {
                 selectedSets[key].clear()
                 console.log(selectedSets);
             }
-            let allElements = modal.querySelectorAll('.element, .color');
+            let allElements = div.querySelectorAll('.element, .color');
             allElements.forEach(element => {
                 element.classList.remove('selected');
-            }); currentDisplay.innerHTML = '';
+            });
+            currentDisplay.innerHTML = '';
+            setDisplay([currentDisplay], 'grid')
             onFilter(clothingItems);
+            div.style.display = 'none';
         })
-        .appendTo(modal);
-    return modal
+        .appendTo(btns);
+    return div
 }
-
-let setDisplay = (elements, displayType) =>
-    elements.forEach(element => element.style.display = displayType)
 
 let fontAwesome = new CreateElement('link').setAttributes({
     rel: 'stylesheet', href: "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css",
@@ -735,7 +713,7 @@ editItemHandler = (newItemContainer = null, appendTo, container, element) => {
     if (newItemContainer) {
         renderEditClothingItem(newItemContainer, appendTo, element)
     }
-    console.log('editing:', element.id)
+    console.log('item', element.id)
 }
 
 async function displayClothingItems(newItemContainer = null, appendTo, filteredData = null, itemsToAdd = null) {
@@ -772,26 +750,28 @@ async function displayClothingItems(newItemContainer = null, appendTo, filteredD
         }
 
         if (element.image) {
-            try {
-                const { data: signedUrlData, error: urlError } = await supabase.storage
-                    .from('fashion-future')
-                    .createSignedUrl(`${element.user_id}/${element.image}`, 60)
+            await getImage(element, container, renderImage, 'wardrobe image');
 
-                if (urlError) throw urlError
-                if (signedUrlData.signedUrl) {
-                    new CreateElement('img')
-                        .setAttributes({ class: 'wardrobe image', src: signedUrlData.signedUrl, alt: `Image for ${element.category}` })
-                        .appendTo(container)
-                }
-            } catch (urlError) {
-                console.error(`Error fetching image: ${urlError}`)
-                new CreateElement('img')
-                    .setAttributes({
-                        class: 'wardrobe image fallback', src: '../assets/createOutfit.png',
-                        alt: `Fallback image representing a variety of clothing items when no specific image is available`
-                    })
-                    .appendTo(container)
-            }
+            // try {
+            //     const { data: signedUrlData, error: urlError } = await supabase.storage
+            //         .from('fashion-future')
+            //         .createSignedUrl(`${element.user_id}/${element.image}`, 60)
+
+            //     if (urlError) throw urlError
+            //     if (signedUrlData.signedUrl) {
+            //         new CreateElement('img')
+            //             .setAttributes({ class: 'wardrobe image', src: signedUrlData.signedUrl, alt: `Image for ${element.category}` })
+            //             .appendTo(container)
+            //     }
+            // } catch (urlError) {
+            //     console.error(`Error fetching image: ${urlError},${element.id}`)
+            //     new CreateElement('img')
+            //         .setAttributes({
+            //             class: 'wardrobe image fallback', src: '../assets/createOutfit.png',
+            //             alt: `Fallback image representing a variety of clothing items when no specific image is available`
+            //         })
+            //         .appendTo(container)
+            // }
         } else {
             new CreateElement('img')
                 .setAttributes({
@@ -806,6 +786,41 @@ async function displayClothingItems(newItemContainer = null, appendTo, filteredD
         return { container, checkbox, itemClickHandler, id: element.id }
     }))
     return itemElements
+}
+
+
+let setDisplay = (elements, displayType) =>
+    elements.forEach(element => element.style.display = displayType)
+
+let closeBtnX = (appendTo, onClick) => new CreateElement('button').setAttributes({ class: 'close' }).setText('×').addEventListener('click', onClick).appendTo(appendTo)
+
+async function getImage(element, appendTo, callback, className = '') {
+    try {
+        const { data: signedUrlData, error: urlError } = await supabase.storage
+            .from('fashion-future')
+            .createSignedUrl(`${element.user_id}/${element.image}`, 60);
+
+        if (urlError) throw urlError;
+        if (signedUrlData.signedUrl) {
+            if (typeof callback === 'function') {
+                callback(signedUrlData, appendTo, className)
+            } else { return signedUrlData }
+        }
+    } catch (urlError) {
+        console.error(`Error fetching image URL: ${urlError}`);
+        new CreateElement('img')
+            .setAttributes({
+                class: 'wardrobe image fallback', src: '../assets/createOutfit.png',
+                alt: `Fallback image representing a variety of clothing items when no specific image is available`
+            })
+            .appendTo(appendTo)
+    }
+}
+
+let renderImage = (signedUrlData, appendTo, className) => {
+    new CreateElement('img')
+        .setAttributes({ class: className, src: signedUrlData.signedUrl })
+        .appendTo(appendTo);
 }
 
 renderNavigation()
