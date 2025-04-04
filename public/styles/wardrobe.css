@@ -41,11 +41,14 @@
 .form-container {
     display: flex;
     flex-direction: column;
-    justify-content: center;
     align-self: baseline;
     margin: var(--margin-big);
     gap: var(--gap-big);
     padding-top: var(--padding-small);
+    overflow: scroll;
+    height: 86vh;
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
 }
 
 .form-container.hidden {
@@ -65,7 +68,7 @@
 }
 
 .form-group.image {
-    margin-top: 30px;
+    /* margin-top: 20px; */
     border-radius: 20px;
 }
 
@@ -101,19 +104,22 @@
     width: 100%;
 }
 
-.form-group.category>:first-child,
-.form-group.occasion>:first-child {
+.form-container .form-group.category>:first-child,
+.form-container .form-group.occasion>:first-child,
+.form-container .form-group.origin>:first-child {
     margin-bottom: var(--margin-big);
 }
 
-.form-group.category>:not(:first-child),
-.form-group.occasion>:not(:first-child) {
+.form-container .form-group.category>:not(:first-child),
+.form-container .form-group.occasion>:not(:first-child),
+.form-container .form-group.origin>:not(:first-child) {
     text-align: center;
     gap: 5px;
 }
 
-.form-group.category .element,
-.form-group.occasion .element {
+.form-container .form-group.category .element,
+.form-container .form-group.occasion .element,
+.form-container .form-group.origin .element {
     padding-left: 4px;
     padding-right: 4px;
     border: 1px solid var(--focus-color);
@@ -126,8 +132,9 @@
     /* background-color: var(--focus-color); */
 }
 
-.form-group.category .element.selected,
-.form-group.occasion .element.selected {
+.form-container .form-group.category .element.selected,
+.form-container .form-group.occasion .element.selected,
+.form-container .form-group.origin .element.selected {
     border: 1px solid var(--font-color);
     box-shadow: inset 1px 1px 12px var(--focus-color), inset -1px -1px 12px var(--focus-color);
 }
@@ -210,33 +217,13 @@
     flex-direction: row;
 }
 
-.color.btn {
-    position: relative;
-    display: inline-block;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    padding: 0px;
-    box-shadow: 1px 1px 2px var(--secondary-color), -1px -1px 2px var(--focus-color);
-}
-
-.color.btn.selected::after {
-    content: "✔";
-    color: white;
-    font-size: 12px;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-}
-
 .form-container:last-child {
     padding-bottom: 7vh;
 }
 
 .header {
-    display: flex;
-    flex-direction: row;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
     gap: var(--gap-medium);
     justify-content: space-between;
 }
@@ -244,6 +231,14 @@
 .header h2,
 .header div {
     margin-bottom: 0px;
+}
+
+.header h2 {
+    grid-column: span 2;
+}
+
+.header .btn-container {
+    justify-self: end;
 }
 
 .header .delete.btn {
@@ -272,6 +267,9 @@
     grid-template-rows: auto;
     gap: var(--gap-medium);
     margin-top: 1vh;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    height: 65vh;
 }
 
 .wardrobe.item-container {
@@ -345,14 +343,7 @@ input[type=text] {
     margin-top: 10px;
 }
 
-.mini.modal .reset.btn {
-    background-color: transparent;
-    text-decoration: underline;
-    text-underline-offset: 4px;
-    margin-top: 10px;
-
-    position: absolute;
-    bottom: 2vh;
-    right: 12vh;
-    color: var(--grey-focus);
+.newItem-container {
+    visibility: hidden;
+    height: 90vh;
 }
