@@ -2,8 +2,14 @@
     display: flex;
     flex-direction: column;
     margin-bottom: 0;
-    padding-bottom: 0;
+    padding-bottom: 8vh;
     gap: 10px;
+    overflow: scroll;
+    padding: var(--padding-small);
+}
+
+.calendar-info {
+    display: block;
 }
 
 .month.header {
@@ -87,7 +93,9 @@
 }
 
 .outfits-container {
+    flex-direction: column;
     width: 100%;
+    gap: var(--gap-small);
 }
 
 .outfits-container .create-outfit {
@@ -119,6 +127,7 @@
     border: 1px solid grey;
     border-radius: 10px;
     overflow: hidden;
+    min-height: 100px;
 }
 
 .outfit img {
@@ -152,100 +161,23 @@
 }
 
 /* filters */
+.filters-container {
+    display: flex;
+    flex-direction: column;
+}
+
 .filters {
-    display: flex;
-    flex-direction: column;
-}
-
-.filters h2 {
-    margin-bottom: 0;
-}
-
-.filters.btn {
-    padding: 0;
-    font-weight: bold;
-    font-size: 26px;
-    background-color: transparent;
-    margin-bottom: 0;
-    margin-top: 0;
-}
-
-.filters-body {
-    padding: initial;
-}
-
-
-.filters .mini.modal {
-    display: none !important;
-    position: initial;
-    width: 100%;
+    display: none;
     height: 0;
-    bottom: 0;
-    left: 0;
-    z-index: 1;
-    background-color: var(--background-color);
-    margin-left: 0px;
 }
 
-.filters .mini.modal.expanded {
-    display: block !important ;
-    flex-direction: column;
-    padding: initial;
-    justify-content: center;
-    transition: all 0.3s ease-in-out;
+.filters.expanded {
+    display: block;
     height: 100%;
-}
-
-.form-group.colour {
-    display: grid;
-    grid-template-columns: repeat(10, 1fr);
-    gap: var(--gap-small);
-}
-
-.form-group.colour>:first-child {
-    grid-column: span 10;
-    margin-bottom: var(--margin-medium);
-}
-
-.form-group.colour .element {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: var(--gap-small);
-}
-
-.form-group.colour .element label {
-    align-content: center;
-    font-size: 12px;
-    font-variant: normal;
-    font-weight: 300;
-    display: flex;
-    flex-direction: row;
-}
-
-.color.btn {
-    position: relative;
-    display: inline-block;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    padding: 0px;
-    box-shadow: 1px 1px 2px var(--secondary-color), -1px -1px 2px var(--focus-color);
-}
-
-.color.btn.selected::after {
-    content: "✔";
-    color: white;
-    font-size: 12px;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
 }
 
 .filters .submit.btn {
     position: initial;
-    float: right;
 }
 
 .open {
@@ -370,4 +302,16 @@
 .challenges.expanded input[type="checkbox"]:checked::before {
     border-color: var(--green-muted);
     color: white;
+}
+
+.quiz-container {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    position: relative;
+    background-color: var(--focus-color);
+    border-radius:
+        10px;
+    padding: var(--padding-main);
+    gap: var(--gap-big);
 }

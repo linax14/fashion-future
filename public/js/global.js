@@ -751,27 +751,6 @@ async function displayClothingItems(newItemContainer = null, appendTo, filteredD
 
         if (element.image) {
             await getImage(element, container, renderImage, 'wardrobe image');
-
-            // try {
-            //     const { data: signedUrlData, error: urlError } = await supabase.storage
-            //         .from('fashion-future')
-            //         .createSignedUrl(`${element.user_id}/${element.image}`, 60)
-
-            //     if (urlError) throw urlError
-            //     if (signedUrlData.signedUrl) {
-            //         new CreateElement('img')
-            //             .setAttributes({ class: 'wardrobe image', src: signedUrlData.signedUrl, alt: `Image for ${element.category}` })
-            //             .appendTo(container)
-            //     }
-            // } catch (urlError) {
-            //     console.error(`Error fetching image: ${urlError},${element.id}`)
-            //     new CreateElement('img')
-            //         .setAttributes({
-            //             class: 'wardrobe image fallback', src: '../assets/createOutfit.png',
-            //             alt: `Fallback image representing a variety of clothing items when no specific image is available`
-            //         })
-            //         .appendTo(container)
-            // }
         } else {
             new CreateElement('img')
                 .setAttributes({
@@ -787,7 +766,6 @@ async function displayClothingItems(newItemContainer = null, appendTo, filteredD
     }))
     return itemElements
 }
-
 
 let setDisplay = (elements, displayType) =>
     elements.forEach(element => element.style.display = displayType)
@@ -821,6 +799,42 @@ let renderImage = (signedUrlData, appendTo, className) => {
     new CreateElement('img')
         .setAttributes({ class: className, src: signedUrlData.signedUrl })
         .appendTo(appendTo);
+}
+
+
+let getUserData = async (dateInfo, progressType) => {
+
+    let [userDetailsData, calendarData] = await Promise.all([
+        selectUserTable(window.user, 'user_details'),
+        selectUserTable(window.user, 'user_calendar')
+    ])
+
+    let progress = {}
+    let challengesToday = []
+
+    let updateChallengesProgress = userDetailsData[0].challenges_progress
+    let updateQuestionsProgress = userDetailsData[0].questions_progress
+
+    switch (progressType) {
+        case 'challenges':
+            progress.challengesProgress = updateChallengesProgress
+
+            let [year, month, day] = dateInfo.split('-');
+            let currentMonth = months[month - 1].toLowerCase();
+            challengesToday = calendarData[0].calendar[currentMonth]?.[day]?.challenges || [];
+            break;
+
+        case 'questions':
+            progress.questionsProgress = updateQuestionsProgress
+            break;
+
+        default:
+            break;
+    }
+
+    return progressType == 'questions'
+        ? { progress }
+        : { progress, challengesToday, calendarData }
 }
 
 renderNavigation()
