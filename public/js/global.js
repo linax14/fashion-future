@@ -192,7 +192,7 @@ class ImageUpload extends FormField {
         super(name, config, container)
         this.selectedFile = null
 
-        let formContainer = document.querySelector('.newItem-container');
+        let formContainer = document.querySelector('.clothing-formContainer');
 
         let addImage = new CreateElement('img')
             .setAttributes({ src: '../assets/createOutfit.png' })
@@ -710,45 +710,25 @@ let fontAwesome = new CreateElement('link').setAttributes({
     crossorigin: "anonymous", referrerpolicy: "no-referrer"
 }).appendTo(document.head)
 
-editItemHandler = (newItemContainer = null, appendTo, container, element) => {
-    if (newItemContainer) {
-        renderEditClothingItem(newItemContainer, appendTo, element)
+editItemHandler = (clothingFormContainer = null, appendTo, container, element) => {
+    if (clothingFormContainer) {
+        renderEditClothingItem(clothingFormContainer, appendTo, element)
     }
     console.log('item', element.id)
 }
 
-async function displayClothingItems(newItemContainer = null, appendTo, filteredData = null, itemsToAdd = null) {
+async function displayClothingItems(clothingFormContainer = null, appendTo, filteredData = null, itemsToAdd = null) {
     let data = filteredData ? filteredData : await selectUserTable(window.user, 'clothing_items')
 
     let itemElements = await Promise.all(data.map(async (element) => {
         let container = new CreateElement('div')
-            .setAttributes({ class: 'wardrobe item-container', id: element.id })
+            .setAttributes({ class: 'wardrobe item-container', 'data-id': element.id })
             .appendTo(appendTo)
 
         //itemClickHandler is removed when the user is deleting clothing items
-        let itemClickHandler = () => editItemHandler(newItemContainer, appendTo, container, element)
+        let itemClickHandler = () => editItemHandler(clothingFormContainer, appendTo, container, element)
         container.itemClickHandler = itemClickHandler
         container.addEventListener('click', itemClickHandler)
-
-        //for delete functionality
-        let checkbox = new CreateElement('input')
-            .setAttributes({ type: 'checkbox', class: 'wardrobe-checkbox', style: 'display:none' })
-            .appendTo(container)
-
-        if (itemsToAdd) {
-            setDisplay([checkbox], 'block')
-            checkbox.addEventListener('change', async (event) => {
-                event.preventDefault()
-
-                if (event.target.checked) {
-                    if (!itemsToAdd.includes(element.id)) {
-                        itemsToAdd.push(element.id)
-                    }
-                } else {
-                    itemsToAdd = itemsToAdd.filter(id => id !== element.id);
-                }
-            })
-        }
 
         if (element.image) {
             await getImage(element, container, renderImage, 'wardrobe image');
@@ -761,8 +741,28 @@ async function displayClothingItems(newItemContainer = null, appendTo, filteredD
                 .appendTo(container)
         }
 
-        new CreateElement('p').setText(element.brand).appendTo(container)
+        let p = new CreateElement('p').setText(element.brand).appendTo(container)
 
+        //for delete functionality
+        let checkbox = new CreateElement('input')
+            .setAttributes({ type: 'checkbox', class: 'wardrobe-checkbox', style: 'display:none' })
+            .appendTo(container)
+
+        if (itemsToAdd) {
+            setDisplay([checkbox], 'block')
+
+            checkbox.addEventListener('change', async (event) => {
+                event.preventDefault()
+
+                if (event.target.checked) {
+                    if (!itemsToAdd.includes(element.id)) {
+                        itemsToAdd.push(element.id)
+                    }
+                } else {
+                    itemsToAdd = itemsToAdd.filter(id => id !== element.id);
+                }
+            })
+        }
         return { container, checkbox, itemClickHandler, id: element.id }
     }))
     return itemElements
