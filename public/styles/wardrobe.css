@@ -42,7 +42,6 @@
     display: flex;
     flex-direction: column;
     align-self: baseline;
-    margin: var(--margin-big);
     gap: var(--gap-big);
     padding-top: var(--padding-small);
     overflow: scroll;
@@ -265,7 +264,7 @@
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     grid-template-rows: auto;
-    gap: var(--gap-medium);
+    gap: var(--gap-small);
     margin-top: 1vh;
     overflow-y: scroll;
     overflow-x: hidden;
@@ -277,12 +276,11 @@
     background-color: var(--focus-color);
     border-radius: var(--border-radius-medium);
     height: 16vh;
-    width: 30vw;
+    width: auto;
     display: flex;
     flex-direction: column;
     gap: var(--gap-medium);
     overflow: hidden;
-
 }
 
 .wardrobe.item-container p {
@@ -327,7 +325,6 @@ input[type=text] {
     align-items: center;
     align-content: center;
     height: 16vh;
-    padding: var(--padding-main);
     border-bottom: 1px solid var(--secondary-color)
 }
 
