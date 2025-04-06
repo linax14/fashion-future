@@ -98,7 +98,6 @@ function handleFormSubmit(newItemContainer, wardrobeContainer, form, onSubmitCal
         newItemContainer.style.visibility = 'hidden'
     })
 
-
     return { form, isDirty: () => isDirty }
 }
 
@@ -184,7 +183,6 @@ async function renderEditClothingItem(newItemContainer, wardrobeContainer, item)
     console.log(item)
 
     let aboutFormContainer = newItemContainer.querySelector('#about-form')
-
     if (!aboutFormContainer) {
         console.error('Form container not found!')
         return
@@ -276,7 +274,6 @@ async function renderEditClothingItem(newItemContainer, wardrobeContainer, item)
         e.preventDefault()
         updateClothingItem(item.id, aboutFormContainer, newItemContainer, wardrobeContainer)
     })
-
 }
 
 async function deleteClothingItems(itemIds, selectedItems, itemElements) {
@@ -312,7 +309,6 @@ async function updateClothingItem(itemId, formContainer, newItemContainer, wardr
         }
 
     })
-
 
     let imageFile = formValues.image
     let imageName

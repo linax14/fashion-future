@@ -30,6 +30,7 @@
 
 body {
     background-color: var(--background-color);
+    padding: var(--padding-small);
 }
 
 h3 {
@@ -463,3 +464,4 @@ li {
     object-fit: cover;
     opacity: 10%;
 }
+

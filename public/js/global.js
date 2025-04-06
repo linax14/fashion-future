@@ -56,7 +56,7 @@ async function updateUserTable(user, tableName, updates) {
     return data
 }
 
-function capitalise(str) {
+let capitalise = (str) => {
     return str.charAt(0).toUpperCase() + str.slice(1)
 }
 
@@ -461,7 +461,7 @@ async function initializeUserCalendar(user) {
         calendar[month] = {};
 
         for (let day = 1; day <= daysInMonth; day++) {
-            calendar[month][day] = { challenges: [], quiz: [] };
+            calendar[month][day] = { challenges: [], quiz: [], streak: 0 };
         }
     })
 
@@ -521,6 +521,7 @@ async function updateOutfit(user, outfitId, wearDate) {
         .from('outfit')
         .update({
             wear_dates: dates,
+            worn: true
         })
         .eq('id', outfitId)
         .select()
@@ -801,7 +802,6 @@ let renderImage = (signedUrlData, appendTo, className) => {
         .appendTo(appendTo);
 }
 
-
 let getUserData = async (dateInfo, progressType) => {
 
     let [userDetailsData, calendarData] = await Promise.all([
@@ -815,6 +815,14 @@ let getUserData = async (dateInfo, progressType) => {
     let updateChallengesProgress = userDetailsData[0].challenges_progress
     let updateQuestionsProgress = userDetailsData[0].questions_progress
 
+    Object.values(updateChallengesProgress).forEach(value => {
+        value.complete_count ??= 0;
+    })
+
+    Object.values(updateQuestionsProgress).forEach(value => {
+        value.correctAnswers ??= 0;
+        value.attempts ??= 0;
+    })
     switch (progressType) {
         case 'challenges':
             progress.challengesProgress = updateChallengesProgress
@@ -836,5 +844,13 @@ let getUserData = async (dateInfo, progressType) => {
         ? { progress }
         : { progress, challengesToday, calendarData }
 }
+
+let datesDifference = (earliest, latest) => {
+    let diff = new Date(latest) - new Date(earliest)
+    let daysDiff = diff / (1000 * 60 * 60 * 24)
+
+    return daysDiff
+}
+
 
 renderNavigation()

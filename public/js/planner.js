@@ -1,166 +1,9 @@
-document.addEventListener("userInitialized", async () => {
-    renderCalendarDisplay()
-    // renderClothingDisplay()
-});
-
-let calendarContainer = new CreateElement('div').setAttributes({ id: 'calendar' }).appendTo(document.body)
-
-let clothingContainer = new CreateElement('div').setAttributes({ class: 'clothing-container' })
-    .appendTo(document.body)
-
-let displayInPlanner = (type) => {
-    let outfitContainer = document.querySelector('.outfits-container')
-    let challengesContainer = document.querySelector('.challenges-container')
-    let quizContainer = document.querySelector('.quiz-container')
-    let calendarInfo = document.querySelector('.calendar-info')
-
-    switch (type) {
-        case 'calendar':
-            setDisplay([calendarContainer, outfitContainer], 'flex')
-            setDisplay([clothingContainer], 'none')
-            setDisplay([outfitContainer, challengesContainer, calendarInfo, quizContainer], 'block')
-
-            break;
-
-        case 'clothing':
-            setDisplay([clothingContainer], 'block')
-            setDisplay([calendarContainer], 'none')
-            break;
-
-        default:
-            setDisplay([calendarContainer, outfitContainer], 'flex')
-            setDisplay([challengesContainer, quizContainer], 'block');
-            break;
-    }
-}
-
-async function renderCalendarDisplay() {
-    calendarContainer.innerHTML = ''
-    let main = calendarHeader()
-
-    let weekScrollWrapper = new CreateElement('div').setAttributes({ class: 'week-scroll-wrapper' }).appendTo(main);
-    let daysContainer = new CreateElement('div').setAttributes({ class: 'days-container' }).appendTo(weekScrollWrapper);
-    let noDaysMonth = new Date(year, month + 1, 0).getDate();
-
-    let { createOutfitDate, challengesContainer, quizContainer, outfitsContainer } = renderContentSections();
-
-    await calendarDays(noDaysMonth, createOutfitDate, daysContainer, challengesContainer, quizContainer, outfitsContainer);
-    await scrollToday(createOutfitDate, challengesContainer, quizContainer, outfitsContainer);
-}
-
-let calendarHeader = () => {
-    let main = new CreateElement('div').setAttributes({ class: 'calendar-info' }).appendTo(calendarContainer)
-    new CreateElement('h1').setAttributes({ class: 'calendar header' }).setText(`PLANNING ${year}`).appendTo(main)
-    let monthHeader = new CreateElement('div').setAttributes({ class: 'month header' }).appendTo(main)
-
-    months.forEach((element, index) => {
-        new CreateElement('h2')
-            .setAttributes({ class: index === month ? 'item current' : 'item' })
-            .addEventListener('click', () => {
-                month = index
-                renderCalendarDisplay()
-            })
-            .setText(element.substring(0, 3))
-            .appendTo(monthHeader)
-    })
-    return main
-}
-
-async function calendarDays(noDaysMonth, createOutfitDate, daysContainer, challengesContainer, quizContainer, outfitsContainer) {
-    for (let day = 1; day <= noDaysMonth; day++) {
-        let currentDate = new Date(year, month, day);
-        let dataDate = `${year}-${month + 1}-${day}`;
-        let dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][currentDate.getDay()];
-
-        let dayContainerClass = 'day-container';
-
-        let className = 'day';
-        if (currentDate.toDateString() == date.toDateString()) dayContainerClass += ' today';
-        if (currentDate.getDay() === 0) dayContainerClass += ' sunday';
-
-        let dayContainer = new CreateElement('div').setAttributes({ class: dayContainerClass }).appendTo(daysContainer);
-        new CreateElement('div').setAttributes({ class: 'day-header' }).setText(dayOfWeek).appendTo(dayContainer);
-
-        new CreateElement('div')
-            .setAttributes({ class: className, 'data-date': dataDate })
-            .setText(day)
-            .addEventListener('click', async () => {
-                await handleDayClick(dayContainer, dataDate, createOutfitDate, challengesContainer, quizContainer, outfitsContainer)
-            })
-            .appendTo(dayContainer);
-    }
-}
-
-async function scrollToday(createOutfitDate, challengesContainer, quizContainer, outfitsContainer) {
-    setTimeout(() => {
-        (async () => {
-            let todayDiv = document.querySelector('.day-container.today');
-            if (todayDiv) {
-                let scrollContainer = document.querySelector('.week-scroll-wrapper');
-
-                let scrollPosition = todayDiv.offsetLeft - (scrollContainer.clientWidth / 2) + (todayDiv.clientWidth / 2);
-                scrollContainer.scrollTo({
-                    left: scrollPosition,
-                    behavior: 'smooth'
-                });
-                todayDiv.classList.add('selected');
-                let div = todayDiv.childNodes[1];
-
-                if (div.hasAttribute('data-date')) {
-                    let dataDate = div.getAttribute('data-date');
-                    await handleDayClick(todayDiv, dataDate, createOutfitDate, challengesContainer, quizContainer, outfitsContainer);
-                }
-            }
-        })();
-    }, 0);
-}
-
-let handleDayClick = async (dayContainer, dataDate, createOutfitDate, challengesContainer, quizContainer, outfitsContainer) => {
-    document.querySelectorAll('.day-container.selected').forEach(el => el.classList.remove('selected'));
-    dayContainer.classList.add('selected');
-
-    createOutfitDate = dataDate;
-
-    challengesContainer.innerHTML = '';
-    quizContainer.innerHTML = '';
-    document.querySelectorAll('.outfit').forEach(el => el.parentNode.removeChild(el));
-
-    displayInPlanner()
-
-    let createOutfit = document.querySelector('.create-outfit')
-    createOutfit.addEventListener('click', () => {
-        renderClothingDisplay(createOutfitDate, 'addOutfit');
-    });
-
-    let render = await renderOutfits(dataDate, outfitsContainer);
-    if (render) getOutfitId();
-
-    await getDaily(window.user, dataDate, 'challenge', challengesContainer)
-    await getDaily(window.user, dataDate, 'quiz', quizContainer)
-}
-
-let renderContentSections = () => {
-    let outfitsContainer = new CreateElement('section').setAttributes({ class: 'outfits-container' }).appendTo(calendarContainer);
-    let createOutfitDate = renderCreateOutfit(outfitsContainer)
-    let challengesContainer = new CreateElement('section').setAttributes({ class: 'challenges-container' }).appendTo(calendarContainer);
-    let quizContainer = new CreateElement('section').setAttributes({ class: 'quiz-container' }).appendTo(calendarContainer);
-
-    return { createOutfitDate, challengesContainer, quizContainer, outfitsContainer };
-}
-
-let renderCreateOutfit = (outfitsContainer) => {
-    let createOutfitDate = null;
-    let createOutfit = new CreateElement('div').setAttributes({ class: 'create-outfit' }).appendTo(outfitsContainer);
-
-    new CreateElement('h2').setText('add an outfit').appendTo(createOutfit);
-    new CreateElement('img').setAttributes({ src: '../assets/createOutfit.png' }).appendTo(createOutfit);
-    return createOutfitDate;
-}
 
 async function renderOutfits(dataDate, outfitsContainer) {
-    let outfits = await getDetailedOutfits();
+    let data = await getDetailedOutfits();
+    data = data.filter(item => item.worn == true)
 
-    for (const element of outfits) {
+    for (const element of data) {
         if (element.wornDates) {
             let outfitDates = element.wornDates;
 
@@ -175,8 +18,39 @@ async function renderOutfits(dataDate, outfitsContainer) {
                 }
             });
         }
+
+        await updateWearCount(element);
     }
+
     return true
+}
+
+async function updateWearCount(element) {
+    let itemWearMap = new Map();
+
+    if (element.clothingItems) {
+        for (let item of element.clothingItems) {
+            if (!itemWearMap.has(item.id)) {
+                itemWearMap.set(item.id, new Set());
+            }
+
+            for (date of element.wornDates) {
+                itemWearMap.get(item.id).add(date);
+            }
+        }
+    }
+
+    for (let [itemId, dates] of itemWearMap.entries()) {
+        let wearCount = dates.size;
+
+        let { error } = await supabase.from('clothing_items')
+            .update({ wear_count: wearCount })
+            .eq('id', itemId);
+
+        if (error) {
+            console.error(error);
+        }
+    }
 }
 
 async function renderClothingDisplay(createOutfitDate, type, outfitId) {
@@ -185,7 +59,7 @@ async function renderClothingDisplay(createOutfitDate, type, outfitId) {
     clothingContainer.innerHTML = ''
     displayInPlanner('clothing')
     let itemsToAdd = []
-
+    let addOutfitBtn
     if (type == 'editOutfit') new CreateElement('h2').setText('Edit Outfit').appendTo(clothingContainer)
     if (type == 'addOutfit') new CreateElement('h2').setText('Add Outfit').appendTo(clothingContainer)
 
@@ -226,7 +100,7 @@ async function renderClothingDisplay(createOutfitDate, type, outfitId) {
     }
 
     if (type == 'addOutfit') {
-        new CreateElement('button').setText('add outfit').setAttributes({ class: 'submit btn' })
+        addOutfitBtn = new CreateElement('button').setText('add outfit').setAttributes({ class: 'submit btn' })
             .addEventListener('click', async (event) => {
                 event.preventDefault()
                 console.log(itemsToAdd);
@@ -242,10 +116,65 @@ async function renderClothingDisplay(createOutfitDate, type, outfitId) {
 
                 itemsToAdd = []
 
+                addOutfitStreak(createOutfitDate)
+
                 displayInPlanner('calendar')
 
             }).appendTo(clothingContainer)
     }
+}
+
+async function addOutfitStreak(createOutfitDate) {
+
+    let { data, error } = await supabase.from('outfit').select('wear_dates').eq('user_id', window.user.id)
+    // console.log(data);
+
+    if (error) { console.error(error); }
+
+    let calendarData = await selectUserTable(window.user, 'user_calendar')
+
+    let allDates = data.flatMap(entry => entry.wear_dates || []);
+    let sortedDates = [...new Set(allDates)].sort((a, b) => new Date(a) - new Date(b));
+
+    sortedDates = sortedDates.map(date => formatDateUnpadded(date))
+    let prevDate = null;
+    let streakCount = 0;
+    let target = null
+
+    // if (sortedDates.includes(createOutfitDate)) console.log('here')
+
+    for (let dateStr of sortedDates) {
+        let curr = dateStr;
+
+        if (prevDate) {
+            let diffInDays = datesDifference(prevDate, curr)
+            streakCount = (diffInDays == 1) ? streakCount + 1 : 1;
+        } else {
+            streakCount = 1;
+        }
+
+        if (dateStr == createOutfitDate) {
+            const [year, month, day] = createOutfitDate.split('-');
+            const currentMonth = months[month - 1].toLowerCase();
+
+            for (const element of calendarData) {
+
+                if (element.year == year) {
+                    let targetMonth = element.calendar[currentMonth]
+
+                    if (targetMonth) {
+                        target = targetMonth[day]
+
+                        target.streak = streakCount
+                        await updateUserTable(window.user, 'user_calendar', { calendar: element.calendar });
+                    }
+
+                }
+                break
+            }
+        } prevDate = dateStr;
+    }
+    return target;
 }
 
 async function editMode(outfitId, clothingItemElements, itemsToAdd) {
@@ -347,7 +276,8 @@ async function getDetailedOutfits(outfitId = null) {
         return {
             outfitId: outfit.id,
             wornDates: outfit.wear_dates,
-            clothingItems: itemsForOutfit
+            clothingItems: itemsForOutfit,
+            worn: outfit.worn
         };
     });
 
@@ -373,6 +303,8 @@ async function getDaily(user, dateInfo, type, appendTo) {
     let calendarData = await selectUserTable(window.user, 'user_calendar')
     let [year, month, day] = dateInfo.split('-')
     let currentMonth = months[month - 1].toLowerCase()
+    let quiz
+    let header
 
     for (const element of calendarData) {
         if (element.year == year) {
@@ -384,7 +316,11 @@ async function getDaily(user, dateInfo, type, appendTo) {
                 async function handleQuiz() {
                     localStorage.setItem('targetQuiz', JSON.stringify(target.quiz));
                     localStorage.setItem('dateInfo', `${dateInfo}`);
-                    window.location.href = 'quizzes.html'
+                    await renderQuiz(target.quiz, dateInfo, quiz, handleQuiz)
+                    quiz.classList.toggle('expanded')
+                    setDisplay([header], 'none')
+                    let challenges = document.querySelector('.challenges')
+                    setDisplay([challenges], 'none')
                 }
 
                 if (type == 'challenge') {
@@ -403,12 +339,16 @@ async function getDaily(user, dateInfo, type, appendTo) {
                         await updateUserTable(window.user, 'user_calendar', { calendar: element.calendar });
                     }
                     let sessionCompleted = localStorage.getItem(`quiz_${dateInfo}_completed`);
-                    let quiz = new CreateElement('h2').setText('quiz').addEventListener('click', handleQuiz).appendTo(appendTo)
-                    new CreateElement('i').setAttributes({ class: 'fa-solid fa-question' }).appendTo(quiz)
+                    quiz = new CreateElement('div').setAttributes({ class: 'quiz-container' }).appendTo(appendTo)
+                    header = new CreateElement('div').setAttributes({ class: 'header' }).addEventListener('click', handleQuiz).appendTo(quiz)
+                    let h2 = new CreateElement('h2').setText('quiz').appendTo(header)
+                    new CreateElement('i').setAttributes({ class: 'fa-solid fa-question' }).appendTo(header)
 
                     if (sessionCompleted) {
-                        quiz.removeEventListener('click', handleQuiz)
-                        quiz.innerText = 'Quiz completed'
+                        header.removeEventListener('click', handleQuiz)
+                        h2.innerText += ' completed'
+                        new CreateElement('br').appendTo(h2)
+                        new CreateElement('span').setText('check back tomorrow').appendTo(h2)
                     }
                 }
             }
@@ -538,8 +478,6 @@ class UserQuiz {
             ...this.getQuestionsTag(tags[1], countTag2)
         ]
 
-        console.log(selected);
-
         let attempts = 0;
         while (selected.length < 6 && attempts < 2) {
             selected.push(
@@ -556,9 +494,6 @@ class UserQuiz {
 async function userQuiz() {
     let userQuestions = await initializeUserDetails('questions', 'questions_progress');
     let questions = userQuestions[0].questions_progress;
-
     let quiz = new UserQuiz(questions);
-    console.log(quiz.generateQuiz());
-
     return quiz.generateQuiz();
 }
