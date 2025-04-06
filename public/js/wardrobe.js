@@ -1,20 +1,92 @@
 document.addEventListener("userInitialized", async () => {
     //console.log("user", window.user)
+    clothingManager = new ClothingManager(window.user)
+
     renderHeader()
     renderWardrobe()
 })
 
-//add clothing items to sb
-async function addClothingItems(user, brand = null, category = null, colour = null, season = null, occasion = null, origin = null, image = null) {
-    try {
-        const { data, error } = await supabase.from('clothing_items')
-            .insert({ brand, category, colour, season, occasion, origin, user_id: user.id, image, }).select()
-        if (error) throw new Error(error.message)
-        return data
+let userInfo = new CreateElement('div').setAttributes({ class: 'header-user' }).appendTo(document.body)
+let wardrobeHeader = new CreateElement('div').setAttributes({ class: 'header' }).appendTo(document.body)
+let wardrobeContainer = new CreateElement('div').setAttributes({ class: 'wardrobe-container' }).appendTo(document.body)
+let clothingFormContainer = new CreateElement('div').setAttributes({ class: 'clothing-formContainer' }).appendTo(document.body)
 
-    } catch (error) {
-        console.log(error)
-        throw error
+let clothingManager
+let displayInWardrobe = (type) => {
+
+    switch (type) {
+        case 'form':
+            setDisplay([clothingFormContainer], 'block')
+            clothingFormContainer.style.visibility = 'visible'
+            setDisplay([wardrobeContainer, wardrobeHeader, userInfo], 'none')
+            break;
+
+        case 'wardrobe':
+            wardrobeContainer.innerHTML = ''
+            wardrobeHeader.innerHTML = ''
+            setDisplay([wardrobeContainer, userInfo, wardrobeHeader], 'grid')
+            setDisplay([clothingFormContainer], 'none')
+            clothingFormContainer.style.visibility = 'hidden'
+            break;
+
+        default:
+            break;
+    }
+}
+
+class ClothingManager {
+    constructor(user) {
+        this.user = user
+    }
+
+    async getAllClothes() {
+        return await selectUserTable(window.user, 'clothing_items')
+    }
+
+    async addItem({ brand = null, category = null, colour = null, season = null, occasion = null, origin = null, image = null }) {
+        try {
+            const { data, error } = await supabase.from('clothing_items')
+                .insert({ brand, category, colour, season, occasion, origin, user_id: this.user.id, image, }).select()
+            if (error) throw new Error(error.message)
+            return data
+
+        } catch (error) {
+            console.log(error)
+            throw error
+        }
+    }
+
+    async deleteItems(clothesIdFromCheckbox, selectedClothesCheckbox, allClothes) {
+        try {
+            const { error } = await supabase.from('clothing_items').delete().in('id', clothesIdFromCheckbox)
+            if (error) throw error
+
+            selectedClothesCheckbox.forEach(({ container }) => container.remove())
+            allClothes = allClothes.filter(({ id }) => !clothesIdFromCheckbox.includes(id))
+
+            console.log('items deleted')
+
+        } catch (err) {
+            console.error('error deleting', err)
+        }
+        return allClothes
+    }
+
+    async updateItem(brand, category, colour, season, occasion, origin, image, itemId) {
+        try {
+            const { data, error } = await supabase
+                .from('clothing_items')
+                .update({ brand, category, colour, season, occasion, origin, image })
+                .eq('id', itemId)
+
+            if (error) {
+                console.error(`supabase error: ${error}`)
+                throw new Error(error.message)
+            }
+            return data
+        } catch {
+            console.error('error updating', error)
+        }
     }
 }
 
@@ -47,8 +119,7 @@ async function uploadFile(user, filepath, file) {
     }
 }
 
-function handleFormSubmit(newItemContainer, wardrobeContainer, form, onSubmitCallback, itemId = null) {
-    let wardrobeHeader = document.querySelector('.header')
+function handleFormSubmit(form, onSubmitCallback, itemId = null) {
     let isDirty = false
 
     form.addEventListener("input", () => isDirty = true)
@@ -86,38 +157,29 @@ function handleFormSubmit(newItemContainer, wardrobeContainer, form, onSubmitCal
         }
 
         await onSubmitCallback(formValues, imageName)
-
         isDirty = false
-
-        let headerContainer = document.querySelector('.header-user')
-        wardrobeContainer.innerHTML = ''
-        wardrobeHeader.innerHTML = ''
-        wardrobeContainer.innerHTML = ''
-        setDisplay([wardrobeContainer, headerContainer, wardrobeHeader], 'grid')
-        setDisplay([newItemContainer], 'none')
-        newItemContainer.style.visibility = 'hidden'
+        displayInWardrobe('wardrobe')
     })
 
     return { form, isDirty: () => isDirty }
 }
 
-async function renderAddClothingItem(newItemContainer, wardrobeContainer, headerContainer) {
-    let wardrobeHeader = document.querySelector('.header')
+async function renderclothingForm(clothingFormContainer) {
 
-    closeBtnX(newItemContainer, () => {
-        setDisplay([newItemContainer], 'none')
-        newItemContainer.style.visibility = 'hidden'
-        setDisplay([wardrobeContainer, wardrobeHeader, headerContainer], 'grid')
+    closeBtnX(clothingFormContainer, () => {
+        setDisplay([clothingFormContainer], 'none')
+        clothingFormContainer.style.visibility = 'hidden'
+        setDisplay([wardrobeContainer, wardrobeHeader, userInfo], 'grid')
     })
 
-    let btnContainer = new CreateElement('div').setAttributes({ class: 'btn-container' }).appendTo(newItemContainer)
+    let btnContainer = new CreateElement('div').setAttributes({ class: 'btn-container' }).appendTo(clothingFormContainer)
     let aboutBtn = new CreateElement('button').setText('about').setAttributes({ class: 'tab-btn' }).appendTo(btnContainer)
     let careBtn = new CreateElement('button').setText('care').setAttributes({ class: 'tab-btn' }).appendTo(btnContainer)
 
     let aboutFormContainer = new CreateElement('form')
-        .setAttributes({ id: 'about-form', class: 'form-container' }).appendTo(newItemContainer)
+        .setAttributes({ id: 'about-form', class: 'form-container' }).appendTo(clothingFormContainer)
     let careFormContainer = new CreateElement('form')
-        .setAttributes({ id: 'care-form', class: 'form-container' }).appendTo(newItemContainer)
+        .setAttributes({ id: 'care-form', class: 'form-container' }).appendTo(clothingFormContainer)
 
     let aboutFormFields = {
         image: new ImageUpload('image', { type: 'input', inputType: 'file', class: 'image', accept: 'image/png, image/jpeg', capture: 'camera' }, aboutFormContainer),
@@ -151,17 +213,17 @@ async function renderAddClothingItem(newItemContainer, wardrobeContainer, header
         }, aboutFormContainer)
     }
 
-    let aboutForm = handleFormSubmit(newItemContainer, wardrobeContainer, aboutFormContainer,
+    let aboutForm = handleFormSubmit(clothingFormContainer, aboutFormContainer,
         async (formValues, imageName) => {
-            await addClothingItems(window.user,
-                formValues.brand,
-                formValues.category,
-                formValues.colour,
-                formValues.season,
-                formValues.occasion,
-                formValues.origin,
-                imageName
-            )
+            await clothingManager.addItem({
+                brand: formValues.brand,
+                category: formValues.category,
+                colour: formValues.colour,
+                season: formValues.season,
+                occasion: formValues.occasion,
+                origin: formValues.origin,
+                image: imageName
+            })
         })
 
     careFormContainer.classList.add("hidden")
@@ -174,15 +236,11 @@ async function renderAddClothingItem(newItemContainer, wardrobeContainer, header
     [careBtn, aboutBtn].forEach(btn => btn.addEventListener('click', () => { toggleBtns() }))
 }
 
-async function renderEditClothingItem(newItemContainer, wardrobeContainer, item) {
-    let headerContainer = document.querySelector('.header-user')
-    let wardrobeHeader = document.querySelector('.header')
-    setDisplay([newItemContainer], 'block')
-    newItemContainer.style.visibility = 'visible'
-    setDisplay([wardrobeContainer, wardrobeHeader, headerContainer], 'none')
+async function renderEditClothingItem(clothingFormContainer, item) {
+    displayInWardrobe('form')
     console.log(item)
 
-    let aboutFormContainer = newItemContainer.querySelector('#about-form')
+    let aboutFormContainer = clothingFormContainer.querySelector('#about-form')
     if (!aboutFormContainer) {
         console.error('Form container not found!')
         return
@@ -269,34 +327,16 @@ async function renderEditClothingItem(newItemContainer, wardrobeContainer, item)
         }
     }
 
-    let submitBtn = newItemContainer.querySelector('.submit')
+    let submitBtn = clothingFormContainer.querySelector('.submit')
     submitBtn.addEventListener('click', (e) => {
         e.preventDefault()
-        updateClothingItem(item.id, aboutFormContainer, newItemContainer, wardrobeContainer)
+        updateClothingItem(item.id, aboutFormContainer, clothingFormContainer)
     })
 }
 
-async function deleteClothingItems(itemIds, selectedItems, itemElements) {
-    try {
-        const { error } = await supabase.from('clothing_items').delete().in('id', itemIds)
-        if (error) throw error
-
-        selectedItems.forEach(({ container }) => container.remove())
-        itemElements = itemElements.filter(({ id }) => !itemIds.includes(id))
-
-        console.log('items deleted')
-
-    } catch (err) {
-        console.error('error deleting', err)
-    }
-    return itemElements
-}
-
-async function updateClothingItem(itemId, formContainer, newItemContainer, wardrobeContainer) {
+async function updateClothingItem(itemId, formContainer, clothingFormContainer) {
     let formData = new FormData(formContainer)
     let formValues = {}
-
-    console.log(formValues)
 
     formData.forEach((value, key) => {
         if (formValues[key]) {
@@ -323,30 +363,19 @@ async function updateClothingItem(itemId, formContainer, newItemContainer, wardr
     }
 
     try {
-        const { data, error } = await supabase
-            .from('clothing_items')
-            .update({
-                brand: formValues.brand,
-                category: formValues.category,
-                colour: formValues.colour,
-                season: formValues.season,
-                occasion: formValues.occasion,
-                origin: formValues.origin,
-                image: imageName
-            })
-            .eq('id', itemId)
+        await clothingManager.updateItem(
+            formValues.brand,
+            formValues.category,
+            formValues.colour,
+            formValues.season,
+            formValues.occasion,
+            formValues.origin,
+            imageName,
+            itemId
+        )
 
-        if (error) {
-            console.error(`supabase error: ${error}`)
-            throw new Error(error.message)
-        }
-
-        let headerContainer = document.querySelector('.header-user')
-        setDisplay([newItemContainer], 'none')
-        newItemContainer.style.visibility = 'hidden'
-        setDisplay([wardrobeContainer, headerContainer], 'grid')
-        wardrobeContainer.innerHTML = ''
-        displayClothingItems(newItemContainer, wardrobeContainer)
+        displayInWardrobe('wardrobe')
+        displayClothingItems(clothingFormContainer, wardrobeContainer)
 
     } catch (error) {
         console.error('error updating', error)
@@ -356,24 +385,17 @@ async function updateClothingItem(itemId, formContainer, newItemContainer, wardr
 async function renderWardrobe() {
     let editMode = false
     let filterMode = false
+    
+    displayInWardrobe('wardrobe')
 
-    let headerContainer = document.querySelector('.header-user')
-    let wardrobeHeader = new CreateElement('div').setAttributes({ class: 'header' }).appendTo(document.body)
-    wardrobeHeader.innerHTML = ''
-    let wardrobeContainer = new CreateElement('div').setAttributes({ class: 'wardrobe-container' }).appendTo(document.body)
-    wardrobeContainer.innerHTML = ''
     new CreateElement('h2').setText('All items').appendTo(wardrobeHeader)
     let btnContainer = new CreateElement('div').setAttributes({ class: 'btn-container' }).appendTo(wardrobeHeader)
     let deleteButton = new CreateElement('button').setText('Delete').setAttributes({ style: 'display:none', class: 'delete btn' }).appendTo(wardrobeHeader)
     let editWardrobe = new CreateElement('button').setAttributes({ class: 'edit btn' }).appendTo(btnContainer)
     new CreateElement('i').setAttributes({ class: 'fa-trash fa-solid' }).appendTo(editWardrobe)
 
-    let newItemContainer = new CreateElement('div').setAttributes({ class: 'newItem-container' }).appendTo(document.body)
-    let clothingItemElements = await displayClothingItems(newItemContainer, wardrobeContainer)
-    renderAddClothingItem(newItemContainer, wardrobeContainer, headerContainer)
-
-    setDisplay([newItemContainer], 'none')
-    newItemContainer.style.visibility = 'hidden'
+    let allClothes = await displayClothingItems(clothingFormContainer, wardrobeContainer)
+    renderclothingForm(clothingFormContainer)
 
     let filtersBtn = new CreateElement('button').setAttributes({ class: 'filter btn' }).appendTo(btnContainer)
     new CreateElement('i').setAttributes({ class: 'fa-filter fa-solid' }).appendTo(filtersBtn)
@@ -382,7 +404,7 @@ async function renderWardrobe() {
         editMode = !editMode
         filterMode = false
 
-        clothingItemElements.forEach(({ container, checkbox }) => {
+        allClothes.forEach(({ container, checkbox }) => {
             editMode
                 ? container.removeEventListener('click', container.itemClickHandler)
                 : container.addEventListener('click', container.itemClickHandler)
@@ -397,28 +419,28 @@ async function renderWardrobe() {
         filterMode = !filterMode
         editMode = false
 
-        let miniModal = document.querySelector('.filters')
+        let filtersDisplay = document.querySelector('.filters')
 
-        if (!miniModal) {
+        if (!filtersDisplay) {
             renderFilters(wardrobeHeader, wardrobeContainer, (filteredItems) => {
                 wardrobeContainer.innerHTML = ''
-                filteredItems.forEach(e => displayClothingItems(newItemContainer, wardrobeContainer, [e]))
+                filteredItems.forEach(e => displayClothingItems(clothingFormContainer, wardrobeContainer, [e]))
                 console.log(filteredItems);
             })
-            miniModal = document.querySelector('.filters');
+            filtersDisplay = document.querySelector('.filters');
         }
 
-        if (miniModal) {
-            let isExpanded = miniModal.classList.toggle('expanded')
+        if (filtersDisplay) {
+            let isExpanded = filtersDisplay.classList.toggle('expanded')
 
             if (filterMode) {
-                miniModal.classList.add('expanded');
+                filtersDisplay.classList.add('expanded');
             } else {
-                miniModal.classList.remove('expanded');
+                filtersDisplay.classList.remove('expanded');
                 setDisplay([wardrobeContainer], 'grid')
             }
 
-            setDisplay([miniModal], filterMode ? 'block' : 'none')
+            setDisplay([filtersDisplay], filterMode ? 'block' : 'none')
             setDisplay([wardrobeContainer, wardrobeHeader], isExpanded && filterMode ? 'none' : 'grid')
         }
         editWardrobe.disabled = filterMode
@@ -429,49 +451,44 @@ async function renderWardrobe() {
 
     deleteButton.addEventListener('click', async () => {
 
-        let selectedItems = clothingItemElements.filter(({ checkbox }) => checkbox.checked)
-        if (selectedItems.length === 0) {
+        let selectedClothesCheckbox = allClothes.filter(({ checkbox }) => checkbox.checked)
+        if (selectedClothesCheckbox.length === 0) {
             alert('No items selected.')
             return
         }
+        console.log(selectedClothesCheckbox);
 
-        let itemIds = selectedItems.map(({ id }) => id)
-        clothingItemElements = await deleteClothingItems(itemIds, selectedItems, clothingItemElements)
+        let clothesIdFromCheckbox = selectedClothesCheckbox.map(({ id }) => id)
+        allClothes = await clothingManager.deleteItems(clothesIdFromCheckbox, selectedClothesCheckbox, allClothes)
         editMode = false
 
-        clothingItemElements.forEach(({ container, checkbox }) => {
+        allClothes.forEach(({ container, checkbox }) => {
             container.addEventListener('click', container.itemClickHandler)
             setDisplay([checkbox], 'none')
         })
 
-        setDisplay([newItemContainer, deleteButton], 'none')
+        setDisplay([clothingFormContainer, deleteButton], 'none')
         setDisplay([wardrobeContainer], 'grid')
     })
 
     let navBtn = document.querySelectorAll('nav ol li button')
     navBtn[0].addEventListener('click', () => {
-        if (newItemContainer.hasChildNodes()) {
-            setDisplay([newItemContainer], 'block')
-            newItemContainer.style.visibility = 'visible'
-            setDisplay([wardrobeContainer, headerContainer, wardrobeHeader], 'none')
+        if (clothingFormContainer.hasChildNodes()) {
+            displayInWardrobe('form')
         } else {
-            setDisplay([wardrobeContainer, newItemContainer], 'none')
-            newItemContainer.style.visibility = 'hidden'
-            setDisplay([headerContainer, wardrobeHeader], 'grid')
-
-            renderAddClothingItem(newItemContainer, wardrobeContainer, headerContainer)
+            displayInWardrobe('form')
+            renderclothingForm(clothingFormContainer)
         }
     })
 }
 
 async function renderHeader() {
-    let userInfo = new CreateElement('div').setAttributes({ class: 'header-user' }).appendTo(document.body)
     new CreateElement('div').setAttributes({ class: 'icon' }).appendTo(userInfo)
     new CreateElement('p').setText(`${window.user.user_metadata.first_name} ${window.user.user_metadata.last_name}`)
         .appendTo(userInfo)
     new CreateElement('p').setText('personality').appendTo(userInfo)
 
-    const clothingItems = await selectUserTable(window.user, 'clothing_items')
+    const clothingItems = await clothingManager.getAllClothes()
 
     let clothingItemsTotal = clothingItems.length
     new CreateElement('p').setText(`${clothingItemsTotal} items in wardrobe`).appendTo(userInfo)
