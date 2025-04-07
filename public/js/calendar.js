@@ -64,6 +64,7 @@ let calendarHeader = () => {
 
 async function calendarDays(noDaysMonth, createOutfitDate, daysContainer, outfitsContainer) {
     for (let day = 1; day <= noDaysMonth; day++) {
+        let date = new Date()
         let currentDate = new Date(year, month, day);
         let dataDate = `${year}-${month + 1}-${day}`;
         let dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][currentDate.getDay()];
@@ -127,7 +128,7 @@ let handleDayClick = async (dayContainer, dataDate, createOutfitDate, outfitsCon
         renderClothingDisplay(createOutfitDate, 'addOutfit');
     });
 
-    let render = await renderOutfits(dataDate, outfitsContainer);
+    let render = await renderOutfits(dataDate, outfitsContainer);    
     if (render) getOutfitId();
 
     localStorage.setItem('dateInfo', `${dataDate}`);

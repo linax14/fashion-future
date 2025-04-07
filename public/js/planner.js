@@ -58,18 +58,16 @@ async function updateWearCount(element) {
 }
 
 async function renderClothingDisplay(createOutfitDate, type, outfitId) {
-    console.log(createOutfitDate);
-
     clothingContainer.innerHTML = ''
     displayInPlanner('clothing')
-    let itemsToAdd = []
-    let addOutfitBtn
-    if (type == 'editOutfit') new CreateElement('h2').setText('Edit Outfit').appendTo(clothingContainer)
-    if (type == 'addOutfit') new CreateElement('h2').setText('Add Outfit').appendTo(clothingContainer)
+    closeBtnX(clothingContainer, () => displayInPlanner('calendar'))
 
-    closeBtnX(clothingContainer, () => {
-        displayInPlanner('calendar')
-    })
+    let itemsToAdd = []
+
+    let header = new CreateElement('h2')
+    type == 'addOutfit'
+        ? header.setText('Add outfit').appendTo(clothingContainer)
+        : header.setText('Edit outfit').appendTo(clothingContainer)
 
     let filtersContainer = new CreateElement('div').setAttributes({ class: 'filters-container' }).appendTo(clothingContainer)
     let clothingList = new CreateElement('div').setAttributes({ class: 'clothing-list' }).appendTo(clothingContainer)
@@ -93,38 +91,26 @@ async function renderClothingDisplay(createOutfitDate, type, outfitId) {
 
             let isExpanded = filtersSection.classList.toggle('expanded');
 
-            setDisplay([addOutfitBtn], isExpanded ? 'none' : 'block');
             setDisplay([clothingList], isExpanded ? 'none' : 'grid');
             setDisplay([filtersSection], isExpanded ? 'block' : 'none');
         })
         .appendTo(filtersContainer);
 
-    if (type == 'editOutfit') {
-        itemsToAdd = await editMode(outfitId, clothingItemElements, itemsToAdd);
-    }
+    let btns = document.querySelectorAll('.btn').forEach(btn => btn.remove());
+    let submitBtn = new CreateElement('button').setText('Save').setAttributes({ class: 'submit btn' }).appendTo(clothingContainer)
+    let deleteBtn = new CreateElement('button').setText('Delete').setAttributes({ class: 'delete btn' }).appendTo(clothingContainer)
 
-    if (type == 'addOutfit') {
-        addOutfitBtn = new CreateElement('button').setText('add outfit').setAttributes({ class: 'submit btn' })
-            .addEventListener('click', async (event) => {
-                event.preventDefault()
-                console.log(itemsToAdd);
-
-                if (itemsToAdd.length < 0) {
-                    alert('Please select at least one item')
-                    return
-                }
-
-                let outfitId = await outfitManager.generateOutfitId()
-                await outfitItems.addItems(outfitId, itemsToAdd)
-                if (createOutfitDate) await outfitManager.updateOutfit(outfitId, createOutfitDate)
-
-                itemsToAdd = []
-
-                addOutfitStreak(createOutfitDate)
-
-                displayInPlanner('calendar')
-
-            }).appendTo(clothingContainer)
+    switch (type) {
+        case 'addOutfit':
+            setDisplay([deleteBtn], 'none')
+            deleteBtn.disabled = true
+            itemsToAdd = await addMode(itemsToAdd, createOutfitDate, submitBtn)
+            break;
+        case 'editOutfit':
+            itemsToAdd = await editMode(outfitId, clothingItemElements, itemsToAdd, submitBtn, deleteBtn);
+            break;
+        default:
+            break;
     }
 }
 
@@ -179,7 +165,8 @@ async function addOutfitStreak(createOutfitDate) {
     return target;
 }
 
-async function editMode(outfitId, clothingItemElements, itemsToAdd) {
+let editMode = async (outfitId, clothingItemElements, itemsToAdd, submitBtn, deleteBtn) => {
+
     let id = getOutfitId(outfitId);
     let outfit = await outfitManager.getOutfitData(outfitId);
     let inOutfit;
@@ -204,46 +191,56 @@ async function editMode(outfitId, clothingItemElements, itemsToAdd) {
         });
     });
 
-    document.querySelectorAll('.edit-outfit.btn').forEach(e => e.remove())
+    submitBtn.addEventListener('click', async (event) => {
+        event.preventDefault();
+        let data = await outfitManager.getOutfitItems([id])
+        let existingIds = new Set(Object.values(data)[0]);
+        let newItems = [...new Set(itemsToAdd)].filter(item => !existingIds.has(item));
+        if (newItems.length > 0) await outfitItems.addItems(id, newItems)
 
-    new CreateElement('button')
-        .setText('save')
-        .setAttributes({ class: 'edit-outfit btn' })
-        .addEventListener('click', async (event) => {
-            event.preventDefault();
+        if (itemsToRemove.length > 0) await outfitItems.removeItems(id, itemsToRemove)
 
-            let data = await outfitManager.getOutfitItems([id])
-            let existingIds = new Set(Object.values(data)[0]);
-            let newItems = [...new Set(itemsToAdd)].filter(item => !existingIds.has(item));
-            if (newItems.length > 0) await outfitItems.addItems(id, newItems)
+        renderCalendarDisplay();
+        displayInPlanner('calendar')
+    })
 
-            if (itemsToRemove.length > 0) await outfitItems.removeItems(id, itemsToRemove)
+    deleteBtn.addEventListener('click', async (event) => {
+        event.preventDefault();
+        await outfitManager.deleteOutfit(id)
 
-            displayInPlanner('calendar')
+        let outfitContainer = document.querySelectorAll('outfits-container');
+        outfitContainer.forEach(container => {
+            if (container.getAttribute('data-date') == id) container.remove();
+        });
 
-        })
-        .appendTo(clothingContainer);
-
-    new CreateElement('button')
-        .setText('delete')
-        .setAttributes({ class: 'edit-outfit btn' })
-        .addEventListener('click', async (event) => {
-            event.preventDefault();
-
-            await outfitManager.deleteOutfit(id)
-
-            let outfitContainer = document.querySelectorAll('outfits-container');
-            outfitContainer.forEach(container => {
-                if (container.getAttribute('data-date') == id) container.remove();
-            });
-
-            renderCalendarDisplay();
-            displayInPlanner('calendar')
-
-        })
-        .appendTo(clothingContainer)
+        renderCalendarDisplay();
+        displayInPlanner('calendar')
+    })
 
     return itemsToAdd;
+}
+
+let addMode = async (itemsToAdd, createOutfitDate, submitBtn) => {
+    submitBtn.addEventListener('click', async (event) => {
+        event.preventDefault()
+        console.log(itemsToAdd);
+
+        if (itemsToAdd.length < 0) {
+            alert('Please select at least one item')
+            return
+        }
+
+        let outfitId = await outfitManager.generateOutfitId()
+        await outfitItems.addItems(outfitId, itemsToAdd)
+        if (createOutfitDate) await outfitManager.updateOutfit(outfitId, createOutfitDate)
+
+        itemsToAdd = []
+
+        addOutfitStreak(createOutfitDate)
+        displayInPlanner('calendar')
+
+    })
+    return itemsToAdd
 }
 
 let getOutfitId = (outfitId) => {
