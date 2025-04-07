@@ -65,9 +65,8 @@ function renderNavigation() {
     let ol = new CreateElement('ol').appendTo(navigation)
 
     let elements = {
-        quizzes: { type: 'li', link: { type: 'a', href: 'quizzes.html', text: 'quizzes' } },
-        addOutfit: { type: 'li', link: { type: 'button', text: '+' } },
         dashboard: { type: 'li', link: { type: 'a', href: 'dashboard.html', text: 'dashboard' } },
+        addOutfit: { type: 'li', link: { type: 'button', text: '+' } },
         planner: { type: 'li', link: { type: 'a', href: 'planner.html', text: 'planner' } },
         wardrobe: { type: 'li', link: { type: 'a', href: 'wardrobe.html', text: 'wardrobe' } }
     }
@@ -907,6 +906,5 @@ let datesDifference = (earliest, latest) => {
 
     return daysDiff
 }
-
 
 renderNavigation()

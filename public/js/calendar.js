@@ -16,7 +16,6 @@ let displayInPlanner = (type) => {
             setDisplay([calendarContainer, outfitContainer], 'flex')
             setDisplay([clothingContainer], 'none')
             setDisplay([outfitContainer, calendarInfo], 'block')
-
             break;
 
         case 'clothing':
@@ -122,20 +121,25 @@ let handleDayClick = async (dayContainer, dataDate, createOutfitDate, outfitsCon
     document.querySelectorAll('.outfit').forEach(el => el.parentNode.removeChild(el));
 
     displayInPlanner()
+    let prevWorn = document.querySelector('.prev-worn-container')
+    if (prevWorn) prevWorn.remove()
 
     let createOutfit = document.querySelector('.create-outfit')
     createOutfit.addEventListener('click', () => {
         renderClothingDisplay(createOutfitDate, 'addOutfit');
     });
 
-    let render = await renderOutfits(dataDate, outfitsContainer);    
+    let render = await renderOutfits(dataDate, outfitsContainer);
     if (render) getOutfitId();
+
+    await renderPreviousOutfits(calendarContainer)
 
     localStorage.setItem('dateInfo', `${dataDate}`);
 }
 
 let renderContentSections = () => {
     let outfitsContainer = new CreateElement('section').setAttributes({ class: 'outfits-container' }).appendTo(calendarContainer);
+    new CreateElement('h2').setText('today').appendTo(outfitsContainer)
     let createOutfitDate = renderCreateOutfit(outfitsContainer)
 
     return { createOutfitDate, outfitsContainer };

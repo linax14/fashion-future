@@ -20,13 +20,60 @@ async function renderOutfits(dataDate, outfitsContainer) {
 
     for (const element of data) {
         let outfitContainer = new CreateElement('div').setAttributes({ class: 'outfit', 'data-id': element.outfitId }).appendTo(outfitsContainer)
-        element.clothingItems.forEach(async (item) => {
-            if (item.image) await getImage(item, outfitContainer, renderImage);
-        });
+        let count = 0
+        await Promise.all(
+            element.clothingItems.map(async (item) => {
+                if (item.image) {
+                    count++
+                    await getImage(item, outfitContainer, renderImage)
+                };
+            }))
 
+
+        outfitImagesDisplay(outfitContainer, count)
         await updateWearCount(element);
     }
     return true
+}
+
+async function renderPreviousOutfits(container) {
+    let data = (await outfitManager.getOutfitData()).sort(() => Math.random() - 0.5).slice(0, 2)
+    let prevDiv = new CreateElement('div').setAttributes({ class: 'prev-worn-container' }).appendTo(container)
+
+    new CreateElement('h2').setText('Previously worn').appendTo(prevDiv)
+    for (const element of data) {
+        let outfitContainer = new CreateElement('div').setAttributes({ class: 'outfit', 'data-id': element.outfitId }).appendTo(prevDiv)
+        let count = 0
+        await Promise.all(
+            element.clothingItems.map(async (item) => {
+                if (item.image) {
+                    count++
+                    let img = await getImage(item, outfitContainer, renderImage)
+                }
+            })
+        )
+
+        outfitImagesDisplay(outfitContainer, count)
+    }
+    return true
+}
+
+function outfitImagesDisplay(outfitContainer, count) {
+    let images = outfitContainer.querySelectorAll('img');
+    let c = images.length;
+
+    if (count == 1) {
+        outfitContainer.style.display = 'grid'
+        outfitContainer.style.gridTemplateColumns = '1fr'
+    } else {
+        outfitContainer.style.display = 'grid'
+        outfitContainer.style.gridTemplateColumns = 'repeat(2, 1fr)'
+
+        if (count % 2 != 0) {
+            images[c - 1].style.gridColumn = 'span 2';
+        }
+
+    }
 }
 
 async function updateWearCount(element) {
@@ -323,7 +370,7 @@ async function userChallenges() {
 
     return challengesProgress
         .sort(() => Math.random() - 0.5)
-        .slice(0, 5);
+        .slice(0, 2);
 }
 
 async function renderChallenges(user, randomChallenges, dateInfo, challengesContainer) {
