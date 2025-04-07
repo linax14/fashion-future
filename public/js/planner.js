@@ -1,27 +1,31 @@
+document.addEventListener("userInitialized", async () => {
+    //console.log("user", window.user)
+    outfitManager = new OutfitManager(window.user)
+    outfitItems = new ClothingItems(window.user)
+})
+
+let outfitManager
+let outfit
 
 async function renderOutfits(dataDate, outfitsContainer) {
-    let data = await getDetailedOutfits();
-    data = data.filter(item => item.worn == true)
+    let data = (await outfitManager.getOutfitData())
+        .filter(item => {
+            if (item.worn == true) {
+                return item.wornDates?.some(date => {
+                    return formatDateUnpadded(date) == dataDate
+                })
+            }
+            return false
+        });
 
     for (const element of data) {
-        if (element.wornDates) {
-            let outfitDates = element.wornDates;
-
-            outfitDates.forEach(date => {
-                if (formatDateUnpadded(date) == dataDate) {
-                    let outfitContainer = new CreateElement('div').setAttributes({ class: 'outfit', 'data-id': element.outfitId }).appendTo(outfitsContainer)
-                    element.clothingItems.forEach(async (item) => {
-                        if (item.image) {
-                            await getImage(item, outfitContainer, renderImage);
-                        }
-                    });
-                }
-            });
-        }
+        let outfitContainer = new CreateElement('div').setAttributes({ class: 'outfit', 'data-id': element.outfitId }).appendTo(outfitsContainer)
+        element.clothingItems.forEach(async (item) => {
+            if (item.image) await getImage(item, outfitContainer, renderImage);
+        });
 
         await updateWearCount(element);
     }
-
     return true
 }
 
@@ -70,7 +74,7 @@ async function renderClothingDisplay(createOutfitDate, type, outfitId) {
     let filtersContainer = new CreateElement('div').setAttributes({ class: 'filters-container' }).appendTo(clothingContainer)
     let clothingList = new CreateElement('div').setAttributes({ class: 'clothing-list' }).appendTo(clothingContainer)
 
-    let clothingItemElements = await displayClothingItems(null, clothingList, null, itemsToAdd)
+    let clothingItemElements = await renderClothingItem(null, clothingList, null, itemsToAdd)
 
     new CreateElement('h2').setText('Filters')
         .addEventListener('click', async () => {
@@ -79,7 +83,7 @@ async function renderClothingDisplay(createOutfitDate, type, outfitId) {
             if (!filtersSection) {
                 await renderFilters(filtersContainer, clothingList, (filteredItems) => {
                     clothingList.innerHTML = '';
-                    filteredItems.forEach(e => displayClothingItems(null, clothingList, [e], itemsToAdd));
+                    filteredItems.forEach(e => renderClothingItem(null, clothingList, [e], itemsToAdd));
                     console.log(filteredItems);
                     setDisplay([addOutfitBtn], 'block');
                     setDisplay([clothingList], 'grid');
@@ -110,9 +114,9 @@ async function renderClothingDisplay(createOutfitDate, type, outfitId) {
                     return
                 }
 
-                let outfitId = await generateOutfit(window.user)
-                await addItemsOutfit(window.user, outfitId, itemsToAdd)
-                if (createOutfitDate) await updateOutfit(window.user, outfitId, createOutfitDate)
+                let outfitId = await outfitManager.generateOutfitId()
+                await outfitItems.addItems(outfitId, itemsToAdd)
+                if (createOutfitDate) await outfitManager.updateOutfit(outfitId, createOutfitDate)
 
                 itemsToAdd = []
 
@@ -140,8 +144,6 @@ async function addOutfitStreak(createOutfitDate) {
     let prevDate = null;
     let streakCount = 0;
     let target = null
-
-    // if (sortedDates.includes(createOutfitDate)) console.log('here')
 
     for (let dateStr of sortedDates) {
         let curr = dateStr;
@@ -179,7 +181,7 @@ async function addOutfitStreak(createOutfitDate) {
 
 async function editMode(outfitId, clothingItemElements, itemsToAdd) {
     let id = getOutfitId(outfitId);
-    let outfit = await getDetailedOutfits(outfitId);
+    let outfit = await outfitManager.getOutfitData(outfitId);
     let inOutfit;
     let itemsToRemove = [];
 
@@ -210,26 +212,12 @@ async function editMode(outfitId, clothingItemElements, itemsToAdd) {
         .addEventListener('click', async (event) => {
             event.preventDefault();
 
-            let { data, error } = await supabase.from('outfit_items').select('clothing_item_id').eq('outfit_id', id);
-            if (error) return console.error("error getting items", error);
-
-            let existingIds = new Set(data.map(item => item.clothing_item_id));
+            let data = await outfitManager.getOutfitItems([id])
+            let existingIds = new Set(Object.values(data)[0]);
             let newItems = [...new Set(itemsToAdd)].filter(item => !existingIds.has(item));
+            if (newItems.length > 0) await outfitItems.addItems(id, newItems)
 
-            if (newItems.length > 0) {
-                await supabase.from('outfit_items').insert(newItems.map(item => ({
-                    user_id: user.id,
-                    outfit_id: id,
-                    clothing_item_id: item
-                })));
-
-                if (error) console.error("error adding items:", error);
-            }
-
-            if (itemsToRemove.length > 0) {
-                await supabase.from('outfit_items').delete().eq('outfit_id', id).in('clothing_item_id', itemsToRemove);
-                if (error) console.error("error removing items:", error);
-            }
+            if (itemsToRemove.length > 0) await outfitItems.removeItems(id, itemsToRemove)
 
             displayInPlanner('calendar')
 
@@ -242,13 +230,12 @@ async function editMode(outfitId, clothingItemElements, itemsToAdd) {
         .addEventListener('click', async (event) => {
             event.preventDefault();
 
+            await outfitManager.deleteOutfit(id)
+
             let outfitContainer = document.querySelectorAll('outfits-container');
             outfitContainer.forEach(container => {
                 if (container.getAttribute('data-date') == id) container.remove();
             });
-
-            let { error } = await supabase.from('outfit').delete().eq('id', id);
-            if (error) return console.error("Error fetching existing items:", error);
 
             renderCalendarDisplay();
             displayInPlanner('calendar')
@@ -257,33 +244,6 @@ async function editMode(outfitId, clothingItemElements, itemsToAdd) {
         .appendTo(clothingContainer)
 
     return itemsToAdd;
-}
-
-async function getDetailedOutfits(outfitId = null) {
-    const outfits = await selectUserTable(window.user, 'outfit')
-    const outfitIds = outfits.map(outfit => outfit.id)
-
-    const outfitItems = await getOutfitItems(outfitIds)
-
-    const clothingItemIds = [].concat(...Object.values(outfitItems))
-    const clothingItems = await selectUserTable(window.user, 'clothing_items', clothingItemIds)
-
-    let outfitDetails = outfits.map(outfit => {
-        const outfitItemIds = outfitItems[outfit.id] || [];
-
-        const itemsForOutfit = clothingItems.filter(item => outfitItemIds.includes(item.id));
-
-        return {
-            outfitId: outfit.id,
-            wornDates: outfit.wear_dates,
-            clothingItems: itemsForOutfit,
-            worn: outfit.worn
-        };
-    });
-
-    return outfitId === null
-        ? outfitDetails
-        : outfitDetails.filter(outfit => outfit.outfitId == outfitId);
 }
 
 let getOutfitId = (outfitId) => {

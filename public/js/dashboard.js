@@ -1,5 +1,6 @@
 document.addEventListener("userInitialized", async () => {
     renderDashboard(window.user)
+    outfitManager = new OutfitManager(window.user)
 })
 
 let getTimePeriod = () => {
@@ -232,7 +233,7 @@ async function renderOutfitStreak(createOutfitDate, appendTo) {
 }
 
 async function getUnwornItems(dateInfo) {
-    let data = await getDetailedOutfits()
+    let data = await outfitManager.getOutfitData()
     data = data.filter(item => item.worn == true)
     let itemWearMap = new Map()
     let unwornItems = []
@@ -270,7 +271,7 @@ async function renderNotRecentlyWorn(dateInfo) {
     let data = await getUnwornItems(dateInfo)
     data = data.sort(() => Math.random() - 0.5)
     let container = new CreateElement('div').setAttributes({ class: 'unworn-container' }).appendTo(document.body)
-    await displayClothingItems(null, container, data.slice(0, 2))
+    await renderClothingItem(null, container, data.slice(0, 2))
 }
 
 

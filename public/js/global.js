@@ -408,15 +408,7 @@ class Colours extends SelectMultiple {
     }
 }
 
-function formatDatePadded(dateString) {
-    const [year, month, day] = dateString.split('-');
-    const paddedDay = day.padStart(2, '0');
-    const paddedMonth = month.padStart(2, '0');
-
-    return `${paddedDay}-${paddedMonth}-${year}`;
-}
-
-function formatDateUnpadded(dateString) {
+let formatDateUnpadded = (dateString) => {
     const [year, month, day] = dateString.split('-');
     const unpaddedDay = parseInt(day, 10);
     const unpaddedMonth = parseInt(month, 10);
@@ -473,81 +465,145 @@ async function initializeUserCalendar(user) {
     return data
 }
 
-async function addItemsOutfit(user, outfitId, clothingIds) {
-
-    if (clothingIds && !Array.isArray(clothingIds)) {
-        clothingIds = [clothingIds];
+class OutfitManager {
+    constructor(user) {
+        this.user = user
     }
 
-    if (!clothingIds || clothingIds.length == 0) {
-        throw new Error("At least one clothing item is required to create an outfit.");
-    }
+    async generateOutfitId() {
+        try {
+            const { data, error } = await supabase
+                .from('outfit')
+                .insert({ 'user_id': user.id })
+                .eq('user_id', this.user.id)
+                .select()
 
-    const { data: outfitItems, error: outfitItemsError } = await supabase
-        .from('outfit_items')
-        .insert(
-            clothingIds.map(clothingId => ({
-                'outfit_id': outfitId,
-                'clothing_item_id': clothingId,
-                'user_id': user.id
-            }))
-        )
-        .eq('user_id', user.id)
-        .select()
+            if (error) throw error
 
-    if (outfitItemsError) throw outfitItemsError
-
-    return outfitItems
-}
-
-async function generateOutfit(user) {
-
-    const { data, error } = await supabase
-        .from('outfit')
-        .insert({ 'user_id': user.id })
-        .eq('user_id', user.id)
-        .select()
-
-    if (error) throw error
-
-    let outfitId = data[0].id
-    return outfitId
-}
-
-async function updateOutfit(user, outfitId, wearDate) {
-    let dates = Array.isArray(wearDate) ? wearDate : [wearDate];
-
-    const { data, error } = await supabase
-        .from('outfit')
-        .update({
-            wear_dates: dates,
-            worn: true
-        })
-        .eq('id', outfitId)
-        .select()
-
-    if (error) throw error
-    return data
-}
-
-async function getOutfitItems(outfitIds) {
-    const { data: outfitItems, error: outfitItemsError } = await supabase
-        .from('outfit_items')
-        .select('outfit_id, clothing_item_id')
-        .in('outfit_id', outfitIds);
-
-    if (outfitItemsError) throw outfitItemsError;
-
-    let group = {};
-
-    outfitItems.forEach(item => {
-        if (!group[item.outfit_id]) {
-            group[item.outfit_id] = [];
+            let outfitId = data[0].id
+            return outfitId
+        } catch (error) {
+            console.error(error);
         }
-        group[item.outfit_id].push(item.clothing_item_id);
-    });
+    }
 
-    return group;
+    async updateOutfit(outfitId, wearDate) {
+        let dates = Array.isArray(wearDate) ? wearDate : [wearDate];
+
+        const { data, error } = await supabase
+            .from('outfit')
+            .update({
+                wear_dates: dates,
+                worn: true
+            })
+            .eq('id', outfitId)
+            .select()
+
+        if (error) throw error
+        return data
+    }
+
+    async getOutfitItems(outfitIds) {
+        try {
+            const { data, error } = await supabase
+                .from('outfit_items')
+                .select('outfit_id, clothing_item_id')
+                .in('outfit_id', outfitIds);
+
+            if (error) throw error;
+
+            let group = {};
+
+            data.forEach(item => {
+                if (!group[item.outfit_id]) {
+                    group[item.outfit_id] = [];
+                }
+                group[item.outfit_id].push(item.clothing_item_id);
+            });
+
+            return group;
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    async deleteOutfit(outfitId) {
+        try {
+            let { error } = await supabase.from('outfit').delete().eq('id', outfitId);
+            if (error) return console.error("Error fetching existing items:", error);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    async getOutfitData(outfitId = null) {
+        const outfits = await selectUserTable(this.user, 'outfit')
+        const outfitIds = outfits.map(outfit => outfit.id)
+        const outfitItems = await this.getOutfitItems(outfitIds)
+        const clothingItemIds = [].concat(...Object.values(outfitItems))
+        const clothingItems = await selectUserTable(this.user, 'clothing_items', clothingItemIds)
+        
+        let outfitDetails = outfits.map(outfit => {
+            const outfitItemIds = outfitItems[outfit.id] || [];
+
+            const itemsForOutfit = clothingItems.filter(item => outfitItemIds.includes(item.id));
+
+            return {
+                outfitId: outfit.id,
+                wornDates: outfit.wear_dates,
+                clothingItems: itemsForOutfit,
+                worn: outfit.worn
+            };
+        });
+
+        return outfitId === null
+            ? outfitDetails
+            : outfitDetails.filter(outfit => outfit.outfitId == outfitId);
+    }
+}
+
+class ClothingItems extends OutfitManager {
+    constructor(user) {
+        super(user)
+    }
+
+    async addItems(outfitId, clothingIds) {
+
+        if (clothingIds && !Array.isArray(clothingIds)) clothingIds = [clothingIds];
+        if (!clothingIds || clothingIds.length == 0) throw new Error("At least one clothing item is required to create an outfit.");
+
+        try {
+            const { data, error } = await supabase
+                .from('outfit_items')
+                .insert(
+                    clothingIds.map(clothingId => ({
+                        'outfit_id': outfitId,
+                        'clothing_item_id': clothingId,
+                        'user_id': this.user.id
+                    }))
+                )
+                .eq('user_id', this.user.id)
+                .select()
+
+            if (error) throw error
+
+            return data
+
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    async removeItems(outfitId, itemsToRemove) {
+        try {
+            const { data, error } = await supabase.from('outfit_items')
+                .delete().eq('outfit_id', outfitId)
+                .in('clothing_item_id', itemsToRemove);
+            if (error) console.error("error removing items:", error);
+        } catch (error) {
+            console.error(error);
+        }
+    }
 }
 
 async function filters(container) {
@@ -717,7 +773,7 @@ editItemHandler = (clothingFormContainer = null, appendTo, container, element) =
     console.log('item', element.id)
 }
 
-async function displayClothingItems(clothingFormContainer = null, appendTo, filteredData = null, itemsToAdd = null) {
+async function renderClothingItem(clothingFormContainer = null, appendTo, filteredData = null, itemsToAdd = null) {
     let data = filteredData ? filteredData : await selectUserTable(window.user, 'clothing_items')
 
     let itemElements = await Promise.all(data.map(async (element) => {
