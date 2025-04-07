@@ -35,60 +35,7 @@ async function renderDashboard(user) {
     await renderOutfitStreak(today, main)
     await getDaily(window.user, today, 'quiz', main)
     await getDaily(window.user, today, 'challenge', main)
-    await renderNotRecentlyWorn(today)
-}
-
-async function renderChallenges(user, randomChallenges, dateInfo, challengesContainer) {
-
-    let challenges = new CreateElement('div')
-        .setAttributes({ class: 'challenges' })
-        .addEventListener('click', async () => { challenges.classList.toggle('expanded'); })
-        .appendTo(challengesContainer)
-
-    new CreateElement('h2').setText('challenges').appendTo(challenges)
-
-    let { progress, challengesToday, calendarData } = await getUserData(dateInfo, 'challenges')
-    let updateCalendar = calendarData[0].calendar
-
-    randomChallenges.forEach(value => {
-
-        let elements = new CreateElement('div').setAttributes({ class: 'elements' }).appendTo(challenges)
-        let checkbox = new CreateElement('input')
-            .setAttributes({ type: 'checkbox', id: value.id, class: 'challenges' })
-            .addEventListener('click', (event) => {
-                event.stopPropagation()
-            })
-            .addEventListener('change', async (event) => {
-                event.preventDefault()
-
-                let updateChallenge = progress.challengesProgress.find(item => item.id == checkbox.id)
-                let updateCalendarChallenge = challengesToday.find(item => item.id == checkbox.id)
-
-                if (updateChallenge && updateChallenge.complete_count == undefined) {
-                    updateChallenge.complete_count = 0;
-                }
-
-                if (checkbox.checked) {
-
-                    if (updateCalendarChallenge) updateCalendarChallenge.completed = true;
-                    if (updateChallenge) updateChallenge.complete_count += 1;
-
-                } else {
-                    if (updateCalendarChallenge) updateCalendarChallenge.completed = false;
-                    if (updateChallenge) updateChallenge.complete_count = Math.max(0, updateChallenge.complete_count - 1);
-                }
-
-                await updateUserTable(window.user, 'user_details', { user_id: user.id, challenges_progress: progress.challengesProgress })
-                await updateUserTable(window.user, 'user_calendar', { user_id: user.id, calendar: updateCalendar })
-
-            })
-            .appendTo(elements)
-
-        let ul = new CreateElement('ul').setText(value.title).appendTo(elements)
-        new CreateElement('li').setText(value.details).appendTo(ul)
-
-        checkbox.checked = challengesToday.some(item => item.id === value.id && item.completed);
-    });
+    await renderNotRecentlyWorn(today, main)
 }
 
 async function renderQuiz(currentQuiz, challengeDate, container, complete = false, handleQuiz) {
@@ -267,11 +214,14 @@ async function getUnwornItems(dateInfo) {
     return unwornItems
 }
 
-async function renderNotRecentlyWorn(dateInfo) {
+async function renderNotRecentlyWorn(dateInfo, container) {
     let data = await getUnwornItems(dateInfo)
     data = data.sort(() => Math.random() - 0.5)
-    let container = new CreateElement('div').setAttributes({ class: 'unworn-container' }).appendTo(document.body)
-    await renderClothingItem(null, container, data.slice(0, 2))
+    let unworn = new CreateElement('div').setAttributes({ class: 'unworn-container' }).appendTo(container)
+    let cards = new CreateElement('div').setAttributes({ class: 'cards' }).appendTo(unworn)
+    let clothes = new CreateElement('div').setAttributes({ class: 'clothes' }).appendTo(unworn)
+    let h2 = new CreateElement('h2').setText(`Did you forget about us?`).appendTo(cards)
+    new CreateElement('br').appendTo(h2)
+    new CreateElement('span').setText(`Let's make a new outfit`).appendTo(h2)
+    await renderClothingItem(null, clothes, data.slice(0, 2))
 }
-
-
