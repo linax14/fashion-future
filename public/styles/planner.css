@@ -91,25 +91,30 @@
 }
 
 .outfits-container {
+    background-color: var(--focus-color);
+    padding: var(--padding-small);
+    border-radius: var(--border-radius-medium);
     flex-direction: column;
-    width: 100%;
     gap: var(--gap-small);
+}
+
+.outfits-container h2 {
+    text-transform: uppercase;
+    margin-bottom: 2px;
 }
 
 .outfits-container .create-outfit {
     display: flex;
-    justify-content: flex-start;
+    justify-content: start;
     align-items: center;
     position: relative;
-    background-color: var(--focus-color);
-    border-radius: 10px;
-    padding: var(--padding-main);
     gap: var(--gap-big);
+    flex-direction: row-reverse;
 }
 
 
 .outfits-container .create-outfit img {
-    width: 100px;
+    width: 40px;
     opacity: 0.8;
 }
 
@@ -117,6 +122,7 @@
     text-align: center;
     text-transform: uppercase;
     text-decoration: underline;
+    margin-top: 2px;
 }
 
 .outfit {
@@ -126,6 +132,7 @@
     border-radius: 10px;
     overflow: hidden;
     min-height: 100px;
+    height: 20vh;
 }
 
 .outfit img {
@@ -312,4 +319,19 @@
         10px;
     padding: var(--padding-main);
     gap: var(--gap-big);
+}
+
+.prev-worn-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    background-color: var(--focus-color);
+    padding: var(--padding-small);
+    border-radius: var(--border-radius-medium);
+    gap: var(--gap-small);
+}
+
+
+.prev-worn-container h2 {
+    grid-column: span 2;
+    text-transform: uppercase;
 }

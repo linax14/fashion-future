@@ -33,7 +33,7 @@ body {
     padding: var(--padding-small);
 }
 
-h3 {
+h2, h3 {
     margin-top: var(--margin-small);
     margin-bottom: var(--margin-small);
 }
@@ -413,7 +413,7 @@ li {
     background-color: var(--font-color);
     border-color: var(--secondary-color);
     border-radius: var(--border-radius-small);
-    position: absolute;
+    /* position: absolute; */
     z-index: 1;
 }
 
@@ -434,28 +434,34 @@ li {
     margin-left: 3px;
 }
 
-.wardrobe.item-container,
-.clothing-list .item-container {
+.wardrobe.item-container {
     border: 1px solid var(--secondary-color);
     background-color: var(--focus-color);
     border-radius: var(--border-radius-medium);
     height: 16vh;
-    width: 30vw;
-    display: flex;
-    flex-direction: column;
+    width: auto;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    /* display: flex;
+    flex-direction: column; */
+    justify-items: inherit;
+
     gap: var(--gap-medium);
     overflow: hidden;
-
 }
 
-.wardrobe.item-container p,
-.clothing-list .item-container p {
+.wardrobe.item-container p {
     margin-left: 8px;
+    grid-column: span 3;
+    text-align: start;
+    align-self: center;
 }
 
-.clothing-list .item-container img {
-    height: 12vh;
-    overflow: hidden;
+.wardrobe.image {
+    height: 12dvh;
+    width: -moz-available;
+    object-fit: cover;
+    grid-column: span 4;
 }
 
 .image.fallback {

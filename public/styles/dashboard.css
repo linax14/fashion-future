@@ -274,24 +274,46 @@
     max-width: min-content;
 }
 
+.unworn-container{
+    grid-column: span 3;
+    background-color: var(--focus-color);
+    padding: var(--padding-small);
+    border-radius: var(--border-radius-medium);
+}
+.clothes {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-row: auto;
+    gap: var(--gap-small);
+    height: fit-content;
+    overflow: hidden;
+}
+
+.cards h2 span {
+    font-size: 14px;
+}
+
 .wardrobe.item-container {
     border: 1px solid var(--secondary-color);
     background-color: var(--focus-color);
     border-radius: var(--border-radius-medium);
     height: 16vh;
     width: auto;
-    display: flex;
-    flex-direction: column;
+    /* display: flex;
+    flex-direction: column; */
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
     gap: var(--gap-medium);
     overflow: hidden;
 }
 
 .wardrobe.item-container p {
     margin-left: 8px;
+    margin-bottom: 8px;
 }
 
 .wardrobe.image {
-    height: 12dvh;
+    height: 13dvh;
     width: -moz-available;
     object-fit: cover;
 }

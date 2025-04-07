@@ -46,9 +46,12 @@
     padding-top: var(--padding-small);
     overflow: scroll;
     height: 86vh;
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
 }
+
 
 .form-container.hidden {
     display: none;
@@ -182,17 +185,10 @@
     background-color: var(--font-color);
     border-color: var(--secondary-color);
     border-radius: var(--border-radius-small);
-    position: absolute;
+    /* position: absolute; */
     z-index: 1;
-}
-
-.wardrobe.item-container input[type="checkbox"]:checked {
-    border-color: var(--secondary-color);
-}
-
-.wardrobe.item-container input[type="checkbox"]:checked::before {
-    border-color: var(--secondary-color);
-    color: var(--focus-color);
+    grid-column: span 1;
+    align-self: safe;
 }
 
 .wardrobe.item-container [type="checkbox"]::before {
@@ -242,7 +238,7 @@
 
 .header .delete.btn {
     position: absolute;
-    bottom: 8vh;
+    bottom: 6vh;
 }
 
 .edit.btn {
@@ -269,28 +265,6 @@
     overflow-y: scroll;
     overflow-x: hidden;
     height: 65vh;
-}
-
-.wardrobe.item-container {
-    border: 1px solid var(--secondary-color);
-    background-color: var(--focus-color);
-    border-radius: var(--border-radius-medium);
-    height: 16vh;
-    width: auto;
-    display: flex;
-    flex-direction: column;
-    gap: var(--gap-medium);
-    overflow: hidden;
-}
-
-.wardrobe.item-container p {
-    margin-left: 8px;
-}
-
-.wardrobe.image {
-    height: 12dvh;
-    width: -moz-available;
-    object-fit: cover;
 }
 
 .outfits-container {
@@ -340,7 +314,12 @@ input[type=text] {
     margin-top: 10px;
 }
 
-.newItem-container {
+.clothing-formContainer {
     visibility: hidden;
     height: 90vh;
+}
+
+.clothing-formContainer .submit.btn{
+    position: absolute;
+    bottom: 6vh;
 }
