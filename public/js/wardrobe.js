@@ -1,6 +1,6 @@
 document.addEventListener("userInitialized", async () => {
     //console.log("user", window.user)
-    clothingManager = new ClothingManager(window.user)
+    clothingManager = new WardrobeManager(window.user)
 
     renderHeader()
     renderWardrobe()
@@ -34,7 +34,7 @@ let displayInWardrobe = (type) => {
     }
 }
 
-class ClothingManager {
+class WardrobeManager {
     constructor(user) {
         this.user = user
     }
@@ -51,7 +51,7 @@ class ClothingManager {
             return data
 
         } catch (error) {
-            console.log(error)
+            console.error(error)
             throw error
         }
     }
@@ -304,7 +304,6 @@ async function renderEditClothingItem(clothingFormContainer, item) {
                 element.classList.toggle('selected', selectedValues.includes(value))
             })
         }
-
     }
 
     setMultiSelection(aboutFormContainer, "colour", item.colour, false, isColour = true)
@@ -375,7 +374,7 @@ async function updateClothingItem(itemId, formContainer, clothingFormContainer) 
         )
 
         displayInWardrobe('wardrobe')
-        displayClothingItems(clothingFormContainer, wardrobeContainer)
+        renderClothingItem(clothingFormContainer, wardrobeContainer)
 
     } catch (error) {
         console.error('error updating', error)
@@ -394,7 +393,7 @@ async function renderWardrobe() {
     let editWardrobe = new CreateElement('button').setAttributes({ class: 'edit btn' }).appendTo(btnContainer)
     new CreateElement('i').setAttributes({ class: 'fa-trash fa-solid' }).appendTo(editWardrobe)
 
-    let allClothes = await displayClothingItems(clothingFormContainer, wardrobeContainer)
+    let allClothes = await renderClothingItem(clothingFormContainer, wardrobeContainer)
     renderclothingForm(clothingFormContainer)
 
     let filtersBtn = new CreateElement('button').setAttributes({ class: 'filter btn' }).appendTo(btnContainer)
@@ -424,7 +423,7 @@ async function renderWardrobe() {
         if (!filtersDisplay) {
             renderFilters(wardrobeHeader, wardrobeContainer, (filteredItems) => {
                 wardrobeContainer.innerHTML = ''
-                filteredItems.forEach(e => displayClothingItems(clothingFormContainer, wardrobeContainer, [e]))
+                filteredItems.forEach(e => renderClothingItem(clothingFormContainer, wardrobeContainer, [e]))
                 console.log(filteredItems);
             })
             filtersDisplay = document.querySelector('.filters');
