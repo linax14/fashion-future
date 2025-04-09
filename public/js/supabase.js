@@ -1,0 +1,362 @@
+const supabase = window.supabase.createClient('https://idtiohrkbkotgjsbgcij.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlkdGlvaHJrYmtvdGdqc2JnY2lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzcyMTI4MjgsImV4cCI6MjA1Mjc4ODgyOH0.JVeYsapCa4SgTMqs89vfWA0Nke5oAQmHUPmjhDulea4')
+window.user = null;
+
+window.onload = async (event) => {
+    let theme = 'dark'
+    document.documentElement.setAttribute('data-theme', theme)
+}
+
+(async function () {
+    window.user = await getUser();
+    // console.log("user", window.user);
+
+    document.dispatchEvent(new Event("userInitialized"));
+    initializeUserCalendar(user)
+
+})();
+
+async function getUser() {
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+        console.error("User not logged in.")
+        return
+    }
+
+    return user
+}
+
+async function selectUserTable(user, tableName) {
+    const { data, error } = await supabase
+        .from(tableName)
+        .select()
+        .eq('user_id', user.id)
+
+    if (error) throw error
+
+    return data
+}
+
+async function updateUserTable(user, tableName, updates) {
+    const { data, error } = await supabase
+        .from(tableName)
+        .update(updates)
+        .eq('user_id', user.id);
+
+    if (error) throw error
+    return data
+}
+
+let mergeData = (existingData, newData) => {
+    const existingIds = new Set(existingData.map(c => c.id))
+    return [...existingData, ...newData.filter(c => !existingIds.has(c.id))]
+}
+
+let initializeUserDetails = async (fromTable, initializeColumn) => {
+
+    let { data } = await supabase.from(fromTable).select()
+    let userData = await selectUserTable(window.user, 'user_details')
+    if (!userData || userData.length <= 0) await supabase.from('user_details').insert({ user_id: user.id })
+
+    let currentData = userData[0]?.[initializeColumn] || []
+    let newData = data
+    let updatedData = mergeData(currentData, newData)
+
+    await updateUserTable(window.user, 'user_details', { [initializeColumn]: updatedData })
+    data = await selectUserTable(window.user, 'user_details')
+    return data
+}
+
+async function initializeUserCalendar(user) {
+    let data = await selectUserTable(window.user, 'user_calendar')
+
+    if (data.length == 0) {
+        await supabase.from('user_calendar').insert({ user_id: user.id })
+        data = await selectUserTable(window.user, 'user_calendar')
+    }
+
+    data = data[0]
+    if (!data.year) await updateUserTable(window.user, 'user_calendar', { 'year': year });
+
+    let calendar = {}
+    months.forEach((month, index) => {
+        let daysInMonth = new Date(year, index + 1, 0).getDate()
+        calendar[month] = {};
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            calendar[month][day] = { challenges: [], quiz: [], streak: 0, points: {} };
+        }
+    })
+
+    if (!data.calendar) {
+        await updateUserTable(window.user, 'user_calendar', { 'calendar': calendar })
+        data = await selectUserTable(window.user, 'user_calendar')
+    }
+
+    return data
+}
+
+class OutfitManager {
+    constructor(user) {
+        this.user = user
+    }
+
+    async generateOutfitId() {
+        try {
+            const { data, error } = await supabase
+                .from('outfit')
+                .insert({ 'user_id': user.id })
+                .eq('user_id', this.user.id)
+                .select()
+
+            if (error) throw error
+
+            let outfitId = data[0].id
+            return outfitId
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    async updateOutfit(outfitId, wearDate) {
+        let dates = Array.isArray(wearDate) ? wearDate : [wearDate];
+
+        const { data, error } = await supabase
+            .from('outfit')
+            .update({
+                wear_dates: dates,
+                worn: true
+            })
+            .eq('id', outfitId)
+            .select()
+
+        if (error) throw error
+        return data
+    }
+
+    async getOutfitItems(outfitIds) {
+        try {
+            const { data, error } = await supabase
+                .from('outfit_items')
+                .select('outfit_id, clothing_item_id')
+                .in('outfit_id', outfitIds);
+
+            if (error) throw error;
+
+            let group = {};
+
+            data.forEach(item => {
+                if (!group[item.outfit_id]) {
+                    group[item.outfit_id] = [];
+                }
+                group[item.outfit_id].push(item.clothing_item_id);
+            });
+
+            return group;
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    async deleteOutfit(outfitId) {
+        try {
+            let { error } = await supabase.from('outfit').delete().eq('id', outfitId);
+            if (error) return console.error("Error fetching existing items:", error);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    async getOutfitData(outfitId = null) {
+        const outfits = await selectUserTable(this.user, 'outfit')
+        const outfitIds = outfits.map(outfit => outfit.id)
+        const outfitItems = await this.getOutfitItems(outfitIds)
+        const clothingItemIds = [].concat(...Object.values(outfitItems))
+        const clothingItems = await selectUserTable(this.user, 'clothing_items', clothingItemIds)
+
+        let outfitDetails = outfits.map(outfit => {
+            const outfitItemIds = outfitItems[outfit.id] || [];
+
+            const itemsForOutfit = clothingItems.filter(item => outfitItemIds.includes(item.id));
+
+            return {
+                outfitId: outfit.id,
+                wornDates: outfit.wear_dates,
+                clothingItems: itemsForOutfit,
+                worn: outfit.worn
+            };
+        });
+
+        return outfitId === null
+            ? outfitDetails
+            : outfitDetails.filter(outfit => outfit.outfitId == outfitId);
+    }
+}
+
+class ClothingItems extends OutfitManager {
+    constructor(user) {
+        super(user)
+    }
+
+    async addItems(outfitId, clothingIds) {
+
+        if (clothingIds && !Array.isArray(clothingIds)) clothingIds = [clothingIds];
+        if (!clothingIds || clothingIds.length == 0) throw new Error("At least one clothing item is required to create an outfit.");
+
+        try {
+            const { data, error } = await supabase
+                .from('outfit_items')
+                .insert(
+                    clothingIds.map(clothingId => ({
+                        'outfit_id': outfitId,
+                        'clothing_item_id': clothingId,
+                        'user_id': this.user.id
+                    }))
+                )
+                .eq('user_id', this.user.id)
+                .select()
+
+            if (error) throw error
+
+            return data
+
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    async removeItems(outfitId, itemsToRemove) {
+        try {
+            const { data, error } = await supabase.from('outfit_items')
+                .delete().eq('outfit_id', outfitId)
+                .in('clothing_item_id', itemsToRemove);
+            if (error) console.error("error removing items:", error);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+}
+
+async function getImage(element, appendTo, callback, className = '') {
+    try {
+        // const { data: signedUrlData, error: urlError } = await supabase.storage
+        //     .from('fashion-future')
+        //     .createSignedUrl(`${element.user_id}/${element.image}`, 60);
+
+        // if (urlError) throw urlError;
+        // if (signedUrlData.signedUrl) {
+        //     if (typeof callback === 'function') {
+        //         callback(signedUrlData, appendTo, className)
+        //     } else { return signedUrlData }
+        // }
+
+        new CreateElement('img')
+            .setAttributes({
+                class: 'wardrobe image fallback', src: '../assets/createOutfit.png',
+                alt: `Fallback image representing a variety of clothing items when no specific image is available`
+            })
+            .appendTo(appendTo)
+
+    } catch (urlError) {
+        console.error(`Error fetching image URL: ${urlError}`);
+        new CreateElement('img')
+            .setAttributes({
+                class: 'wardrobe image fallback', src: '../assets/createOutfit.png',
+                alt: `Fallback image representing a variety of clothing items when no specific image is available`
+            })
+            .appendTo(appendTo)
+    }
+}
+
+let getUserData = async (dateInfo, progressType) => {
+
+    let [userDetailsData, calendarData] = await Promise.all([
+        selectUserTable(window.user, 'user_details'),
+        selectUserTable(window.user, 'user_calendar')
+    ])
+
+    let progress = {}
+    let challengesToday = []
+
+    let updateChallengesProgress = userDetailsData[0].challenges_progress
+    let updateQuestionsProgress = userDetailsData[0].questions_progress
+
+    Object.values(updateChallengesProgress).forEach(value => {
+        value.complete_count ??= 0;
+    })
+
+    Object.values(updateQuestionsProgress).forEach(value => {
+        value.correctAnswers ??= 0;
+        value.attempts ??= 0;
+    })
+    switch (progressType) {
+        case 'challenges':
+            progress.challengesProgress = updateChallengesProgress
+
+            let [year, month, day] = dateInfo.split('-');
+            let currentMonth = months[month - 1].toLowerCase();
+            challengesToday = calendarData[0].calendar[currentMonth]?.[day]?.challenges || [];
+            break;
+
+        case 'questions':
+            progress.questionsProgress = updateQuestionsProgress
+            break;
+
+        default:
+            break;
+    }
+
+    return progressType == 'questions'
+        ? { progress }
+        : { progress, challengesToday, calendarData }
+}
+
+
+async function updatePoints(type = null, dataDate) {
+    let calendarData = await selectUserTable(window.user, 'user_calendar')
+    let data = await getTarget(dataDate)
+    let target = data.target
+    let calendar = data.calendar
+
+    if (target) {
+        if (!target.points) target.points = {}
+        let tags = { 'style': 0, 'discipline': 0, 'curiosity': 0, 'knowledge': 0, 'mastery': 0 }
+
+        for (let key in tags) {
+            if (!(key in target.points)) {
+                target.points[key] = tags[key]
+            }
+        }
+
+        if (type) {
+            if (isNaN(target.points[type])) target.points[type] = 0;
+            target.points[type] += 1
+        }
+        console.log(target);
+        await updateUserTable(window.user, 'user_calendar', { calendar: calendar })
+    }
+
+    return { calendarData, target }
+}
+
+let getTarget = async ( dataDate) => {
+    let calendarData = await selectUserTable(window.user, 'user_calendar')
+    let target
+
+    for (const element of calendarData) {
+
+        const [year, month, day] = dataDate.split('-')
+        const currentMonth = months[month - 1].toLowerCase()
+
+        if (element.year == year) {
+            let targetMonth = element.calendar[currentMonth]
+            if (targetMonth) {
+                target = targetMonth[day]
+                return { calendar: element.calendar, target }
+            }
+        }
+    }
+    return { calendarData, target }
+}
+
+renderNavigation()
