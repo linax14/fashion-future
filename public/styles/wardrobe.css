@@ -1,3 +1,7 @@
+.body {
+    overflow: clip;
+}
+
 .modal {
     display: none;
     position: fixed;
@@ -15,17 +19,6 @@
     padding: var(--padding-main);
     border: 1px solid var(--grey-focus);
     width: 80%;
-}
-
-.close {
-    float: right;
-}
-
-.close.btn {
-    padding: 0;
-    background-color: transparent;
-    font-size: 20px;
-    margin-bottom: var(--margin-big);
 }
 
 .create-outfit {
@@ -146,11 +139,11 @@
     display: grid;
     grid-template-columns: repeat(10, 1fr);
     gap: var(--gap-small);
+    margin-bottom: var(--margin-big);
 }
 
 .form-group.colour>:first-child {
     grid-column: span 10;
-    margin-bottom: var(--margin-medium);
 }
 
 .form-group.season {
@@ -161,7 +154,6 @@
 
 .form-group.season>:first-child {
     grid-column: span 2;
-    margin-bottom: var(--margin-medium);
 }
 
 .form-group.season>:not(:first-child) {
@@ -181,14 +173,18 @@
     gap: var(--gap-medium);
 }
 
-.wardrobe.item-container input[type="checkbox"] {
+.clothing-list.item-container input[type="checkbox"] {
     background-color: var(--font-color);
     border-color: var(--secondary-color);
     border-radius: var(--border-radius-small);
-    /* position: absolute; */
-    z-index: 1;
     grid-column: span 1;
     align-self: safe;
+}
+
+.wardrobe-container {
+    padding-bottom: 8vh;
+    height: 60vh;
+    padding-bottom: 8vh;
 }
 
 .wardrobe.item-container [type="checkbox"]::before {
@@ -220,7 +216,7 @@
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: var(--gap-medium);
-    justify-content: space-between;
+    height: fit-content;
 }
 
 .header h2,
@@ -234,11 +230,18 @@
 
 .header .btn-container {
     justify-self: end;
+    height: min-content;
+    flex-direction: row-reverse;
 }
 
 .header .delete.btn {
     position: absolute;
     bottom: 6vh;
+}
+
+.header .filters {
+    height: 50vh;
+    overflow-y: scroll;
 }
 
 .edit.btn {
@@ -256,7 +259,7 @@
     padding: 2px;
 }
 
-.wardrobe-container {
+.clothing-list {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     grid-template-rows: auto;
@@ -264,7 +267,6 @@
     margin-top: 1vh;
     overflow-y: scroll;
     overflow-x: hidden;
-    height: 65vh;
 }
 
 .outfits-container {
@@ -298,8 +300,27 @@ input[type=text] {
     grid-template-rows: auto;
     align-items: center;
     align-content: center;
-    height: 16vh;
-    border-bottom: 1px solid var(--secondary-color)
+}
+
+.header-user .btn-container {
+    border-top: 1px solid var(--secondary-color);
+    padding-bottom: var(--margin-big);
+    grid-column: span 2;
+}
+
+.header-user .btn-container .btn {
+    width: 100%;
+    background-color: transparent;
+    border-bottom: 1px solid var(--secondary-color);
+    border-radius: 0px;
+}
+
+.header-user .info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: start;
+    gap: 4px;
 }
 
 .header-user .icon {
@@ -307,6 +328,7 @@ input[type=text] {
     height: 100px;
     width: 100px;
     grid-row: span 3;
+    border-radius: var(--border-radius-medium);
 }
 
 .mini.modal .close.btn {
@@ -319,7 +341,30 @@ input[type=text] {
     height: 90vh;
 }
 
-.clothing-formContainer .submit.btn{
-    position: absolute;
-    bottom: 6vh;
+.clothing-formContainer .btn-container.bottom {
+    display: flex;
+    position: relative;
+    bottom: 8vh;
+    justify-content: flex-end;
+}
+
+.clothing-formContainer input[type="checkbox"]::before {
+    font-size: 12px;
+}
+
+.clothing-formContainer input[type="checkbox"]:checked::before {
+    border-color: var(--focus-color);
+    color: white;
+}
+
+.btn-container.bottom .delete {
+    background-color: transparent;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    color: var(--grey-focus);
+    padding: 10px 10px;
+}
+
+.stats-container {
+    display: flex;
 }
