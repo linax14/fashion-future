@@ -163,20 +163,27 @@ async function renderClothingDisplay(createOutfitDate, type, outfitId) {
 
 async function addOutfitStreak(createOutfitDate) {
 
-    let { data, error } = await supabase.from('outfit').select('wear_dates').eq('user_id', window.user.id)
-    // console.log(data);
+    let { data: outfitData, error } = await supabase.from('outfit').select('wear_dates').eq('user_id', window.user.id)
+    if (error) {
+        console.error(error);
+        return { target: null }
+    }
 
-    if (error) { console.error(error); }
-
-    let calendarData = await selectUserTable(window.user, 'user_calendar')
-
-    let allDates = data.flatMap(entry => entry.wear_dates || []);
+    let allDates = outfitData.flatMap(entry => entry.wear_dates || []);
     let sortedDates = [...new Set(allDates)].sort((a, b) => new Date(a) - new Date(b));
-
     sortedDates = sortedDates.map(date => formatDateUnpadded(date))
+
     let prevDate = null;
     let streakCount = 0;
-    let target = null
+
+    let data = await calendarDataTarget(createOutfitDate, 'day')
+    let target = data.target
+    let calendar = target.calendar
+
+    if (sortedDates.includes(createOutfitDate)) {
+        // console.log('already logged - skip');
+        return { target };
+    }
 
     for (let dateStr of sortedDates) {
         let curr = dateStr;
@@ -189,27 +196,15 @@ async function addOutfitStreak(createOutfitDate) {
         }
 
         if (dateStr == createOutfitDate) {
-            const [year, month, day] = createOutfitDate.split('-');
-            const currentMonth = months[month - 1].toLowerCase();
-
-            for (const element of calendarData) {
-
-                if (element.year == year) {
-                    let targetMonth = element.calendar[currentMonth]
-
-                    if (targetMonth) {
-                        target = targetMonth[day]
-
-                        target.streak = streakCount
-                        await updateUserTable(window.user, 'user_calendar', { calendar: element.calendar });
-                    }
-
-                }
-                break
+            if (target) {
+                target.streak = streakCount
             }
+            await updateUserTable(window.user, 'user_calendar', { calendar: calendar });
+            await updatePoints('discipline', createOutfitDate);
+
         } prevDate = dateStr;
     }
-    return target;
+    return { target };
 }
 
 let editMode = async (outfitId, clothingItemElements, itemsToAdd, submitBtn, deleteBtn) => {
@@ -279,13 +274,15 @@ let addMode = async (itemsToAdd, createOutfitDate, submitBtn) => {
 
         let outfitId = await outfitManager.generateOutfitId()
         await outfitItems.addItems(outfitId, itemsToAdd)
-        if (createOutfitDate) await outfitManager.updateOutfit(outfitId, createOutfitDate)
+        if (createOutfitDate) {
+            await outfitManager.updateOutfit(outfitId, createOutfitDate)
+            await updatePoints('style', createOutfitDate)
+        }
 
         itemsToAdd = []
 
-        addOutfitStreak(createOutfitDate)
+        await addOutfitStreak(createOutfitDate);
         displayInPlanner('calendar')
-
     })
     return itemsToAdd
 }

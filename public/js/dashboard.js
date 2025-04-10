@@ -141,6 +141,9 @@ async function renderQuiz(currentQuiz, challengeDate, container, complete = fals
                     }
 
                     percentage = (answeredQuestions / totalQuestions * 100)
+                    if (percentage == 100) {
+                        await updatePoints('mastery', challengeDate)
+                    }
                     progressBarWrapper.setAttribute("aria-valuenow", percentage)
                     progressbar.style.width = `${percentage}%`
 
@@ -150,6 +153,8 @@ async function renderQuiz(currentQuiz, challengeDate, container, complete = fals
                         let result = (score / totalQuestions) * 100
                         console.log(result);
                         localStorage.setItem(`quiz_${challengeDate}_completed`, true);
+                        await updatePoints('curiosity', challengeDate)
+                        await updatePoints('knowledge', challengeDate)
                     }
 
                     answerUI.style.pointerEvents = 'none';
@@ -163,14 +168,13 @@ async function renderQuiz(currentQuiz, challengeDate, container, complete = fals
 
 async function renderOutfitStreak(createOutfitDate, appendTo) {
     let data = await addOutfitStreak(createOutfitDate)
-    // console.log(data);
 
     let div = new CreateElement('div').setAttributes({ class: 'outfits-streak' }).appendTo(appendTo)
 
     if (data == null) {
         let h1 = new CreateElement('p').setText(`Log today's to keep up with your streak`).appendTo(div)
     } else {
-        let h1 = new CreateElement('h2').setText(`${data.streak} DAY streak`).appendTo(div)
+        let h1 = new CreateElement('h2').setText(`${data.target.streak} DAY streak`).appendTo(div)
     }
 
     // new CreateElement('br').appendTo(h1)

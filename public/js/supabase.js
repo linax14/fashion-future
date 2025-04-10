@@ -314,7 +314,7 @@ let getUserData = async (dateInfo, progressType) => {
 
 async function updatePoints(type = null, dataDate) {
     let calendarData = await selectUserTable(window.user, 'user_calendar')
-    let data = await getTarget(dataDate)
+    let data = await calendarDataTarget(dataDate, 'day')
     let target = data.target
     let calendar = data.calendar
 
@@ -339,7 +339,8 @@ async function updatePoints(type = null, dataDate) {
     return { calendarData, target }
 }
 
-let getTarget = async ( dataDate) => {
+let calendarDataTarget = async (dataDate, type) => {
+    //type = 'month'/'day'
     let calendarData = await selectUserTable(window.user, 'user_calendar')
     let target
 
@@ -351,8 +352,12 @@ let getTarget = async ( dataDate) => {
         if (element.year == year) {
             let targetMonth = element.calendar[currentMonth]
             if (targetMonth) {
-                target = targetMonth[day]
-                return { calendar: element.calendar, target }
+                if (type == 'day') {
+                    target = targetMonth[day]
+                    return { calendar: element.calendar, target }
+                } else if (type == 'month') {
+                    return { calendar: element.calendar, targetMonth }
+                }
             }
         }
     }
