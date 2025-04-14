@@ -177,7 +177,7 @@ class SelectOption extends FormField {
 
         if (this.isDropdown) {
             close = new CreateElement('span')
-                .setAttributes({ class: 'close' })
+                .setAttributes({ class: 'toggle btn' })
                 .setText('+')
                 .appendTo(this.wrapper);
         }

@@ -139,7 +139,6 @@ let handleDayClick = async (dayContainer, dataDate, createOutfitDate, outfitsCon
 
 let renderContentSections = () => {
     let outfitsContainer = new CreateElement('section').setAttributes({ class: 'outfits-container' }).appendTo(calendarContainer);
-    new CreateElement('h2').setText('today').appendTo(outfitsContainer)
     let createOutfitDate = renderCreateOutfit(outfitsContainer)
 
     return { createOutfitDate, outfitsContainer };
@@ -149,7 +148,7 @@ let renderCreateOutfit = (outfitsContainer) => {
     let createOutfitDate = null;
     let createOutfit = new CreateElement('div').setAttributes({ class: 'create-outfit' }).appendTo(outfitsContainer);
 
-    new CreateElement('h2').setText('add an outfit').appendTo(createOutfit);
+    new CreateElement('h4').setText('add an outfit').appendTo(createOutfit);
     new CreateElement('img').setAttributes({ src: '../assets/createOutfit.png' }).appendTo(createOutfit);
 
     return createOutfitDate;

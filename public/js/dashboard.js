@@ -172,13 +172,10 @@ async function renderOutfitStreak(createOutfitDate, appendTo) {
     let div = new CreateElement('div').setAttributes({ class: 'outfits-streak' }).appendTo(appendTo)
 
     if (data == null) {
-        let h1 = new CreateElement('p').setText(`Log today's to keep up with your streak`).appendTo(div)
+        new CreateElement('p').setText(`Log today's to keep up with your streak`).appendTo(div)
     } else {
-        let h1 = new CreateElement('h2').setText(`${data.target.streak} DAY streak`).appendTo(div)
+new CreateElement('h2').setText(`${data.target.streak} DAY streak`).appendTo(div)
     }
-
-    // new CreateElement('br').appendTo(h1)
-    // new CreateElement('span').setText('streak').appendTo(h1)
 
     return div
 }

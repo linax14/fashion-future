@@ -504,7 +504,7 @@ async function renderWardrobe() {
             displayInHome('form')
         } else {
             displayInHome('form')
-            // renderclothingForm(clothingFormContainer)
+            renderClothingForm(clothingFormContainer)
         }
     })
 }

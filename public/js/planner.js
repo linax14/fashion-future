@@ -40,7 +40,7 @@ async function renderPreviousOutfits(container) {
     let data = (await outfitManager.getOutfitData()).sort(() => Math.random() - 0.5).slice(0, 2)
     let prevDiv = new CreateElement('div').setAttributes({ class: 'prev-worn-container' }).appendTo(container)
 
-    new CreateElement('h2').setText('Previously worn').appendTo(prevDiv)
+    new CreateElement('h4').setText('Previously worn').appendTo(prevDiv)
     for (const element of data) {
         let outfitContainer = new CreateElement('div').setAttributes({ class: 'outfit', 'data-id': element.outfitId }).appendTo(prevDiv)
         let count = 0
@@ -111,7 +111,7 @@ async function renderClothingDisplay(createOutfitDate, type, outfitId) {
 
     let itemsToAdd = []
 
-    let header = new CreateElement('h2')
+    let header = new CreateElement('h3')
     type == 'addOutfit'
         ? header.setText('Add outfit').appendTo(clothingContainer)
         : header.setText('Edit outfit').appendTo(clothingContainer)
@@ -121,7 +121,7 @@ async function renderClothingDisplay(createOutfitDate, type, outfitId) {
 
     let clothingItemElements = await renderClothingItem(null, clothingList, null, itemsToAdd)
 
-    new CreateElement('h2').setText('Filters')
+    new CreateElement('h4').setText('Filters')
         .addEventListener('click', async () => {
             let filtersSection = document.querySelector('.filters');
 
@@ -130,7 +130,7 @@ async function renderClothingDisplay(createOutfitDate, type, outfitId) {
                     clothingList.innerHTML = '';
                     filteredItems.forEach(e => renderClothingItem(null, clothingList, [e], itemsToAdd));
                     console.log(filteredItems);
-                    setDisplay([addOutfitBtn], 'block');
+                    setDisplay([submitBtn, deleteBtn], 'block');
                     setDisplay([clothingList], 'grid');
                 });
                 filtersSection = document.querySelector('.filters');
@@ -140,12 +140,14 @@ async function renderClothingDisplay(createOutfitDate, type, outfitId) {
 
             setDisplay([clothingList], isExpanded ? 'none' : 'grid');
             setDisplay([filtersSection], isExpanded ? 'block' : 'none');
+            setDisplay([btnContainer], isExpanded ? 'none' : 'block');
         })
         .appendTo(filtersContainer);
 
+    let btnContainer = new CreateElement('div').setAttributes({ class: 'btn-container bottom' }).appendTo(clothingContainer)
     let btns = document.querySelectorAll('.btn').forEach(btn => btn.remove());
-    let submitBtn = new CreateElement('button').setText('Save').setAttributes({ class: 'submit btn' }).appendTo(clothingContainer)
-    let deleteBtn = new CreateElement('button').setText('Delete').setAttributes({ class: 'delete btn' }).appendTo(clothingContainer)
+    let submitBtn = new CreateElement('button').setText('Save').setAttributes({ class: 'submit btn' }).appendTo(btnContainer)
+    let deleteBtn = new CreateElement('button').setText('Delete').setAttributes({ class: 'delete btn' }).appendTo(btnContainer)
 
     switch (type) {
         case 'addOutfit':

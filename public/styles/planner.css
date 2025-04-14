@@ -78,7 +78,7 @@
 }
 
 .day-header {
-    font-weight: bold;
+    /* font-weight: bold; */
     color: var(--font-color);
 }
 
@@ -91,7 +91,6 @@
 }
 
 .outfits-container {
-    background-color: var(--focus-color);
     padding: var(--padding-small);
     border-radius: var(--border-radius-medium);
     flex-direction: column;
@@ -118,11 +117,12 @@
     opacity: 0.8;
 }
 
-.outfits-container .create-outfit h2 {
+.outfits-container .create-outfit h4 {
     text-align: center;
     text-transform: uppercase;
     text-decoration: underline;
     margin-top: 2px;
+    margin-bottom: 0;
 }
 
 .outfit {
@@ -147,7 +147,7 @@
     border: none;
     color: #aaa;
     float: right;
-    font-size: 22px;
+    font-size: 30px;
     font-weight: bold;
 }
 
@@ -158,12 +158,14 @@
     cursor: pointer;
 }
 
-.submit.btn {
+/* .submit.btn {
     position: absolute;
     float: right;
     bottom: 10vh;
     right: 5vw;
-}
+} */
+
+
 
 /* filters */
 .filters-container {
@@ -190,6 +192,14 @@
     float: right;
     font-size: 28px;
     font-weight: bold;
+}
+
+.filters .form-group span label {
+    align-content: center;
+    font-size: var(--font-size-label);
+    font-variant:
+        small-caps;
+    font-weight: var(--font-weight-label);
 }
 
 .open:hover,
@@ -324,14 +334,13 @@
 .prev-worn-container {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    background-color: var(--focus-color);
     padding: var(--padding-small);
     border-radius: var(--border-radius-medium);
     gap: var(--gap-small);
 }
 
 
-.prev-worn-container h2 {
+.prev-worn-container h4 {
     grid-column: span 2;
     text-transform: uppercase;
 }

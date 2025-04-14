@@ -62,6 +62,18 @@
     font-weight: var(--font-weight-label);
 }
 
+.toggle.btn {
+    background-color: transparent !important;
+    border: none;
+    color: #aaa;
+    float: right;
+    font-size: 20px;
+    font-weight: bold;
+    text-align: center;
+    gap: 5px;
+    font-weight: var(--font-weight-label);
+}
+
 .form-group.image {
     /* margin-top: 20px; */
     border-radius: 20px;
@@ -363,6 +375,13 @@ input[type=text] {
     text-underline-offset: 4px;
     color: var(--grey-focus);
     padding: 10px 10px;
+}
+
+.clothing-formContainer .close {
+    position: absolute;
+    float: none;
+    top: 4vh;
+    right: 10px;
 }
 
 .stats-container {
