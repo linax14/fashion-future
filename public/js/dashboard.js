@@ -20,6 +20,29 @@ let getTimePeriod = () => {
     return period
 }
 
+let displayInDashboard = (type) => {
+    let outfitsContainer = document.querySelector('.outfits-streak')
+    let quizContainer = document.querySelector('.quiz-container')
+    let challengesContainer = document.querySelector('.challenges')
+    let unwornItemContainer = document.querySelector('.unworn-container')
+    console.log(outfitsContainer);
+
+    switch (type) {
+        case 'quiz':
+
+            setDisplay([outfitsContainer, challengesContainer, unwornItemContainer], 'none')
+            quizContainer.style.gridColumn = 'span 4'
+            setDisplay([quizContainer], 'block')
+
+            break;
+
+        default:
+            setDisplay([outfitsContainer, challengesContainer, unwornItemContainer, quizContainer], 'block')
+            quizContainer.style.gridColumn = 'span 2'
+            break;
+    }
+}
+
 async function renderDashboard(user) {
     let main = new CreateElement('div').setAttributes({ class: 'dashboard' }).appendTo(document.body)
     let time = getTimePeriod()
@@ -40,11 +63,12 @@ async function renderDashboard(user) {
 
 async function renderQuiz(currentQuiz, challengeDate, container, complete = false, handleQuiz) {
 
+    displayInDashboard('quiz')
     closeBtnX(container, () => {
         let header = document.querySelector('.quiz-container .header')
         console.log(header);
         setDisplay([header], 'grid')
-
+        displayInDashboard()
         console.log(container.children);
         Array.from(container.children).forEach((el, index) => {
             if (index != 0) {
@@ -53,9 +77,6 @@ async function renderQuiz(currentQuiz, challengeDate, container, complete = fals
         })
 
         container.classList.remove('expanded')
-
-        let challenges = document.querySelector('.challenges')
-        setDisplay([challenges], 'grid')
     })
 
     let { data: answersData } = await supabase.from('answers').select()
@@ -174,7 +195,7 @@ async function renderOutfitStreak(createOutfitDate, appendTo) {
     if (data == null) {
         new CreateElement('p').setText(`Log today's to keep up with your streak`).appendTo(div)
     } else {
-new CreateElement('h2').setText(`${data.target.streak} DAY streak`).appendTo(div)
+        new CreateElement('h2').setText(`${data.target.streak} DAY streak`).appendTo(div)
     }
 
     return div
