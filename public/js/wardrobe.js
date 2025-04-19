@@ -4,7 +4,7 @@ document.addEventListener("userInitialized", async () => {
 
     renderHeader()
     // renderWardrobe()
-    renderStats()
+    // renderStats()
 })
 
 new CreateElement('h1').setText('HOME').setAttributes({ class: 'header' }).appendTo(document.body)
@@ -12,7 +12,7 @@ let userInfo = new CreateElement('div').setAttributes({ class: 'header-user' }).
 let wardrobeContainer = new CreateElement('div').setAttributes({ class: 'wardrobe-container' }).appendTo(document.body)
 let wardrobeHeader = new CreateElement('div').setAttributes({ class: 'header' }).appendTo(wardrobeContainer)
 let clothingList = new CreateElement('div').setAttributes({ class: 'clothing-list' }).appendTo(wardrobeContainer)
-let statsContainer = new CreateElement('div').setAttributes({ class: 'stats-container' }).appendTo(document.body)
+let statsSection = new CreateElement('section').setAttributes({ class: 'stats-section' }).appendTo(document.body)
 let clothingFormContainer = new CreateElement('div').setAttributes({ class: 'clothing-formContainer' }).appendTo(document.body)
 
 let clothingManager
@@ -30,17 +30,17 @@ let displayInHome = (type) => {
             wardrobeHeader.innerHTML = ''
             setDisplay([wardrobeContainer, userInfo, wardrobeHeader], 'grid')
             setDisplay([clothingFormContainer], 'none')
-            setDisplay([statsContainer], 'none')
+            setDisplay([statsSection], 'none')
             clothingFormContainer.style.visibility = 'hidden'
-            statsContainer.style.visibility = 'hidden'
+            statsSection.style.visibility = 'hidden'
             break;
 
         case 'stats':
-            statsContainer.innerHTML = ''
+            statsSection.innerHTML = ''
             setDisplay([wardrobeContainer, clothingFormContainer], 'none')
-            setDisplay([statsContainer], 'flex')
+            setDisplay([statsSection], 'flex')
             setDisplay([userInfo, wardrobeHeader], 'grid')
-            statsContainer.style.visibility = 'visible'
+            statsSection.style.visibility = 'visible'
 
         default:
             setDisplay([clothingList, userInfo, wardrobeHeader], 'grid')
@@ -141,14 +141,10 @@ function handleFormSubmit(form, onSubmitCallback, itemId = null) {
 
     form.addEventListener("input", () => isDirty = true)
 
-    let btns = new CreateElement('div').setAttributes({ class: 'btn-container bottom' }).appendTo(form)
-    new CreateElement('button').setAttributes({ class: 'delete btn' }).setText('delete')
-        .appendTo(btns)
     new CreateElement('button').setAttributes({ class: 'submit btn', type: 'submit' }).setText('submit')
-        .appendTo(btns)
+        .appendTo(form)
 
-
-    form.addEventListener("submit", async (event) => {
+    form.addEventListener('submit', async (event) => {
         event.preventDefault()
 
         let formData = new FormData(form)
@@ -185,7 +181,7 @@ function handleFormSubmit(form, onSubmitCallback, itemId = null) {
 }
 
 async function renderClothingForm(clothingFormContainer) {
-
+    clothingFormContainer.innerHTML = ''
     closeBtnX(clothingFormContainer, () => {
         setDisplay([clothingFormContainer], 'none')
         clothingFormContainer.style.visibility = 'hidden'
@@ -234,7 +230,7 @@ async function renderClothingForm(clothingFormContainer) {
         }, aboutFormContainer)
     }
 
-    let aboutForm = handleFormSubmit(clothingFormContainer, aboutFormContainer,
+    let aboutForm = handleFormSubmit(aboutFormContainer,
         async (formValues, imageName) => {
             await clothingManager.addItem({
                 brand: formValues.brand,
@@ -259,7 +255,6 @@ async function renderClothingForm(clothingFormContainer) {
 
 async function renderEditClothingItem(clothingFormContainer, wardrobeContainer, item) {
     displayInHome('form')
-    console.log(item)
 
     let aboutFormContainer = clothingFormContainer.querySelector('#about-form')
     if (!aboutFormContainer) {
@@ -278,7 +273,7 @@ async function renderEditClothingItem(clothingFormContainer, wardrobeContainer, 
         if (!name) return
         let selectInput = container.querySelector(`input[name=${name}]`)
         if (selectInput) selectInput.value = value
-        console.log(name)
+        // console.log(name)
 
         let elements = document.querySelectorAll(`.form-group.${name} .element`)
         elements.forEach(element => {
@@ -353,12 +348,13 @@ async function renderEditClothingItem(clothingFormContainer, wardrobeContainer, 
         updateClothingItem(item.id, aboutFormContainer, clothingFormContainer)
     })
 
-    let deleteBtn = clothingFormContainer.querySelector('.delete')
-    deleteBtn.addEventListener('click', async () => {
-        await clothingManager.deleteItems([item.id])
-        renderWardrobe()
-        displayInHome('wardrobe')
-    })
+    //do not add it inside the form again!!
+    let deleteBtn = new CreateElement('button').setAttributes({ class: 'delete btn' }).setText('delete')
+        .addEventListener('click', async () => {
+            await clothingManager.deleteItems([item.id])
+            renderWardrobe()
+            displayInHome('wardrobe')
+        }).appendTo(clothingFormContainer)
 }
 
 async function updateClothingItem(itemId, formContainer, clothingFormContainer) {
@@ -415,7 +411,7 @@ async function renderWardrobe() {
 
     displayInHome('wardrobe')
 
-    new CreateElement('h2').setText('All items').appendTo(wardrobeHeader)
+    new CreateElement('h2').setText('Clothing items').appendTo(wardrobeHeader)
     let btnContainer = new CreateElement('div').setAttributes({ class: 'btn-container' }).appendTo(wardrobeHeader)
     let deleteButton = new CreateElement('button').setText('Delete').setAttributes({ style: 'display:none', class: 'delete btn' }).appendTo(wardrobeHeader)
     let editWardrobe = new CreateElement('button').setAttributes({ class: 'edit btn' }).appendTo(btnContainer)
@@ -458,17 +454,17 @@ async function renderWardrobe() {
         }
 
         if (filtersDisplay) {
-            let isExpanded = filtersDisplay.classList.toggle('expanded')
 
             if (filterMode) {
                 filtersDisplay.classList.add('expanded');
+                setDisplay([clothingList], 'none')
+
             } else {
                 filtersDisplay.classList.remove('expanded');
-                setDisplay([clothingList], 'grid')
+                setDisplay([clothingList, wardrobeHeader], 'grid')
             }
 
             setDisplay([filtersDisplay], filterMode ? 'block' : 'none')
-            setDisplay([clothingList, wardrobeHeader], isExpanded && filterMode ? 'none' : 'grid')
         }
         editWardrobe.disabled = filterMode
     }
@@ -479,6 +475,8 @@ async function renderWardrobe() {
     deleteButton.addEventListener('click', async () => {
 
         let selectedClothesCheckbox = allClothes.filter(({ checkbox }) => checkbox.checked)
+        console.log(selectedClothesCheckbox);
+
         if (selectedClothesCheckbox.length === 0) {
             alert('No items selected.')
             return
@@ -502,9 +500,6 @@ async function renderWardrobe() {
     navBtn[0].addEventListener('click', () => {
         if (clothingFormContainer.hasChildNodes()) {
             displayInHome('form')
-        } else {
-            displayInHome('form')
-            renderClothingForm(clothingFormContainer)
         }
     })
 }
@@ -534,6 +529,6 @@ let modeBtns = () => {
     new CreateElement('button').setText('Stats').setAttributes({ class: 'btn' })
         .addEventListener('click', () => {
             displayInHome('stats')
-            renderStats()
+            render()
         }).appendTo(container)
 }
