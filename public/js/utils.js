@@ -49,7 +49,7 @@ class FormField {
             .setAttributes({ class: `form-group ${name}` })
             .appendTo(this.container)
 
-        let label = new CreateElement('label')
+        this.label = new CreateElement('label')
             .setAttributes({ for: name }).setText(capitalise(name))
             .appendTo(this.wrapper)
     }
@@ -85,7 +85,7 @@ class CheckboxGroup extends FormField {
                 .appendTo(this.wrapper)
 
             let checkbox = new CreateElement('input')
-                .setAttributes({ type: 'checkbox', name: name, value: option })
+                .setAttributes({ type: 'checkbox', value:option})
                 .addEventListener('change', () => {
 
                     let selectedArray = selected ? selected.split(',') : [];
@@ -179,7 +179,7 @@ class SelectOption extends FormField {
             close = new CreateElement('span')
                 .setAttributes({ class: 'toggle btn' })
                 .setText('+')
-                .appendTo(this.wrapper);
+                .appendTo(this.label);
         }
 
         if (this.isDropdown) {
@@ -228,6 +228,13 @@ class SelectOption extends FormField {
         if (this.isDropdown) {
             this.wrapper.addEventListener('click', (event) => {
                 event.stopPropagation();
+
+                document.querySelectorAll('.dropdown-options.open').forEach(el => {
+                    if (!this.wrapper.contains(el)) {
+                        el.classList.remove('open');
+                    }
+                });
+
                 dropdown.classList.toggle('open');
             });
 
