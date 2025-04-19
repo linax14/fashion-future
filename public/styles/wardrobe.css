@@ -55,6 +55,14 @@
     font-size: var(--font-size-label);
     font-variant: small-caps;
     font-weight: var(--font-weight-label);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.form-group label .btn {
+    padding: 0;
 }
 
 .form-group .close {
@@ -197,6 +205,7 @@
     padding-bottom: 8vh;
     height: 60vh;
     padding-bottom: 8vh;
+    align-content: baseline;
 }
 
 .wardrobe.item-container [type="checkbox"]::before {
@@ -279,6 +288,8 @@
     margin-top: 1vh;
     overflow-y: scroll;
     overflow-x: hidden;
+    align-content: baseline;
+  justify-content: start;
 }
 
 .outfits-container {
@@ -356,7 +367,7 @@ input[type=text] {
 .clothing-formContainer .btn-container.bottom {
     display: flex;
     position: relative;
-    bottom: 8vh;
+    /* bottom: 8vh; */
     justify-content: flex-end;
 }
 
@@ -369,12 +380,18 @@ input[type=text] {
     color: white;
 }
 
-.btn-container.bottom .delete {
+.delete.btn {
     background-color: transparent;
     text-decoration: underline;
     text-underline-offset: 4px;
     color: var(--grey-focus);
     padding: 10px 10px;
+    position: absolute;
+    bottom: 5vh;
+}
+
+.delete.btn:hover{
+    background-color: transparent;
 }
 
 .clothing-formContainer .close {
@@ -382,8 +399,4 @@ input[type=text] {
     float: none;
     top: 4vh;
     right: 10px;
-}
-
-.stats-container {
-    display: flex;
 }
