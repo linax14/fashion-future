@@ -29,10 +29,10 @@ async function renderOutfits(dataDate, outfitsContainer) {
                 };
             }))
 
-
         outfitImagesDisplay(outfitContainer, count)
-        await updateWearCount(element);
+        // await updateWearCount(element);
     }
+
     return true
 }
 
@@ -76,20 +76,7 @@ function outfitImagesDisplay(outfitContainer, count) {
     }
 }
 
-async function updateWearCount(element) {
-    let itemWearMap = new Map();
-
-    if (element.clothingItems) {
-        for (let item of element.clothingItems) {
-            if (!itemWearMap.has(item.id)) {
-                itemWearMap.set(item.id, new Set());
-            }
-
-            for (date of element.wornDates) {
-                itemWearMap.get(item.id).add(date);
-            }
-        }
-    }
+async function updateWearCount(itemWearMap) {
 
     for (let [itemId, dates] of itemWearMap.entries()) {
         let wearCount = dates.size;
@@ -102,6 +89,8 @@ async function updateWearCount(element) {
             console.error(error);
         }
     }
+
+    return itemWearMap
 }
 
 async function renderClothingDisplay(createOutfitDate, type, outfitId) {
@@ -240,8 +229,8 @@ let editMode = async (outfitId, clothingItemElements, itemsToAdd, submitBtn, del
         let data = await outfitManager.getOutfitItems([id])
         let existingIds = new Set(Object.values(data)[0]);
         let newItems = [...new Set(itemsToAdd)].filter(item => !existingIds.has(item));
-        if (newItems.length > 0) await outfitItems.addItems(id, newItems)
 
+        if (newItems.length > 0) await outfitItems.addItems(id, newItems)
         if (itemsToRemove.length > 0) await outfitItems.removeItems(id, itemsToRemove)
 
         renderCalendarDisplay();
@@ -264,12 +253,14 @@ let editMode = async (outfitId, clothingItemElements, itemsToAdd, submitBtn, del
     return itemsToAdd;
 }
 
+let itemWearMap = new Map()
+
 let addMode = async (itemsToAdd, createOutfitDate, submitBtn) => {
     submitBtn.addEventListener('click', async (event) => {
         event.preventDefault()
         console.log(itemsToAdd);
 
-        if (itemsToAdd.length < 0) {
+        if (itemsToAdd.length <= 0) {
             alert('Please select at least one item')
             return
         }
@@ -280,6 +271,26 @@ let addMode = async (itemsToAdd, createOutfitDate, submitBtn) => {
             await outfitManager.updateOutfit(outfitId, createOutfitDate)
             await updatePoints('style', createOutfitDate)
         }
+
+        let data = await outfitManager.getOutfitData()
+
+
+        for (let outfit of data) {
+
+            if (outfit.worn && outfit.wornDates && outfit.clothingItems) {
+                for (let date of outfit.wornDates) {
+                    for (let item of outfit.clothingItems) {
+                        if (!itemWearMap.has(item.id)) {
+                            itemWearMap.set(item.id, new Set());
+                        }
+                        itemWearMap.get(item.id).add(date);
+                    }
+                }
+            }
+        }
+
+        let count = await updateWearCount(itemWearMap);
+        console.log(count);
 
         itemsToAdd = []
 
