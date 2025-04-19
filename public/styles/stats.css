@@ -1,0 +1,29 @@
+
+.bubble-chart {
+    display: block ruby;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.stats-section {
+    display: flex;
+    flex-direction: column;
+    overflow-y: scroll;
+    gap: var(--gap-big);
+}
+
+.stats-container {
+    display: flex;
+    align-items: center;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
+    overflow-x: scroll;
+    width: 100%;
+    white-space:
+        nowrap;
+    gap: var(--gap-big);
+}
+
+.stats-container div {
+    padding: 10px;
+}
