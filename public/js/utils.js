@@ -360,9 +360,10 @@ function renderNavigation() {
 
     let elements = {
         dashboard: { type: 'li', link: { type: 'a', href: 'dashboard.html', text: 'dashboard' } },
-        addOutfit: { type: 'li', link: { type: 'button', text: '+' } },
         planner: { type: 'li', link: { type: 'a', href: 'planner.html', text: 'planner' } },
-        wardrobe: { type: 'li', link: { type: 'a', href: 'wardrobe.html', text: 'wardrobe' } }
+        addOutfit: { type: 'li', link: { type: 'button', text: '+' } },
+        wardrobe: { type: 'li', link: { type: 'a', href: 'wardrobe.html', text: 'wardrobe' } },
+        stats: { type: 'li', link: { type: 'a', href: 'stats.html', text: 'stats' } },
     }
 
     Object.entries(elements).forEach(([key, value]) => {

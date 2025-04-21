@@ -274,12 +274,13 @@
     max-width: min-content;
 }
 
-.unworn-container{
+.unworn-container {
     grid-column: span 3;
     background-color: var(--focus-color);
     padding: var(--padding-small);
     border-radius: var(--border-radius-medium);
 }
+
 .clothes {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -291,4 +292,25 @@
 
 .cards h2 span {
     font-size: 14px;
+}
+
+
+.header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--gap-big);
+    margin-bottom: 20px;
+}
+
+.header .icon {
+    background-color: var(--focus-color);
+    height: 30px;
+    width: 30px;
+    grid-row: span 3;
+    border-radius: 50%;
+}
+
+.header h3 {
+    margin: 0;
 }

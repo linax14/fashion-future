@@ -44,11 +44,14 @@ let displayInDashboard = (type) => {
 }
 
 async function renderDashboard(user) {
+    let mainHeader = new CreateElement('h2').setText(`Today's focus`).appendTo(document.body)
+
     let main = new CreateElement('div').setAttributes({ class: 'dashboard' }).appendTo(document.body)
     let time = getTimePeriod()
 
-    let header = new CreateElement('div').appendTo(main)
-    let welcomeMsg = new CreateElement('h1').setText(`Good ${time} ${user.user_metadata.first_name}`).appendTo(header)
+    let header = new CreateElement('div').setAttributes({ class: 'header' }).appendTo(main)
+    new CreateElement('div').setAttributes({ class: 'icon' }).appendTo(header)
+    let welcomeMsg = new CreateElement('h3').setText(`Good ${time} ${user.user_metadata.first_name}`).appendTo(header)
 
     //from global.js
     let day = date.getDate()

@@ -45,11 +45,11 @@ async function renderCalendarDisplay() {
 
 let calendarHeader = () => {
     let main = new CreateElement('div').setAttributes({ class: 'calendar-info' }).appendTo(calendarContainer)
-    new CreateElement('h1').setAttributes({ class: 'calendar header' }).setText(`PLANNING ${year}`).appendTo(main)
+    new CreateElement('h2').setAttributes({ class: 'calendar header' }).setText(`Your planner for ${year}`).appendTo(main)
     let monthHeader = new CreateElement('div').setAttributes({ class: 'month header' }).appendTo(main)
 
     months.forEach((element, index) => {
-        new CreateElement('h2')
+        new CreateElement('h3')
             .setAttributes({ class: index === month ? 'item current' : 'item' })
             .addEventListener('click', () => {
                 month = index

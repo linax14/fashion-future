@@ -240,12 +240,17 @@
     height: fit-content;
 }
 
-.header h2,
+.header {
+    margin-top: 16px;
+    border-bottom: 1px solid var(--secondary-color);
+}
+
+.header h3,
 .header div {
     margin-bottom: 0px;
 }
 
-.header h2 {
+.header h3 {
     grid-column: span 2;
 }
 
@@ -289,7 +294,7 @@
     overflow-y: scroll;
     overflow-x: hidden;
     align-content: baseline;
-  justify-content: start;
+    justify-content: start;
 }
 
 .outfits-container {
@@ -315,43 +320,6 @@ input[type=password],
 input[type=text] {
     box-shadow: 1px 1px 2px var(--secondary-color), -1px -1px 2px var(--focus-color);
     background-color: var(--background-color);
-}
-
-.header-user {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: auto;
-    align-items: center;
-    align-content: center;
-}
-
-.header-user .btn-container {
-    border-top: 1px solid var(--secondary-color);
-    padding-bottom: var(--margin-big);
-    grid-column: span 2;
-}
-
-.header-user .btn-container .btn {
-    width: 100%;
-    background-color: transparent;
-    border-bottom: 1px solid var(--secondary-color);
-    border-radius: 0px;
-}
-
-.header-user .info {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: start;
-    gap: 4px;
-}
-
-.header-user .icon {
-    background-color: var(--focus-color);
-    height: 100px;
-    width: 100px;
-    grid-row: span 3;
-    border-radius: var(--border-radius-medium);
 }
 
 .mini.modal .close.btn {
@@ -390,7 +358,7 @@ input[type=text] {
     bottom: 5vh;
 }
 
-.delete.btn:hover{
+.delete.btn:hover {
     background-color: transparent;
 }
 
