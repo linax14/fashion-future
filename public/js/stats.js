@@ -3,8 +3,9 @@ document.addEventListener("userInitialized", async () => {
     render()
 })
 
+let closetOverview = new CreateElement('section').setAttributes({ class: 'overview-section' }).appendTo(document.body)
+
 async function render() {
-    displayInHome('stats')
 
     //points
     let data = await getPointsData()
@@ -12,23 +13,25 @@ async function render() {
 
     //stats
     //brand category colour season occasion origin
-    let stats1 = new CreateElement('div').setAttributes({ class: 'stats-container' }).appendTo(statsSection)
-    let stats2 = new CreateElement('div').setAttributes({ class: 'stats-container' }).appendTo(statsSection)
+    let mainHeader = new CreateElement('h2').setText('Your stats').appendTo(closetOverview)
+    let header1 = new CreateElement('h3').setText('General Wardrobe Stats').appendTo(closetOverview)
+    let stats1 = new CreateElement('div').setAttributes({ class: 'stats-container' }).appendTo(closetOverview)
+    let header2 = new CreateElement('h3').setText('Wear Stats').appendTo(closetOverview)
+    let stats2 = new CreateElement('div').setAttributes({ class: 'stats-container' }).appendTo(closetOverview)
 
-    createChart('doughnut', withWear = false, 'brand', undefined, stats1)
-    createChart('bar', withWear = false, 'category', undefined, stats1)
-    createChart('doughnut', withWear = false, 'season', seasonColours, stats1)
-    createChart('doughnut', withWear = false, 'colour', clothingColours, stats1)
-    createChart('bar', withWear = false, 'origin', undefined, stats1)
-    createChart('doughnut', withWear = false, 'occasion', undefined, stats1)
+    await chartInfo('doughnut', withWear = false, 'brand', undefined, stats1)
+    await chartInfo('bar', withWear = false, 'category', undefined, stats1)
+    await chartInfo('doughnut', withWear = false, 'season', seasonColours, stats1)
+    await chartInfo('doughnut', withWear = false, 'colour', clothingColours, stats1)
+    await chartInfo('bar', withWear = false, 'origin', undefined, stats1)
+    await chartInfo('doughnut', withWear = false, 'occasion', undefined, stats1)
 
-    createChart('doughnut', withWear = true, 'brand', undefined, stats2)
-    createChart('bar', withWear = true, 'category', undefined, stats2)
-    createChart('doughnut', withWear = true, 'season', seasonColours, stats2)
-    createChart('doughnut', withWear = true, 'colour', clothingColours, stats2)
-    createChart('bar', withWear = true, 'origin', undefined, stats2)
-    createChart('doughnut', withWear = true, 'occasion', undefined, stats2)
-
+    await chartInfo('doughnut', withWear = true, 'brand', undefined, stats2)
+    await chartInfo('bar', withWear = true, 'category', undefined, stats2)
+    await chartInfo('doughnut', withWear = true, 'season', seasonColours, stats2)
+    await chartInfo('doughnut', withWear = true, 'colour', clothingColours, stats2)
+    await chartInfo('bar', withWear = true, 'origin', undefined, stats2)
+    await chartInfo('doughnut', withWear = true, 'occasion', undefined, stats2)
 }
 
 class Points {
@@ -175,7 +178,7 @@ async function createChart(chartType, withWear = false, clothingDataType, dataCo
         console.log('no data');
         return
     }
-    
+
     data = Object.fromEntries([...Object.entries(data)].sort((a, b) => b[1] - a[1]).slice(0, 5))
 
     let labels = Object.keys(data).map(d => capitalise(d));
@@ -198,16 +201,10 @@ async function createChart(chartType, withWear = false, clothingDataType, dataCo
         borderColors = options.map(op => `rgb(${getRGB(op)})`)
     }
 
-    let container = new CreateElement('div').setAttributes({ class: 'chart-container', id: `${clothingDataType}-chart` }).appendTo(appendTo)
+    let container = new CreateElement('div').setAttributes({ class: 'chart-container', id: `${clothingDataType}-chart`, 'data-wear': withWear, 'data-chart-type': chartType }).appendTo(appendTo)
     let ctx = new CreateElement('canvas').appendTo(container)
 
-    if (chartType == 'bar') {
-        ctx.style.width = '60vw'
-        ctx.style.height = '50vh !important'
-    } else {
-        ctx.style.width = '50vw'
-        ctx.style.height = '50vh !important'
-    }
+    ctx.classList.add('chart-canvas', chartType === 'bar' ? 'bar-chart' : 'doughnut-chart');
 
     const config = {
         type: chartType,
@@ -220,14 +217,14 @@ async function createChart(chartType, withWear = false, clothingDataType, dataCo
             }]
         },
         options: {
-            indexAxis: chartType == 'bar' ? 'y' : undefined,
+            indexAxis: chartType == 'bar' ? 'x' : undefined,
             responsive: true,
             plugins: {
                 legend: {
                     display: false,
                 },
                 title: {
-                    display: true,
+                    display: false,
                     text: `${capitalise(clothingDataType)}`
                 }
             },
@@ -244,13 +241,154 @@ async function createChart(chartType, withWear = false, clothingDataType, dataCo
                     y: {
                         grid: {
                             display: false
+                        }, ticks: {
+                            stepSize: 1
                         }
                     }
                 }
             })
         },
     };
+
     new Chart(ctx, config)
+    let span = new CreateElement('span').appendTo(container)
+    new CreateElement('i').setAttributes({ class: "fa-solid fa-rotate" }).appendTo(span)
 
     return data
+}
+
+async function chartInfo(chartType, withWear = false, clothingDataType, dataColours = undefined, appendTo) {
+    let data = await createChart(chartType, withWear, clothingDataType, dataColours, appendTo)
+    if (!data) return
+
+    let chart = document.querySelector(`#${clothingDataType}-chart[data-wear="${withWear}"]`)
+    chart.classList.remove('expanded');
+    setDisplay([chart], 'none');
+
+    let cardId = `${clothingDataType}-${withWear ? 'withWear' : 'noWear'}-card`;
+    chart.setAttribute('data-card-id', cardId);
+    let card = new CreateElement('div').setAttributes({ class: 'chart-card', id: cardId }).appendTo(appendTo)
+
+    new CreateElement('h4').setText(clothingDataType).appendTo(card)
+    let info = new CreateElement('p').setText().appendTo(card)
+    let span = new CreateElement('span').appendTo(card)
+    new CreateElement('i').setAttributes({ class: "fa-solid fa-rotate" }).appendTo(span)
+
+    let canvas = chart.querySelector('canvas');
+    canvas.addEventListener('click', (e) => e.stopPropagation());
+
+    chart.addEventListener('click', () => {
+        chart.classList.remove('expanded');
+        setDisplay([chart], 'none');
+        setDisplay([card], 'flex');
+    });
+
+    card.addEventListener('click', () => {
+        document.querySelectorAll('.chart-container.expanded').forEach(openChart => {
+            openChart.classList.remove('expanded');
+            setDisplay([openChart], 'none');
+
+            let cardId = openChart.getAttribute('data-card-id');
+            let originalCard = document.querySelector('#cardId');
+            if (originalCard && originalCard != card) {
+                setDisplay([originalCard], 'flex');
+            }
+        });
+
+        chart.classList.add('expanded');
+        setDisplay([chart], 'flex');
+        setDisplay([card], 'none');
+
+        chart.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    let count = [...Object.entries(data)]
+
+    let mostWorn = count[0]
+    let [topItem, topCount] = mostWorn
+    topItem = capitalise(topItem)
+
+    let dataKeys = formatWithAnd(Object.keys(data).map(key => capitalise(key)))
+
+    function formatWithAnd(arr) {
+        if (arr.length == 1) return arr[0];
+        if (arr.length == 2) return `${arr[0]} and ${arr[1]}`;
+        return `${arr.slice(0, -1).join(', ')}, and ${arr[arr.length - 1]}`;
+    }
+
+    switch (withWear) {
+        case true:
+            if (count.length > 1) {
+                switch (clothingDataType) {
+                    case 'category':
+                        info.innerHTML = `Your most worn categories are ${dataKeys}`;
+                        break;
+                    case 'brand':
+                        info.innerHTML = `You've been repping ${dataKeys} the most`;
+                        break;
+                    case 'colour':
+                        info.innerHTML = `You've worn ${dataKeys} tones more than any others. You wore ${topItem} tones ${topCount} times — your fave shade?`;
+                        break;
+                    case 'season':
+                        info.innerHTML = `You've been dressing mostly for ${dataKeys} weather. You have worn ${topItem} items ${topCount} times!`;
+                        break;
+                    case 'occasion':
+                        info.innerHTML = `Your outfits are mostly worn for ${dataKeys}`;
+                        break;
+                    case 'origin':
+                        info.innerHTML = `You've been favoring clothes from ${dataKeys}`;
+                        break;
+                    default:
+                        info.innerHTML = `Your top ${count.length} most worn ${clothingDataType}s are ${dataKeys}`;
+                }
+            } else {
+                switch (clothingDataType) {
+                    case 'season':
+                        info.innerHTML = `You've only worn clothes suited for ${dataKeys}. You have worn them ${topCount} times!`;
+                        break;
+                    case 'brand':
+                        info.innerHTML = `You mostly wear ${dataKeys}`;
+                        break;
+                    default:
+                        info.innerHTML = `Your most worn ${clothingDataType} is ${dataKeys}`;
+                }
+            }
+            break;
+
+        default:
+            if (count.length > 1) {
+                switch (clothingDataType) {
+                    case 'category':
+                        info.innerHTML = `Your closet includes a variety of categories: ${dataKeys}`;
+                        break;
+                    case 'brand':
+                        info.innerHTML = `Your wardrobe spans ${dataKeys}`;
+                        break;
+                    case 'colour':
+                        info.innerHTML = `Your clothes come in ${dataKeys} shades`;
+                        break;
+                    case 'season':
+                        info.innerHTML = `Your wardrobe is ready for ${dataKeys} seasons`;
+                        break;
+                    case 'occasion':
+                        info.innerHTML = `You're covered for all sorts of events: ${dataKeys}`;
+                        break;
+                    case 'origin':
+                        info.innerHTML = `Your clothes come from ${dataKeys}`;
+                        break;
+                    default:
+                        info.innerHTML = `Your top ${count.length} ${clothingDataType}s are ${dataKeys}`;
+                }
+            } else {
+                switch (clothingDataType) {
+                    case 'season':
+                        info.innerHTML = `All your clothes are perfect for ${dataKeys}`;
+                        break;
+                    default:
+                        info.innerHTML = `The only ${clothingDataType} in your closet is ${dataKeys}`;
+                }
+            }
+            break;
+    }
+
 }

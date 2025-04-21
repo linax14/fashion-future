@@ -2,17 +2,13 @@ document.addEventListener("userInitialized", async () => {
     //console.log("user", window.user)
     clothingManager = new WardrobeManager(window.user)
 
-    renderHeader()
-    // renderWardrobe()
-    // renderStats()
+    renderWardrobe()
 })
 
-new CreateElement('h1').setText('HOME').setAttributes({ class: 'header' }).appendTo(document.body)
-let userInfo = new CreateElement('div').setAttributes({ class: 'header-user' }).appendTo(document.body)
-let wardrobeContainer = new CreateElement('div').setAttributes({ class: 'wardrobe-container' }).appendTo(document.body)
-let wardrobeHeader = new CreateElement('div').setAttributes({ class: 'header' }).appendTo(wardrobeContainer)
-let clothingList = new CreateElement('div').setAttributes({ class: 'clothing-list' }).appendTo(wardrobeContainer)
-let statsSection = new CreateElement('section').setAttributes({ class: 'stats-section' }).appendTo(document.body)
+let wardrobeSection = new CreateElement('div').setAttributes({ class: 'wardrobe-container' }).appendTo(document.body)
+new CreateElement('h2').setText('Your wardrobe').appendTo(wardrobeSection)
+let wardrobeHeader = new CreateElement('div').setAttributes({ class: 'header' }).appendTo(wardrobeSection)
+let clothingList = new CreateElement('div').setAttributes({ class: 'clothing-list' }).appendTo(wardrobeSection)
 let clothingFormContainer = new CreateElement('div').setAttributes({ class: 'clothing-formContainer' }).appendTo(document.body)
 
 let clothingManager
@@ -22,28 +18,19 @@ let displayInHome = (type) => {
         case 'form':
             setDisplay([clothingFormContainer], 'block')
             clothingFormContainer.style.visibility = 'visible'
-            setDisplay([wardrobeContainer, wardrobeHeader, userInfo], 'none')
+            setDisplay([wardrobeSection, wardrobeHeader], 'none')
             break;
 
         case 'wardrobe':
             clothingList.innerHTML = ''
             wardrobeHeader.innerHTML = ''
-            setDisplay([wardrobeContainer, userInfo, wardrobeHeader], 'grid')
+            setDisplay([wardrobeSection, wardrobeHeader], 'grid')
             setDisplay([clothingFormContainer], 'none')
-            setDisplay([statsSection], 'none')
             clothingFormContainer.style.visibility = 'hidden'
-            statsSection.style.visibility = 'hidden'
             break;
 
-        case 'stats':
-            statsSection.innerHTML = ''
-            setDisplay([wardrobeContainer, clothingFormContainer], 'none')
-            setDisplay([statsSection], 'flex')
-            setDisplay([userInfo, wardrobeHeader], 'grid')
-            statsSection.style.visibility = 'visible'
-
         default:
-            setDisplay([clothingList, userInfo, wardrobeHeader], 'grid')
+            setDisplay([clothingList, wardrobeHeader], 'grid')
             setDisplay([clothingFormContainer], 'none')
             break;
     }
@@ -186,7 +173,7 @@ async function renderClothingForm(clothingFormContainer) {
         setDisplay([clothingFormContainer], 'none')
         clothingFormContainer.style.visibility = 'hidden'
         renderWardrobe()
-        setDisplay([clothingList, wardrobeHeader, userInfo], 'grid')
+        setDisplay([clothingList, wardrobeHeader], 'grid')
     })
 
     let btnContainer = new CreateElement('div').setAttributes({ class: 'btn-container' }).appendTo(clothingFormContainer)
@@ -411,7 +398,7 @@ async function renderWardrobe() {
 
     displayInHome('wardrobe')
 
-    new CreateElement('h2').setText('Clothing items').appendTo(wardrobeHeader)
+    new CreateElement('h3').setText('Clothing items').appendTo(wardrobeHeader)
     let btnContainer = new CreateElement('div').setAttributes({ class: 'btn-container' }).appendTo(wardrobeHeader)
     let deleteButton = new CreateElement('button').setText('Delete').setAttributes({ style: 'display:none', class: 'delete btn' }).appendTo(wardrobeHeader)
     let editWardrobe = new CreateElement('button').setAttributes({ class: 'edit btn' }).appendTo(btnContainer)
@@ -504,31 +491,3 @@ async function renderWardrobe() {
     })
 }
 
-async function renderHeader() {
-    new CreateElement('div').setAttributes({ class: 'icon' }).appendTo(userInfo)
-    let info = new CreateElement('ul').setAttributes({ class: 'info' }).appendTo(userInfo)
-    new CreateElement('li').setText(`${window.user.user_metadata.first_name} ${window.user.user_metadata.last_name}`)
-        .appendTo(info)
-    new CreateElement('li').setText('personality').appendTo(info)
-
-    const clothingItems = await clothingManager.getAllClothes()
-
-    let clothingItemsTotal = clothingItems.length
-    new CreateElement('li').setText(`${clothingItemsTotal} items in wardrobe`).appendTo(info)
-
-    modeBtns()
-}
-
-let modeBtns = () => {
-    let container = new CreateElement('div').setAttributes({ class: 'btn-container' }).appendTo(userInfo)
-    new CreateElement('button').setText('Wardrobe').setAttributes({ class: 'btn' })
-        .addEventListener('click', () => {
-            displayInHome('wardrobe')
-            renderWardrobe()
-        }).appendTo(container)
-    new CreateElement('button').setText('Stats').setAttributes({ class: 'btn' })
-        .addEventListener('click', () => {
-            displayInHome('stats')
-            render()
-        }).appendTo(container)
-}

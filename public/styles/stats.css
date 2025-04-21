@@ -1,15 +1,14 @@
-
-.bubble-chart {
-    display: block ruby;
-    flex-direction: column;
-    justify-content: center;
-}
-
-.stats-section {
+.overview-section {
     display: flex;
     flex-direction: column;
     overflow-y: scroll;
     gap: var(--gap-big);
+    margin-bottom: 30px;
+}
+
+.overview-section h3 {
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--secondary-color);
 }
 
 .stats-container {
@@ -19,11 +18,73 @@
     overscroll-behavior-x: contain;
     overflow-x: scroll;
     width: 100%;
-    white-space:
-        nowrap;
-    gap: var(--gap-big);
+    justify-content: space-evenly;
+    gap: 1vh;
+    padding-bottom: 10px;
 }
 
-.stats-container div {
-    padding: 10px;
+.chart-canvas {
+    height: 20vh !important;
+    max-height: 30vh !important;
+    width: 74vw !important;
+    object-fit: contain;
 }
+
+.bar-chart {
+    height: 60vh !important;
+    width: 60vw;
+}
+
+.doughnut-chart {
+    height: 60vh !important;
+    width: 60vw !important;
+    margin: 20px;
+}
+
+.chart-container,
+.chart-card {
+    display: flex;
+    flex-direction: column;
+    width: 100% !important;
+    padding: var(--padding-main);
+    border: 1px solid var(--secondary-color);
+    border-radius: var(--border-radius-medium);
+    position: relative;
+    justify-content: center;
+    transition: all 2s ease-in-out;
+    min-height: 32vh;
+
+}
+
+.chart-container.expanded {
+    width: 76vw;
+    height: 32vh;
+}
+
+.chart-card {
+    min-width: 40vw;
+    min-height: 24vh;
+    height: 24vh;
+    justify-content: start;
+}
+
+.chart-container {
+    align-items: center;
+}
+
+.chart-card h4 {
+    text-transform: capitalize;
+}
+
+.chart-card p {
+    width: 90%;
+}
+
+.chart-container span,
+.chart-card span {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    opacity: 0.8;
+}
+
