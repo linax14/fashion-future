@@ -23,10 +23,8 @@ async function renderOutfits(dataDate, outfitsContainer) {
         let count = 0
         await Promise.all(
             element.clothingItems.map(async (item) => {
-                if (item.image) {
-                    count++
-                    await getImage(item, outfitContainer, renderImage)
-                };
+                count++
+                await getImage(item, outfitContainer, renderImage)
             }))
 
         outfitImagesDisplay(outfitContainer, count)
@@ -46,10 +44,8 @@ async function renderPreviousOutfits(container) {
         let count = 0
         await Promise.all(
             element.clothingItems.map(async (item) => {
-                if (item.image) {
-                    count++
-                    let img = await getImage(item, outfitContainer, renderImage)
-                }
+                count++
+                await getImage(item, outfitContainer, renderImage)
             })
         )
 

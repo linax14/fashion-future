@@ -289,7 +289,7 @@ async function chartInfo(chartType, withWear = false, clothingDataType, dataColo
             setDisplay([openChart], 'none');
 
             let cardId = openChart.getAttribute('data-card-id');
-            let originalCard = document.querySelector('#cardId');
+            let originalCard = document.getElementById(cardId);
             if (originalCard && originalCard != card) {
                 setDisplay([originalCard], 'flex');
             }

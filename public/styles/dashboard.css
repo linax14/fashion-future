@@ -314,3 +314,18 @@
 .header h3 {
     margin: 0;
 }
+
+.sustainability-tips.container {
+    display: flex;
+    flex-direction: column;
+    grid-column: span 2;
+    background-color: var(--focus-color);
+    border-radius: 10px;
+    padding: var(--padding-main);
+    justify-content: center;
+}
+
+.sustainability-tips.container h3{
+    margin-bottom: 0;
+    margin-top: 0;
+}

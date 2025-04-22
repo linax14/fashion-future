@@ -56,12 +56,15 @@ async function renderDashboard(user) {
     //from global.js
     let day = date.getDate()
     let today = `${year}-${month + 1}-${day}`
+    // let today = `${year}-${month + 1}-24`
     // console.log(today);
 
     await renderOutfitStreak(today, main)
     await getDaily(window.user, today, 'quiz', main)
     await getDaily(window.user, today, 'challenge', main)
     await renderNotRecentlyWorn(today, main)
+
+    await dailyTips(window.user, today, main)
 }
 
 async function renderQuiz(currentQuiz, challengeDate, container, complete = false, handleQuiz) {
@@ -207,6 +210,7 @@ async function renderOutfitStreak(createOutfitDate, appendTo) {
 async function getUnwornItems(dateInfo) {
     let data = await outfitManager.getOutfitData()
     data = data.filter(item => item.worn == true)
+
     let itemWearMap = new Map()
     let unwornItems = []
 
@@ -236,6 +240,7 @@ async function getUnwornItems(dateInfo) {
             }
         }
     }
+
     return unwornItems
 }
 
@@ -248,5 +253,58 @@ async function renderNotRecentlyWorn(dateInfo, container) {
     let h2 = new CreateElement('h2').setText(`Did you forget about us?`).appendTo(cards)
     new CreateElement('br').appendTo(h2)
     new CreateElement('span').setText(`Let's make a new outfit`).appendTo(h2)
-    await renderClothingItem(null, clothes, data.slice(0, 2))
+
+    let render = await renderClothingItem(null, clothes, data.slice(0, 2))
+
+    if (render.length == 0) {
+        unworn.style.display = 'none'
+    }
+}
+
+async function dailyTips(user, dateInfo, appendTo) {
+
+    let calendarData = await selectUserTable(window.user, 'user_calendar')
+    let [year, month, day] = dateInfo.split('-')
+    let currentMonth = months[month - 1].toLowerCase()
+
+    let { data, error } = await supabase.from('tips').select()
+    if (error) { console.error(error) }
+
+    let shownTips = new Set()
+    let availableTips = data.filter(tip => !shownTips.has(tip.id))
+    let usableTips = availableTips.length > 0 ? availableTips : data
+
+    for (const element of calendarData) {
+        if (element.year == year) {
+
+            for (let [months, days] of Object.entries(element.calendar)) {
+                for (let [daysNum, dayData] of Object.entries(days)) {
+                    if (dayData?.tip?.id) { shownTips.add(dayData?.tip?.id) }
+                }
+
+            }
+        }
+    }
+
+    for (const element of calendarData) {
+        if (element.year == year) {
+            let targetMonth = element.calendar[currentMonth]
+
+            if (targetMonth) {
+                let target = targetMonth[day]
+                if (!target.tip) {
+
+                    let getRandom = usableTips[Math.floor(Math.random() * usableTips.length)]
+                    target.tip = getRandom
+                    await updateUserTable(window.user, 'user_calendar', { calendar: element.calendar });
+
+                }
+
+                let div = new CreateElement('div').setAttributes({ class: 'sustainability-tips container' }).appendTo(appendTo)
+                new CreateElement('h3').setText(target.tip.main).appendTo(div)
+                new CreateElement('p').setText(target.tip.details).appendTo(div)
+
+            }
+        }
+    }
 }
