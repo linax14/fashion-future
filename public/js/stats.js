@@ -122,7 +122,7 @@ async function wardrobeItems(withWear = false) {
 
             let values = multiValues.includes(key)
                 ? value.split(',').map(v => v.trim().toLowerCase())
-                : [value.toLowerCase()];
+                : [value];
 
             obj[key] = obj[key] || {};
 

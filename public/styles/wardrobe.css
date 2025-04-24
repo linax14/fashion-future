@@ -46,7 +46,7 @@
 }
 
 
-.form-container.hidden {
+.form-part.hidden {
     display: none;
 }
 
@@ -59,6 +59,11 @@
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
+}
+
+.form-group {
+    margin-top: var(--margin-big);
+    margin-bottom: var(--margin-big);
 }
 
 .form-group label .btn {
@@ -157,13 +162,18 @@
 
 .form-group.colour {
     display: grid;
-    grid-template-columns: repeat(10, 1fr);
+    grid-template-columns: repeat(13, 1fr);
     gap: var(--gap-small);
-    margin-bottom: var(--margin-big);
+    justify-content: space-evenly;
+    align-content: space-evenly;
 }
 
 .form-group.colour>:first-child {
-    grid-column: span 10;
+    grid-column: span 13;
+}
+
+.form-group.colour .element[name="white"] .color.btn.selected::after {
+    color: rgb(61, 61, 61);
 }
 
 .form-group.season {
@@ -203,7 +213,7 @@
 
 .wardrobe-container {
     padding-bottom: 8vh;
-    height: 60vh;
+    height: auto;
     padding-bottom: 8vh;
     align-content: baseline;
 }
@@ -231,6 +241,50 @@
 
 .form-container:last-child {
     padding-bottom: 7vh;
+}
+
+.form-group.wash,
+.form-group.bleaching,
+.form-group.tumble.drying,
+.form-group.natural.drying,
+.form-group.iron {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: auto;
+}
+
+.form-group.wash>:first-child,
+.form-group.bleaching>:first-child,
+.form-group.tumble.drying>:first-child,
+.form-group.natural.drying>:first-child,
+.form-group.iron>:first-child {
+    grid-column: span 8;
+}
+
+.form-group.wash>:not(:first-child),
+.form-group.bleaching>:not(:first-child),
+.form-group.tumble.drying>:not(:first-child),
+.form-group.natural.drying>:not(:first-child),
+.form-group.iron>:not(:first-child) {
+    grid-column: span 1;
+}
+
+.form-group.wash .element img.care-label,
+.form-group.bleaching .element img.care-label,
+.form-group.tumble.drying .element img.care-label,
+.form-group.natural.drying .element img.care-label,
+.form-group.iron .element img.care-label {
+    width: 40px;
+    height: auto;
+    filter: invert();
+}
+
+.form-group.wash .element.selected img.care-label,
+.form-group.bleaching .element.selected img.care-label,
+.form-group.tumble.drying .element.selected img.care-label,
+.form-group.natural.drying .element.selected img.care-label,
+.form-group.iron .element.selected img.care-label {
+    border-bottom: 1px solid var(--secondary-color);
 }
 
 .header {

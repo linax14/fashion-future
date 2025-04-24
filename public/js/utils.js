@@ -85,7 +85,7 @@ class CheckboxGroup extends FormField {
                 .appendTo(this.wrapper)
 
             let checkbox = new CreateElement('input')
-                .setAttributes({ type: 'checkbox', value:option})
+                .setAttributes({ type: 'checkbox', value: option })
                 .addEventListener('change', () => {
 
                     let selectedArray = selected ? selected.split(',') : [];
@@ -288,15 +288,15 @@ class SelectColours extends FormField {
     }
 }
 
-class SelectMultiple extends FormField {
+class Colours extends FormField {
     constructor(name, config, container) {
         super(name, config, container)
 
-        let hiddenInput = new CreateElement('input')
+        this.hiddenInput = new CreateElement('input')
             .setAttributes({ type: 'hidden', name: name })
             .appendTo(this.wrapper)
 
-        let selected = []
+        this.selected = []
 
         Object.entries(config.options).forEach(([option, value]) => {
             let element = new CreateElement('div')
@@ -304,37 +304,50 @@ class SelectMultiple extends FormField {
                 .appendTo(this.wrapper)
 
             let item = new CreateElement('span')
-                .setAttributes({ class: config.class })
+                .setAttributes({ class: config.class, style: `background-color:${value}` })
                 .addEventListener('click', () => {
 
-                    if (selected.includes(option)) {
-                        selected = selected.filter(c => c !== option)
+                    if (this.selected.includes(option)) {
+                        this.selected = this.selected.filter(c => c !== option)
                         item.innerHTML = ''
                         item.classList.remove('selected')
                     } else {
-                        selected.push(option)
+                        this.selected.push(option)
                         item.classList.add('selected')
                     }
 
-                    hiddenInput.value = selected.join(',')
+                    this.hiddenInput.value = this.selected.join(',')
                 })
                 .appendTo(element)
-
-
-            // new CreateElement('label')
-            //     .setAttributes({ for: option }).setText(capitalise(option))
-            //     .appendTo(element)
         })
     }
 }
 
-class Colours extends SelectMultiple {
-    constructor(name, config, container, item) {
-        super(name, config, container, item)
+class Images extends FormField {
+    constructor(name, config, container) {
+        super(name, config, container)
+
+        this.hiddenInput = new CreateElement('input')
+            .setAttributes({ type: 'hidden', name: name })
+            .appendTo(this.wrapper)
+
+        this.selected = ''
 
         Object.entries(config.options).forEach(([option, value]) => {
-            let item = container.querySelector(`.element[name="${option}"] span`);
-            if (item) item.style.backgroundColor = value;
+            let element = new CreateElement('div')
+                .setAttributes({ class: 'element', name: option })
+                .appendTo(this.wrapper)
+
+            let item = new CreateElement('img')
+                .setAttributes({ class: config.class, src: value })
+                .addEventListener('click', () => {
+
+                    this.selected = option
+                    element.classList.add('selected')
+
+                    this.hiddenInput.value = this.selected
+                })
+                .appendTo(element)
         })
     }
 }

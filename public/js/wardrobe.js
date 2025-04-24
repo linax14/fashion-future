@@ -45,10 +45,10 @@ class WardrobeManager {
         return await selectUserTable(window.user, 'clothing_items')
     }
 
-    async addItem({ brand = null, category = null, colour = null, season = null, occasion = null, origin = null, image = null }) {
+    async addItem({ brand = null, category = null, colour = null, season = null, occasion = null, origin = null, image = null, care_instructions = {} }) {
         try {
             const { data, error } = await supabase.from('clothing_items')
-                .insert({ brand, category, colour, season, occasion, origin, user_id: this.user.id, image, }).select()
+                .insert({ brand, category, colour, season, occasion, origin, user_id: this.user.id, image, care_instructions }).select()
             if (error) throw new Error(error.message)
             return data
 
@@ -76,11 +76,11 @@ class WardrobeManager {
         return allClothes
     }
 
-    async updateItem(brand, category, colour, season, occasion, origin, image, itemId) {
+    async updateItem(brand, category, colour, season, occasion, origin, image, itemId, care_instructions) {
         try {
             const { data, error } = await supabase
                 .from('clothing_items')
-                .update({ brand, category, colour, season, occasion, origin, image })
+                .update({ brand, category, colour, season, occasion, origin, image, care_instructions })
                 .eq('id', itemId)
 
             if (error) {
@@ -167,33 +167,33 @@ function handleFormSubmit(form, onSubmitCallback, itemId = null) {
     return { form, isDirty: () => isDirty }
 }
 
-async function renderClothingForm(clothingFormContainer) {
-    clothingFormContainer.innerHTML = ''
-    closeBtnX(clothingFormContainer, () => {
-        setDisplay([clothingFormContainer], 'none')
-        clothingFormContainer.style.visibility = 'hidden'
+async function renderClothingForm(mainForm) {
+    mainForm.innerHTML = ''
+    closeBtnX(mainForm, () => {
+        setDisplay([mainForm], 'none')
+        mainForm.style.visibility = 'hidden'
         renderWardrobe()
         setDisplay([clothingList, wardrobeHeader], 'grid')
     })
 
-    let btnContainer = new CreateElement('div').setAttributes({ class: 'btn-container' }).appendTo(clothingFormContainer)
+    let btnContainer = new CreateElement('div').setAttributes({ class: 'btn-container' }).appendTo(mainForm)
     let aboutBtn = new CreateElement('button').setText('about').setAttributes({ class: 'tab-btn' }).appendTo(btnContainer)
     let careBtn = new CreateElement('button').setText('care').setAttributes({ class: 'tab-btn' }).appendTo(btnContainer)
 
-    let aboutFormContainer = new CreateElement('form')
-        .setAttributes({ id: 'about-form', class: 'form-container' }).appendTo(clothingFormContainer)
-    let careFormContainer = new CreateElement('form')
-        .setAttributes({ id: 'care-form', class: 'form-container' }).appendTo(clothingFormContainer)
+    let form = new CreateElement('form')
+        .setAttributes({ id: 'about-form', class: 'form-container' }).appendTo(mainForm)
+
+    let formPart1 = new CreateElement('div').setAttributes({ class: 'form-part', id: 'about' }).appendTo(form)
 
     let aboutFormFields = {
-        image: new ImageUpload('image', { type: 'input', inputType: 'file', class: 'image', accept: 'image/png, image/jpeg', capture: 'camera' }, aboutFormContainer),
-        brand: new TextInput('brand', { placeholder: 'Enter brand name', required: true }, aboutFormContainer),
+        image: new ImageUpload('image', { type: 'input', inputType: 'file', class: 'image', accept: 'image/png, image/jpeg', capture: 'camera' }, formPart1),
+        brand: new TextInput('brand', { placeholder: 'Enter brand name', required: true }, formPart1),
         category: new SelectOption('category', {
             type: 'span', options: ['tops', 't-shirts', 'blouses', 'cardigans',
                 'sweaters', 'sweatshirts', 'blazers', 'coats', 'jackets',
                 'skirts', 'shorts', 'jeans', 'trousers', 'joggers', 'knitwear', 'dresses'
             ], multiple: false, dropdown: true
-        }, aboutFormContainer),
+        }, formPart1),
         colour: new Colours('colour', {
             type: 'button', options: {
                 'red': '#e53935', 'pink': '#d81b60', 'Deep Purple': '#5e35b1',
@@ -203,21 +203,76 @@ async function renderClothingForm(clothingFormContainer) {
                 'brown': '#6d4c41', 'Light Grey': '#757575', 'Blue Grey': '#546e7a',
                 'Deep Grey': '#212121', 'black': '#000000', 'white': '#ffffff'
             }, class: 'color btn'
-        }, aboutFormContainer),
-        season: new CheckboxGroup('season', { options: ['winter', 'spring', 'summer', 'autumn'] }, aboutFormContainer),
+        }, formPart1),
+        season: new CheckboxGroup('season', { options: ['winter', 'spring', 'summer', 'autumn'] }, formPart1),
         occasion: new SelectOption('occasion', {
             type: 'span', options: ['chill', 'work', 'date night', 'gym',
                 'brunch', 'outdoors', 'holiday', 'formal'
             ], multiple: true, dropdown: true
-        }, aboutFormContainer),
+        }, formPart1),
         origin: new SelectOption('origin', {
             type: 'span',
             options: ['new item', 'hand me down', 'thrifted', 'gifted', 'upcycled', 'vintage', 'custom-made', 'rental',],
             multiple: true, dropdown: true
-        }, aboutFormContainer)
+        }, formPart1)
     }
 
-    let aboutForm = handleFormSubmit(aboutFormContainer,
+    let formPart2 = new CreateElement('div').setAttributes({ class: 'form-part', id: 'care' }).appendTo(form)
+
+    let careFields = {
+        wash: new Images('wash', {
+            type: 'button', options: {
+                'wash': '../assets/careLabel/wash1.png',
+                'wash at 30': '../assets/careLabel/wash2.png',
+                'wash at 40': '../assets/careLabel/wash3.png',
+                'wash at 50': '../assets/careLabel/wash4.png',
+                'wash at 60': '../assets/careLabel/wash5.png',
+                'hand wash': '../assets/careLabel/wash6.png',
+                'do not wash': '../assets/careLabel/wash7.png'
+            }, class: 'care-label'
+        }, formPart2),
+        bleaching: new Images('bleaching', {
+            type: 'button', options: {
+                'bleach': '../assets/careLabel/bleach1.png',
+                'cl bleach': '../assets/careLabel/bleach2.png',
+                'ncl bleach': '../assets/careLabel/bleach3.png',
+                'do not bleach': '../assets/careLabel/bleach4.png',
+                'do not bleach': '../assets/careLabel/bleach5.png',
+            }, class: 'care-label'
+        }, formPart2),
+        tumbleDrying: new Images('tumble drying', {
+            type: 'button', options: {
+                'tumble dry': '../assets/careLabel/tumble1.png',
+                'tumble dry low': '../assets/careLabel/tumble2.png',
+                'tumble dry normal': '../assets/careLabel/tumble3.png',
+                'do not tumble dry': '../assets/careLabel/tumble4.png',
+            }, class: 'care-label'
+        }, formPart2),
+        naturalDrying: new Images('natural drying', {
+            type: 'button', options: {
+                'dry': '../assets/careLabel/dry1.png',
+                'line dry': '../assets/careLabel/dry2.png',
+                'dry flat': '../assets/careLabel/dry3.png',
+                'drip dry': '../assets/careLabel/dry4.png',
+                'dry in shade': '../assets/careLabel/dry5.png',
+                'line dry in the shade': '../assets/careLabel/dry6.png',
+                'dry flat in shade': '../assets/careLabel/dry7.png',
+                'drip dry in shade': '../assets/careLabel/dry8.png',
+            }, class: 'care-label'
+        }, formPart2),
+        iron: new Images('iron', {
+            type: 'button', options: {
+                'iron': '../assets/careLabel/iron1.png',
+                'iron low': '../assets/careLabel/iron2.png',
+                'iron medium': '../assets/careLabel/iron3.png',
+                'iron high': '../assets/careLabel/iron4.png',
+                'do not iron': '../assets/careLabel/iron5.png',
+            }, class: 'care-label'
+        }, formPart2),
+
+    }
+
+    handleFormSubmit(form,
         async (formValues, imageName) => {
             await clothingManager.addItem({
                 brand: formValues.brand,
@@ -226,19 +281,28 @@ async function renderClothingForm(clothingFormContainer) {
                 season: formValues.season,
                 occasion: formValues.occasion,
                 origin: formValues.origin,
-                image: imageName
+                image: imageName,
+                care_instructions: {
+                    wash: formValues.wash, bleaching: formValues.bleaching,
+                    iron: formValues.iron, naturalDrying: formValues.naturalDrying,
+                    tumbleDrying: formValues.tumbleDrying
+                }
             })
         })
 
-    careFormContainer.classList.add("hidden")
+    formPart2.classList.add("hidden")
     aboutBtn.classList.add("selected")
 
     let toggleBtns = () => {
-        [careFormContainer, aboutFormContainer].forEach(el => el.classList.toggle('hidden'))
-        [careBtn, aboutBtn].forEach(btn => btn.classList.toggle('selected'))
+        [formPart1, formPart2].forEach(el => el.classList.toggle('hidden'))
+        // [careBtn, aboutBtn].forEach(btn => btn.classList.toggle('selected'))
+        careBtn.classList.toggle('selected')
+        aboutBtn.classList.toggle('selected')
     }
+
     [careBtn, aboutBtn].forEach(btn => btn.addEventListener('click', () => { toggleBtns() }))
 }
+
 
 async function renderEditClothingItem(clothingFormContainer, wardrobeContainer, item) {
     displayInHome('form')
@@ -258,13 +322,19 @@ async function renderEditClothingItem(clothingFormContainer, wardrobeContainer, 
 
     let setSingleSelection = (container, name, value) => {
         if (!name) return
-        let selectInput = container.querySelector(`input[name=${name}]`)
+        let selectInput = container.querySelector(`input[name="${name}"]`)
         if (selectInput) selectInput.value = value
         // console.log(name)
 
         let elements = document.querySelectorAll(`.form-group.${name} .element`)
         elements.forEach(element => {
-            element.classList.toggle('selected', element.getAttribute('value') == value)
+
+            if (element.getAttribute('value')) {
+                element.classList.toggle('selected', element.getAttribute('value') == value)
+            } else {
+                element.classList.toggle('selected', element.getAttribute('name') == value)
+
+            }
         })
     }
 
@@ -313,6 +383,12 @@ async function renderEditClothingItem(clothingFormContainer, wardrobeContainer, 
     setMultiSelection(aboutFormContainer, "season", item.season, isCheckbox = true)
     setMultiSelection(aboutFormContainer, "occasion", item.occasion)
     setMultiSelection(aboutFormContainer, "origin", item.origin)
+
+    setSingleSelection(aboutFormContainer, "wash", item.care_instructions.wash)
+    setSingleSelection(aboutFormContainer, "bleaching", item.care_instructions.bleaching)
+    setSingleSelection(aboutFormContainer, "tumble drying", item.care_instructions.tumble_drying)
+    setSingleSelection(aboutFormContainer, "normal drying", item.care_instructions.normal_drying)
+    setSingleSelection(aboutFormContainer, "iron", item.care_instructions.iron)
 
     let image = aboutFormContainer.querySelector('.image')
     if (item.image) {
@@ -381,7 +457,12 @@ async function updateClothingItem(itemId, formContainer, clothingFormContainer) 
             formValues.occasion,
             formValues.origin,
             imageName,
-            itemId
+            itemId,
+            {
+                wash: formValues.wash, bleaching: formValues.bleaching,
+                iron: formValues.iron, naturalDrying: formValues.naturalDrying,
+                tumbleDrying: formValues.tumbleDrying
+            }
         )
 
         displayInHome('wardrobe')
