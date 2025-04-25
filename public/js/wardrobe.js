@@ -1,6 +1,6 @@
 document.addEventListener("userInitialized", async () => {
     //console.log("user", window.user)
-    clothingManager = new WardrobeManager(window.user)
+    wardrobeManager = new WardrobeManager(window.user)
 
     renderWardrobe()
 })
@@ -11,7 +11,7 @@ let wardrobeHeader = new CreateElement('div').setAttributes({ class: 'header' })
 let clothingList = new CreateElement('div').setAttributes({ class: 'clothing-list' }).appendTo(wardrobeSection)
 let clothingFormContainer = new CreateElement('div').setAttributes({ class: 'clothing-formContainer' }).appendTo(document.body)
 
-let clothingManager
+let wardrobeManager
 let displayInHome = (type) => {
 
     switch (type) {
@@ -274,7 +274,7 @@ async function renderClothingForm(mainForm) {
 
     handleFormSubmit(form,
         async (formValues, imageName) => {
-            await clothingManager.addItem({
+            await wardrobeManager.addItem({
                 brand: formValues.brand,
                 category: formValues.category,
                 colour: formValues.colour,
@@ -400,7 +400,7 @@ async function renderEditClothingItem(clothingFormContainer, wardrobeContainer, 
         // if (urlError) throw urlError
         // if (signedUrlData.signedUrl) {
         //     img.src = signedUrlData.signedUrl
-        //     img.classList.remove('create-outfit')
+        //     img.classList.remove('create-outfit-btn')
         //     img.classList.add('preview')
         // }
     }
@@ -414,7 +414,7 @@ async function renderEditClothingItem(clothingFormContainer, wardrobeContainer, 
     //do not add it inside the form again!!
     let deleteBtn = new CreateElement('button').setAttributes({ class: 'delete btn' }).setText('delete')
         .addEventListener('click', async () => {
-            await clothingManager.deleteItems([item.id])
+            await wardrobeManager.deleteItems([item.id])
             renderWardrobe()
             displayInHome('wardrobe')
         }).appendTo(clothingFormContainer)
@@ -449,7 +449,7 @@ async function updateClothingItem(itemId, formContainer, clothingFormContainer) 
     }
 
     try {
-        await clothingManager.updateItem(
+        await wardrobeManager.updateItem(
             formValues.brand,
             formValues.category,
             formValues.colour,
@@ -552,7 +552,7 @@ async function renderWardrobe() {
         console.log(selectedClothesCheckbox);
 
         let clothesIdFromCheckbox = selectedClothesCheckbox.map(({ id }) => id)
-        allClothes = await clothingManager.deleteItems(clothesIdFromCheckbox, selectedClothesCheckbox, allClothes)
+        allClothes = await wardrobeManager.deleteItems(clothesIdFromCheckbox, selectedClothesCheckbox, allClothes)
         editMode = false
 
         allClothes.forEach(({ container, checkbox }) => {

@@ -21,7 +21,7 @@
     width: 80%;
 }
 
-.create-outfit {
+.create-outfit-btn {
     display: flex;
     justify-content: flex-start;
     align-items: center;
@@ -241,50 +241,6 @@
 
 .form-container:last-child {
     padding-bottom: 7vh;
-}
-
-.form-group.wash,
-.form-group.bleaching,
-.form-group.tumble.drying,
-.form-group.natural.drying,
-.form-group.iron {
-    display: grid;
-    grid-template-columns: repeat(8, 1fr);
-    grid-template-rows: auto;
-}
-
-.form-group.wash>:first-child,
-.form-group.bleaching>:first-child,
-.form-group.tumble.drying>:first-child,
-.form-group.natural.drying>:first-child,
-.form-group.iron>:first-child {
-    grid-column: span 8;
-}
-
-.form-group.wash>:not(:first-child),
-.form-group.bleaching>:not(:first-child),
-.form-group.tumble.drying>:not(:first-child),
-.form-group.natural.drying>:not(:first-child),
-.form-group.iron>:not(:first-child) {
-    grid-column: span 1;
-}
-
-.form-group.wash .element img.care-label,
-.form-group.bleaching .element img.care-label,
-.form-group.tumble.drying .element img.care-label,
-.form-group.natural.drying .element img.care-label,
-.form-group.iron .element img.care-label {
-    width: 40px;
-    height: auto;
-    filter: invert();
-}
-
-.form-group.wash .element.selected img.care-label,
-.form-group.bleaching .element.selected img.care-label,
-.form-group.tumble.drying .element.selected img.care-label,
-.form-group.natural.drying .element.selected img.care-label,
-.form-group.iron .element.selected img.care-label {
-    border-bottom: 1px solid var(--secondary-color);
 }
 
 .header {

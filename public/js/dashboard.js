@@ -1,6 +1,6 @@
 document.addEventListener("userInitialized", async () => {
     renderDashboard(window.user)
-    outfitManager = new OutfitManager(window.user)
+    clothingManager = new ClothingManager(window.user)
 })
 
 let getTimePeriod = () => {
@@ -208,7 +208,7 @@ async function renderOutfitStreak(createOutfitDate, appendTo) {
 }
 
 async function getUnwornItems(dateInfo) {
-    let data = await outfitManager.getOutfitData()
+    let data = await clothingManager.getData('outfit')
     data = data.filter(item => item.worn == true)
 
     let itemWearMap = new Map()

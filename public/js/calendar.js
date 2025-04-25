@@ -1,8 +1,23 @@
 document.addEventListener("userInitialized", async () => {
     renderCalendarDisplay()
+    clothingManager = new ClothingManager(window.user)
+
+});
+
+let navBtn
+let navModal = new CreateElement('div').setAttributes({ class: 'nav-modal' }).appendTo(document.body)
+setDisplay([navModal], 'none')
+
+document.body.addEventListener('click', function handleClickOutside(e) {
+    let isClickInside = navModal.contains(e.target) || navBtn[0].contains(e.target);
+    if (!isClickInside) {
+        setDisplay([navModal], 'none');
+    }
 });
 
 let calendarContainer = new CreateElement('div').setAttributes({ id: 'calendar' }).appendTo(document.body)
+let careBtnContainer = new CreateElement('section').setAttributes({ class: 'care-container' }).appendTo(calendarContainer);
+let careEventContainer = new CreateElement('div').setAttributes({ class: 'care-event-container' }).appendTo(document.body)
 
 let clothingContainer = new CreateElement('div').setAttributes({ class: 'clothing-container' })
     .appendTo(document.body)
@@ -10,6 +25,8 @@ let clothingContainer = new CreateElement('div').setAttributes({ class: 'clothin
 let displayInPlanner = (type) => {
     let outfitContainer = document.querySelector('.outfits-container')
     let calendarInfo = document.querySelector('.calendar-info')
+    let careEvent = document.querySelector('.care-event-container')
+    let careItems = document.querySelector('.care-event-container-items')
 
     switch (type) {
         case 'calendar':
@@ -21,10 +38,18 @@ let displayInPlanner = (type) => {
         case 'clothing':
             setDisplay([clothingContainer], 'block')
             setDisplay([calendarContainer], 'none')
+            if (careEvent) setDisplay([careEvent], 'none')
+            setDisplay([navModal], 'none');
+            break;
+
+        case 'garmentCare':
+            setDisplay([calendarContainer, clothingContainer], 'none')
+            setDisplay([careEvent], 'flex')
+            setDisplay([navModal], 'none');
+            if (careItems) setDisplay([careItems], 'none')
             break;
 
         default:
-            setDisplay([calendarContainer, outfitContainer], 'flex')
             break;
     }
 }
@@ -37,10 +62,15 @@ async function renderCalendarDisplay() {
     let daysContainer = new CreateElement('div').setAttributes({ class: 'days-container' }).appendTo(weekScrollWrapper);
     let noDaysMonth = new Date(year, month + 1, 0).getDate();
 
-    let { createOutfitDate, outfitsContainer } = renderContentSections();
+    let outfitsContainer = new CreateElement('section').setAttributes({ class: 'outfits-container' }).appendTo(calendarContainer);
+    let createOutfitDate = null
+    addNavBtns('create-outfit-btn', 'New outfit', '../assets/createOutfit.png', 'clothing items')
+    addNavBtns('add-care-btn', 'care event', 'https://img.icons8.com/ios/100/laundry-bag.png', 'laundry basket')
 
     await calendarDays(noDaysMonth, createOutfitDate, daysContainer, outfitsContainer);
     await scrollToday(createOutfitDate, outfitsContainer);
+
+    navBtn = document.querySelectorAll('nav ol li button')
 }
 
 let calendarHeader = () => {
@@ -124,32 +154,179 @@ let handleDayClick = async (dayContainer, dataDate, createOutfitDate, outfitsCon
     let prevWorn = document.querySelector('.prev-worn-container')
     if (prevWorn) prevWorn.remove()
 
-    let createOutfit = document.querySelector('.create-outfit')
-    createOutfit.addEventListener('click', () => {
-        renderClothingDisplay(createOutfitDate, 'addOutfit');
-    });
+    navBtn[0].addEventListener('click', () => {
+        let isVisible = navModal.style.display == 'flex'
+        setDisplay([navModal], isVisible ? 'none' : 'flex');
+
+        let createOutfit = document.querySelector('.create-outfit-btn')
+        if (createOutfit) {
+            createOutfit.addEventListener('click', async () => {
+                await renderClothingDisplay(createOutfitDate, 'addOutfit', null);
+            });
+        }
+        let addCareBtn = document.querySelector('.add-care-btn')
+        if (addCareBtn) {
+            addCareBtn.addEventListener('click', () => { renderGarmentCareForm(createOutfitDate) })
+        }
+    })
 
     let render = await renderOutfits(dataDate, outfitsContainer);
     if (render) getOutfitId();
 
+    await renderGarmetCareItems(dataDate, careEventContainer);
     await renderPreviousOutfits(calendarContainer)
 
     localStorage.setItem('dateInfo', `${dataDate}`);
 }
 
-let renderContentSections = () => {
-    let outfitsContainer = new CreateElement('section').setAttributes({ class: 'outfits-container' }).appendTo(calendarContainer);
-    let createOutfitDate = renderCreateOutfit(outfitsContainer)
+let addNavBtns = (className, text, src, alt) => {
+    let div = new CreateElement('div').setAttributes({ class: className }).appendTo(navModal);
 
-    return { createOutfitDate, outfitsContainer };
+    new CreateElement('p').setText(text).appendTo(div);
+    new CreateElement('img').setAttributes({ src: src, alt: alt }).appendTo(div);
+
+    return div
 }
 
-let renderCreateOutfit = (outfitsContainer) => {
-    let createOutfitDate = null;
-    let createOutfit = new CreateElement('div').setAttributes({ class: 'create-outfit' }).appendTo(outfitsContainer);
+async function renderGarmentCareForm(createOutfitDate) {
+    careEventContainer.innerHTML = ''
+    displayInPlanner('garmentCare')
 
-    new CreateElement('h4').setText('add an outfit').appendTo(createOutfit);
-    new CreateElement('img').setAttributes({ src: '../assets/createOutfit.png' }).appendTo(createOutfit);
+    new CreateElement('h2').setText('Basket Care Settings').appendTo(careEventContainer)
+    new CreateElement('p').setText(`Select the care options and submit to start adding clothes`)
+        .appendTo(careEventContainer)
 
-    return createOutfitDate;
+    let form = new CreateElement('form').appendTo(careEventContainer)
+    let careFields = {
+        wash: new Images('wash', {
+            type: 'button', options: {
+                'wash': '../assets/careLabel/wash1.png',
+                'wash at 30': '../assets/careLabel/wash2.png',
+                'wash at 40': '../assets/careLabel/wash3.png',
+                'wash at 50': '../assets/careLabel/wash4.png',
+                'wash at 60': '../assets/careLabel/wash5.png',
+                'hand wash': '../assets/careLabel/wash6.png',
+                'do not wash': '../assets/careLabel/wash7.png'
+            }, class: 'care-label'
+        }, form),
+        bleaching: new Images('bleaching', {
+            type: 'button', options: {
+                'bleach': '../assets/careLabel/bleach1.png',
+                'cl bleach': '../assets/careLabel/bleach2.png',
+                'ncl bleach': '../assets/careLabel/bleach3.png',
+                'do not bleach': '../assets/careLabel/bleach4.png',
+                'do not bleach': '../assets/careLabel/bleach5.png',
+            }, class: 'care-label'
+        }, form),
+        tumbleDrying: new Images('tumble drying', {
+            type: 'button', options: {
+                'tumble dry': '../assets/careLabel/tumble1.png',
+                'tumble dry low': '../assets/careLabel/tumble2.png',
+                'tumble dry normal': '../assets/careLabel/tumble3.png',
+                'do not tumble dry': '../assets/careLabel/tumble4.png',
+            }, class: 'care-label'
+        }, form),
+        naturalDrying: new Images('natural drying', {
+            type: 'button', options: {
+                'dry': '../assets/careLabel/dry1.png',
+                'line dry': '../assets/careLabel/dry2.png',
+                'dry flat': '../assets/careLabel/dry3.png',
+                'drip dry': '../assets/careLabel/dry4.png',
+                'dry in shade': '../assets/careLabel/dry5.png',
+                'line dry in the shade': '../assets/careLabel/dry6.png',
+                'dry flat in shade': '../assets/careLabel/dry7.png',
+                'drip dry in shade': '../assets/careLabel/dry8.png',
+            }, class: 'care-label'
+        }, form),
+        iron: new Images('iron', {
+            type: 'button', options: {
+                'iron': '../assets/careLabel/iron1.png',
+                'iron low': '../assets/careLabel/iron2.png',
+                'iron medium': '../assets/careLabel/iron3.png',
+                'iron high': '../assets/careLabel/iron4.png',
+                'do not iron': '../assets/careLabel/iron5.png',
+            }, class: 'care-label'
+        }, form),
+
+    }
+
+    handleFormSubmit(form,
+        async (formValues, id) => {
+            await clothingManager.update('care_event', id, {
+                date: Array.isArray(createOutfitDate) ? createOutfitDate : [createOutfitDate],
+                wash: formValues.wash, bleach: formValues.bleaching,
+                iron: formValues.iron, normal_dry: formValues.naturalDrying,
+                tumble_dry: formValues.tumbleDrying
+            })
+        }, null,
+        (id, values) => {
+            displayInPlanner('clothing')
+            renderClothingDisplay(createOutfitDate, 'garmentCare', id);
+        })
+}
+
+function handleFormSubmit(form, onSubmitCallback, itemId = null, onSuccess = null) {
+    let isDirty = false
+
+    form.addEventListener("input", () => isDirty = true)
+
+    new CreateElement('button').setAttributes({ class: 'submit btn', type: 'submit' }).setText('submit')
+        .appendTo(form)
+
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault()
+
+        let formData = new FormData(form)
+        let formValues = {}
+
+        formData.forEach((value, key) => {
+            if (formValues[key]) {
+                formValues[key] = `${formValues[key]},${value}`
+            } else {
+                formValues[key] = value
+            }
+        })
+
+        let id = itemId
+        if (!id) {
+            id = await clothingManager.generateId('care_event')
+        }
+
+        await onSubmitCallback(formValues, id)
+        isDirty = false
+        if (onSuccess) {
+            onSuccess(id, formValues)
+        }
+    })
+
+    return { form, isDirty: () => isDirty }
+}
+
+let renderGarmetCareItems = async (dataDate, appendTo) => {
+    let data = (await clothingManager.getData('care_event'))
+        .filter(item => {
+            return item.wornDates?.some(date => {
+                return formatDateUnpadded(date) == dataDate
+            })
+        });
+
+    if (data.length == 0) return false
+
+    let div = new CreateElement('div').setAttributes({ class: 'care-event-container-items' }).appendTo(document.body)
+
+    new CreateElement('h4').setText('Garment Care').appendTo(div)
+    for (const element of data) {
+        let outfitContainer = new CreateElement('div').setAttributes({ class: 'outfit', 'data-id': element.outfitId }).appendTo(div)
+        let count = 0
+        await Promise.all(
+            element.clothingItems.map(async (item) => {
+                count++
+                await getImage(item, outfitContainer, renderImage)
+            })
+        )
+
+        outfitImagesDisplay(outfitContainer, count)
+    }
+
+    return data
 }

@@ -1,14 +1,14 @@
 document.addEventListener("userInitialized", async () => {
     //console.log("user", window.user)
-    outfitManager = new OutfitManager(window.user)
+    clothingManager = new ClothingManager(window.user)
     outfitItems = new ClothingItems(window.user)
 })
 
-let outfitManager
+let clothingManager
 let outfit
 
 async function renderOutfits(dataDate, outfitsContainer) {
-    let data = (await outfitManager.getOutfitData())
+    let data = (await clothingManager.getData('outfit'))
         .filter(item => {
             if (item.worn == true) {
                 return item.wornDates?.some(date => {
@@ -35,7 +35,7 @@ async function renderOutfits(dataDate, outfitsContainer) {
 }
 
 async function renderPreviousOutfits(container) {
-    let data = (await outfitManager.getOutfitData()).sort(() => Math.random() - 0.5).slice(0, 2)
+    let data = (await clothingManager.getData('outfit')).sort(() => Math.random() - 0.5).slice(0, 2)
     let prevDiv = new CreateElement('div').setAttributes({ class: 'prev-worn-container' }).appendTo(container)
 
     new CreateElement('h4').setText('Previously worn').appendTo(prevDiv)
@@ -78,7 +78,7 @@ async function updateWearCount(itemWearMap) {
         let wearCount = dates.size;
 
         let { error } = await supabase.from('clothing_items')
-            .update({ wear_count: wearCount })
+            .update('outfit', { wear_count: wearCount })
             .eq('id', itemId);
 
         if (error) {
@@ -97,9 +97,20 @@ async function renderClothingDisplay(createOutfitDate, type, outfitId) {
     let itemsToAdd = []
 
     let header = new CreateElement('h3')
-    type == 'addOutfit'
-        ? header.setText('Add outfit').appendTo(clothingContainer)
-        : header.setText('Edit outfit').appendTo(clothingContainer)
+
+    switch (type) {
+        case 'addOutfit':
+            header.setText('Add outfit').appendTo(clothingContainer)
+            break;
+        case 'editOutfit':
+            header.setText('Edit outfit').appendTo(clothingContainer)
+            break;
+        case 'garmentCare':
+            header.setText('Add items to basket').appendTo(clothingContainer)
+            break
+        default:
+            break;
+    }
 
     let filtersContainer = new CreateElement('div').setAttributes({ class: 'filters-container' }).appendTo(clothingContainer)
     let clothingList = new CreateElement('div').setAttributes({ class: 'clothing-list' }).appendTo(clothingContainer)
@@ -143,7 +154,13 @@ async function renderClothingDisplay(createOutfitDate, type, outfitId) {
         case 'editOutfit':
             itemsToAdd = await editMode(outfitId, clothingItemElements, itemsToAdd, submitBtn, deleteBtn);
             break;
+        case 'garmentCare':
+            itemsToAdd = await careMode(itemsToAdd, createOutfitDate, submitBtn, outfitId)
+            break
         default:
+            setDisplay([deleteBtn], 'none')
+            deleteBtn.disabled = true
+            itemsToAdd = await addMode(itemsToAdd, createOutfitDate, submitBtn)
             break;
     }
 }
@@ -197,7 +214,7 @@ async function addOutfitStreak(createOutfitDate) {
 let editMode = async (outfitId, clothingItemElements, itemsToAdd, submitBtn, deleteBtn) => {
 
     let id = getOutfitId(outfitId);
-    let outfit = await outfitManager.getOutfitData(outfitId);
+    let outfit = await clothingManager.getData('outfit', outfitId);
     let inOutfit;
     let itemsToRemove = [];
 
@@ -222,11 +239,11 @@ let editMode = async (outfitId, clothingItemElements, itemsToAdd, submitBtn, del
 
     submitBtn.addEventListener('click', async (event) => {
         event.preventDefault();
-        let data = await outfitManager.getOutfitItems([id])
+        let data = await clothingManager.getItems('outfit_items', [id])
         let existingIds = new Set(Object.values(data)[0]);
         let newItems = [...new Set(itemsToAdd)].filter(item => !existingIds.has(item));
 
-        if (newItems.length > 0) await outfitItems.addItems(id, newItems)
+        if (newItems.length > 0) await outfitItems.addItems('outfit_items', id, newItems)
         if (itemsToRemove.length > 0) await outfitItems.removeItems(id, itemsToRemove)
 
         renderCalendarDisplay();
@@ -235,7 +252,7 @@ let editMode = async (outfitId, clothingItemElements, itemsToAdd, submitBtn, del
 
     deleteBtn.addEventListener('click', async (event) => {
         event.preventDefault();
-        await outfitManager.deleteOutfit(id)
+        await clothingManager.deleteRecord('outfit', id)
 
         let outfitContainer = document.querySelectorAll('outfits-container');
         outfitContainer.forEach(container => {
@@ -261,14 +278,19 @@ let addMode = async (itemsToAdd, createOutfitDate, submitBtn) => {
             return
         }
 
-        let outfitId = await outfitManager.generateOutfitId()
-        await outfitItems.addItems(outfitId, itemsToAdd)
+        let outfitId = await clothingManager.generateId('outfit')
+        console.log(outfitId);
+
+        await outfitItems.addItems('outfit_items', outfitId, itemsToAdd)
         if (createOutfitDate) {
-            await outfitManager.updateOutfit(outfitId, createOutfitDate)
+            await clothingManager.update('outfit', outfitId, {
+                wear_dates: Array.isArray(createOutfitDate) ? createOutfitDate : [createOutfitDate],
+                worn: true
+            })
             await updatePoints('style', createOutfitDate)
         }
 
-        let data = await outfitManager.getOutfitData()
+        let data = await clothingManager.getData('outfit')
 
 
         for (let outfit of data) {
@@ -291,6 +313,30 @@ let addMode = async (itemsToAdd, createOutfitDate, submitBtn) => {
         itemsToAdd = []
 
         await addOutfitStreak(createOutfitDate);
+        displayInPlanner('calendar')
+    })
+    return itemsToAdd
+}
+
+let careMode = async (itemsToAdd, createOutfitDate, submitBtn, outfitId, type) => {
+    submitBtn.addEventListener('click', async (event) => {
+        event.preventDefault()
+        console.log(itemsToAdd);
+
+        if (itemsToAdd.length <= 0) {
+            alert('Please select at least one item')
+            return
+        }
+
+        await outfitItems.addItems('care_items', outfitId, itemsToAdd)
+        // if (createOutfitDate) {
+        //     await clothingManager.update('outfit',outfitId, createOutfitDate)
+        //     await updatePoints('style', createOutfitDate)
+        // }
+
+
+        itemsToAdd = []
+
         displayInPlanner('calendar')
     })
     return itemsToAdd
