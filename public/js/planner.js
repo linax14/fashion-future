@@ -2,6 +2,8 @@ document.addEventListener("userInitialized", async () => {
     //console.log("user", window.user)
     clothingManager = new ClothingManager(window.user)
     outfitItems = new ClothingItems(window.user)
+
+    await getChallengeAction()
 })
 
 let clothingManager
@@ -292,7 +294,6 @@ let addMode = async (itemsToAdd, createOutfitDate, submitBtn) => {
 
         let data = await clothingManager.getData('outfit')
 
-
         for (let outfit of data) {
 
             if (outfit.worn && outfit.wornDates && outfit.clothingItems) {
@@ -313,6 +314,8 @@ let addMode = async (itemsToAdd, createOutfitDate, submitBtn) => {
         itemsToAdd = []
 
         await addOutfitStreak(createOutfitDate);
+        await completeChallenge()
+
         displayInPlanner('calendar')
     })
     return itemsToAdd
@@ -335,7 +338,7 @@ let careMode = async (itemsToAdd, createOutfitDate, submitBtn, outfitId, values)
                         event.target.checked = false
                         itemsToAdd = itemsToAdd.filter(id => id != itemId);
                     }
-                } 
+                }
             }
         });
     });
@@ -481,20 +484,9 @@ async function getDaily(user, dateInfo, type, appendTo) {
                     await renderQuiz(target.quiz, dateInfo, quiz, handleQuiz)
                     quiz.classList.toggle('expanded')
                     setDisplay([header], 'none')
-                    let challenges = document.querySelector('.challenges')
-                    setDisplay([challenges], 'none')
                 }
 
-                if (type == 'challenge') {
-                    let challengesData = await userChallenges()
-
-                    if (target.challenges.length == 0) {
-                        target.challenges.push(...challengesData)
-                        await updateUserTable(window.user, 'user_calendar', { calendar: element.calendar })
-                    }
-                    await renderChallenges(window.user, target.challenges, dateInfo, appendTo)
-
-                } else if (type == 'quiz') {
+                if (type == 'quiz') {
                     let quizData = await userQuiz()
                     if (target.quiz.length == 0) {
                         target.quiz.push(...quizData)
@@ -520,64 +512,37 @@ async function getDaily(user, dateInfo, type, appendTo) {
 
     return calendarData
 }
+async function getChallengeAction() {
+    let challengeAction = localStorage.getItem('challengeAction')
+    let actionData = null
+    if (challengeAction) {
+        actionData = JSON.parse(challengeAction)
 
-//challenges
-async function userChallenges() {
-    let challenges = await initializeUserDetails('challenges', 'challenges_progress')
-    let challengesProgress = challenges[0].challenges_progress
-
-    return challengesProgress
-        .sort(() => Math.random() - 0.5)
-        .slice(0, 2);
+        if (actionData.action == 'addOutfit') {
+            await renderClothingDisplay(actionData.dateInfo, 'addOutfit', null)
+        }
+    }
 }
 
-async function renderChallenges(user, randomChallenges, dateInfo, challengesContainer) {
+async function completeChallenge() {
 
-    let challenges = new CreateElement('div')
-        .setAttributes({ class: 'challenges' })
-        .addEventListener('click', async () => { challenges.classList.toggle('expanded'); })
-        .appendTo(challengesContainer)
+    let challenge = JSON.parse(localStorage.getItem('challengeAction'))
 
-    new CreateElement('h2').setText('challenges').appendTo(challenges)
+    if (challenge && challenge.fromChallenge) {
+        let { progress, challengesToday, calendarData } = await getUserData(challenge.dateInfo, 'challenges')
+        let updateChallenge = progress.challengesProgress.find(item => item.id == challenge.challengeId)
+        if (updateChallenge) updateChallenge.complete_count += 1
 
-    let { progress, challengesToday, calendarData } = await getUserData(dateInfo, 'challenges')
-    let updateCalendar = calendarData[0].calendar
+        await updateUserTable(window.user, 'user_details', { user_id: user.id, challenges_progress: progress.challengesProgress })
 
-    randomChallenges.forEach(value => {
+        localStorage.setItem('challengeCompleted', JSON.stringify({
+            challengeId: challenge.challengeId,
+            dateInfo: challenge.dateInfo
+        }))
 
-        let elements = new CreateElement('div').setAttributes({ class: 'elements' }).appendTo(challenges)
-        let checkbox = new CreateElement('input')
-            .setAttributes({ type: 'checkbox', id: value.id, class: 'challenges' })
-            .addEventListener('click', (event) => {
-                event.stopPropagation()
-            })
-            .addEventListener('change', async (event) => {
-                event.preventDefault()
-
-                let updateChallenge = progress.challengesProgress.find(item => item.id == checkbox.id)
-                let updateCalendarChallenge = challengesToday.find(item => item.id == checkbox.id)
-
-                if (checkbox.checked) {
-
-                    if (updateCalendarChallenge) updateCalendarChallenge.completed = true;
-                    if (updateChallenge) updateChallenge.complete_count += 1;
-
-                } else {
-                    if (updateCalendarChallenge) updateCalendarChallenge.completed = false;
-                    if (updateChallenge) updateChallenge.complete_count = Math.max(0, updateChallenge.complete_count - 1);
-                }
-
-                await updateUserTable(window.user, 'user_details', { user_id: user.id, challenges_progress: progress.challengesProgress })
-                await updateUserTable(window.user, 'user_calendar', { user_id: user.id, calendar: updateCalendar })
-
-            })
-            .appendTo(elements)
-
-        let ul = new CreateElement('ul').setText(value.title).appendTo(elements)
-        new CreateElement('li').setText(value.details).appendTo(ul)
-
-        checkbox.checked = challengesToday.some(item => item.id === value.id && item.completed);
-    });
+        localStorage.removeItem('challengeAction')
+        window.location.href = './dashboard.html'
+    }
 }
 
 // quiz

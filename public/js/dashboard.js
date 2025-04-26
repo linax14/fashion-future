@@ -1,5 +1,5 @@
 document.addEventListener("userInitialized", async () => {
-    renderDashboard(window.user)
+    await renderDashboard(window.user)
     clothingManager = new ClothingManager(window.user)
 })
 
@@ -23,21 +23,21 @@ let getTimePeriod = () => {
 let displayInDashboard = (type) => {
     let outfitsContainer = document.querySelector('.outfits-streak')
     let quizContainer = document.querySelector('.quiz-container')
-    let challengesContainer = document.querySelector('.challenges')
     let unwornItemContainer = document.querySelector('.unworn-container')
     console.log(outfitsContainer);
 
     switch (type) {
         case 'quiz':
 
-            setDisplay([outfitsContainer, challengesContainer, unwornItemContainer], 'none')
+            setDisplay([outfitsContainer], 'none')
+            if (unwornItemContainer) setDisplay([unwornItemContainer], 'none')
             quizContainer.style.gridColumn = 'span 4'
             setDisplay([quizContainer], 'block')
 
             break;
 
         default:
-            setDisplay([outfitsContainer, challengesContainer, unwornItemContainer, quizContainer], 'block')
+            setDisplay([outfitsContainer, unwornItemContainer, quizContainer], 'block')
             quizContainer.style.gridColumn = 'span 2'
             break;
     }
@@ -55,16 +55,17 @@ async function renderDashboard(user) {
 
     //from global.js
     let day = date.getDate()
-    let today = `${year}-${month + 1}-${day}`
-    // let today = `${year}-${month + 1}-24`
+    // let today = `${year}-${month + 1}-${day}`
+    let today = `${year}-${month + 1}-27`
     // console.log(today);
 
     await renderOutfitStreak(today, main)
     await getDaily(window.user, today, 'quiz', main)
-    await getDaily(window.user, today, 'challenge', main)
     await renderNotRecentlyWorn(today, main)
 
     await dailyTips(window.user, today, main)
+    await dailyChallenge(window.user, today, main)
+
 }
 
 async function renderQuiz(currentQuiz, challengeDate, container, complete = false, handleQuiz) {
@@ -305,6 +306,125 @@ async function dailyTips(user, dateInfo, appendTo) {
                 new CreateElement('p').setText(target.tip.details).appendTo(div)
 
             }
+        }
+    }
+}
+
+async function dailyChallenge(user, dateInfo, appendTo) {
+
+    let calendarData = await selectUserTable(window.user, 'user_calendar')
+    let [year, month, day] = dateInfo.split('-')
+    let currentMonth = months[month - 1].toLowerCase()
+
+    let { data, error } = await supabase.from('challenges').select()
+    if (error) { console.error(error) }
+
+    let challenges = new Set()
+    let availableChallenges = data.filter(challenge => !challenges.has(challenge.id))
+    let usableChallenges = availableChallenges.length > 0 ? availableChallenges : data
+
+    for (const element of calendarData) {
+        if (element.year == year) {
+
+            for (let [months, days] of Object.entries(element.calendar)) {
+                for (let [daysNum, dayData] of Object.entries(days)) {
+                    if (dayData?.challenge?.id) { challenges.add(dayData?.challenge?.id) }
+
+                }
+
+            }
+        }
+    }
+
+    for (const element of calendarData) {
+        if (element.year == year) {
+            let targetMonth = element.calendar[currentMonth]
+
+            let target
+            if (targetMonth) {
+                target = targetMonth[day]
+                if (!target.challenge) {
+
+                    let getRandom = usableChallenges[Math.floor(Math.random() * usableChallenges.length)]
+                    target.challenge = getRandom
+                    await updateUserTable(window.user, 'user_calendar', { calendar: element.calendar });
+
+                }
+
+                renderChallenge(target, dateInfo, appendTo)
+                await challengeCompleted(target, element)
+            }
+        }
+    }
+}
+
+async function challengeCompleted(target, element) {
+    let challengeElement = document.querySelector('.challenge.container')
+    let renderChallengeCompleted = () => {
+        let heading = challengeElement.querySelector('span')
+        if (heading) {
+            heading.textContent += '✔'
+        }
+    }
+    if (target.challenge.complete == true) {
+        renderChallengeCompleted()
+    }
+
+    let completedChallenge = localStorage.getItem('challengeCompleted')
+    if (completedChallenge) {
+        let { challengeId, dateInfo } = JSON.parse(completedChallenge)
+
+        if (challengeElement.dataset.challengeId == challengeId) {
+            renderChallengeCompleted()
+            target.challenge.complete = true
+            await updateUserTable(window.user, 'user_calendar', { calendar: element.calendar })
+        };
+
+        localStorage.removeItem('challengeCompleted')
+    }
+}
+
+function renderChallenge(target, dateInfo, appendTo) {
+    let div = new CreateElement('div').setAttributes({ class: 'challenge container', 'data-challenge-id': target.challenge.id }).appendTo(appendTo)
+    let h = new CreateElement('h3').setText(target.challenge.title).appendTo(div)
+    let span = new CreateElement('span').appendTo(h)
+    new CreateElement('img').setAttributes({ src: 'https://img.icons8.com/ios/50/nui2.png', alt: 'click to complete challenge', class: 'icon' }).appendTo(span)
+    let p = new CreateElement('p').setText(target.challenge.details).appendTo(div)
+
+    if (target.challenge.complete) {
+        div.removeEventListener('click', async () => completeChallengeEvent(target, dateInfo))
+    } else {
+        div.addEventListener('click', async () => completeChallengeEvent(target, dateInfo))
+    }
+}
+
+function completeChallengeEvent(target, dateInfo) {
+    if (target.challenge.event_type) {
+        let event = target.challenge.target
+        let eventType = target.challenge.event_type
+
+        switch (event) {
+            case 'outfit':
+                switch (eventType) {
+                    case 'new_outfit':
+
+                        localStorage.setItem('challengeAction', JSON.stringify({
+                            action: 'addOutfit',
+                            dateInfo: dateInfo,
+                            fromChallenge: true,
+                            challengeId: target.challenge.id
+                        }))
+                        window.location.href = './planner.html'
+
+                        break
+
+                    default:
+                        break
+                }
+                break
+
+            default:
+                break
         }
     }
 }
