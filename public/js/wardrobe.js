@@ -5,8 +5,8 @@ document.addEventListener("userInitialized", async () => {
     renderWardrobe()
 })
 
+new CreateElement('h2').setText('Your wardrobe').appendTo(document.body)
 let wardrobeSection = new CreateElement('div').setAttributes({ class: 'wardrobe-container' }).appendTo(document.body)
-new CreateElement('h2').setText('Your wardrobe').appendTo(wardrobeSection)
 let wardrobeHeader = new CreateElement('div').setAttributes({ class: 'header' }).appendTo(wardrobeSection)
 let clothingList = new CreateElement('div').setAttributes({ class: 'clothing-list' }).appendTo(wardrobeSection)
 let clothingFormContainer = new CreateElement('div').setAttributes({ class: 'clothing-formContainer' }).appendTo(document.body)
@@ -231,7 +231,7 @@ async function renderClothingForm(mainForm) {
                 'do not wash': '../assets/careLabel/wash7.png'
             }, class: 'care-label'
         }, formPart2),
-        bleaching: new Images('bleaching', {
+        bleach: new Images('bleach', {
             type: 'button', options: {
                 'bleach': '../assets/careLabel/bleach1.png',
                 'cl bleach': '../assets/careLabel/bleach2.png',
@@ -240,7 +240,7 @@ async function renderClothingForm(mainForm) {
                 'do not bleach': '../assets/careLabel/bleach5.png',
             }, class: 'care-label'
         }, formPart2),
-        tumbleDrying: new Images('tumble drying', {
+        tumble_dry: new Images('tumble drying', {
             type: 'button', options: {
                 'tumble dry': '../assets/careLabel/tumble1.png',
                 'tumble dry low': '../assets/careLabel/tumble2.png',
@@ -248,7 +248,7 @@ async function renderClothingForm(mainForm) {
                 'do not tumble dry': '../assets/careLabel/tumble4.png',
             }, class: 'care-label'
         }, formPart2),
-        naturalDrying: new Images('natural drying', {
+        natural_dry: new Images('natural drying', {
             type: 'button', options: {
                 'dry': '../assets/careLabel/dry1.png',
                 'line dry': '../assets/careLabel/dry2.png',
@@ -283,9 +283,9 @@ async function renderClothingForm(mainForm) {
                 origin: formValues.origin,
                 image: imageName,
                 care_instructions: {
-                    wash: formValues.wash, bleaching: formValues.bleaching,
-                    iron: formValues.iron, naturalDrying: formValues.naturalDrying,
-                    tumbleDrying: formValues.tumbleDrying
+                    wash: formValues.wash, bleach: formValues.bleach,
+                    iron: formValues.iron, natural_dry: formValues.natural_dry,
+                    tumble_dry: formValues.tumble_dry
                 }
             })
         })
@@ -385,7 +385,7 @@ async function renderEditClothingItem(clothingFormContainer, wardrobeContainer, 
     setMultiSelection(aboutFormContainer, "origin", item.origin)
 
     setSingleSelection(aboutFormContainer, "wash", item.care_instructions.wash)
-    setSingleSelection(aboutFormContainer, "bleaching", item.care_instructions.bleaching)
+    setSingleSelection(aboutFormContainer, "bleach", item.care_instructions.bleach)
     setSingleSelection(aboutFormContainer, "tumble drying", item.care_instructions.tumble_drying)
     setSingleSelection(aboutFormContainer, "normal drying", item.care_instructions.normal_drying)
     setSingleSelection(aboutFormContainer, "iron", item.care_instructions.iron)
@@ -459,9 +459,9 @@ async function updateClothingItem(itemId, formContainer, clothingFormContainer) 
             imageName,
             itemId,
             {
-                wash: formValues.wash, bleaching: formValues.bleaching,
-                iron: formValues.iron, naturalDrying: formValues.naturalDrying,
-                tumbleDrying: formValues.tumbleDrying
+                wash: formValues.wash, bleach: formValues.bleach,
+                iron: formValues.iron, natural_dry: formValues.natural_dry,
+                tumble_dry: formValues.tumble_dry
             }
         )
 

@@ -89,7 +89,7 @@ async function updateWearCount(itemWearMap) {
     return itemWearMap
 }
 
-async function renderClothingDisplay(createOutfitDate, type, outfitId) {
+async function renderClothingDisplay(createOutfitDate, type, outfitId, values) {
     clothingContainer.innerHTML = ''
     displayInPlanner('clothing')
     closeBtnX(clothingContainer, () => displayInPlanner('calendar'))
@@ -100,7 +100,7 @@ async function renderClothingDisplay(createOutfitDate, type, outfitId) {
 
     switch (type) {
         case 'addOutfit':
-            header.setText('Add outfit').appendTo(clothingContainer)
+            header.setText('New outfit').appendTo(clothingContainer)
             break;
         case 'editOutfit':
             header.setText('Edit outfit').appendTo(clothingContainer)
@@ -155,7 +155,7 @@ async function renderClothingDisplay(createOutfitDate, type, outfitId) {
             itemsToAdd = await editMode(outfitId, clothingItemElements, itemsToAdd, submitBtn, deleteBtn);
             break;
         case 'garmentCare':
-            itemsToAdd = await careMode(itemsToAdd, createOutfitDate, submitBtn, outfitId)
+            itemsToAdd = await careMode(itemsToAdd, createOutfitDate, submitBtn, outfitId, values)
             break
         default:
             setDisplay([deleteBtn], 'none')
@@ -318,8 +318,30 @@ let addMode = async (itemsToAdd, createOutfitDate, submitBtn) => {
     return itemsToAdd
 }
 
-let careMode = async (itemsToAdd, createOutfitDate, submitBtn, outfitId, type) => {
+let careMode = async (itemsToAdd, createOutfitDate, submitBtn, outfitId, values) => {
+    let checkboxes = document.querySelectorAll('.wardrobe-checkbox');
+
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', async (event) => {
+            let itemId = event.target.closest('.item-container').dataset.id;
+
+            if (event.target.checked) {
+                let compatibility = await careCompatibility([itemId], values);
+
+                if (compatibility.length == 0) {
+                    let confirmed = await confirmBox();
+
+                    if (!confirmed) {
+                        event.target.checked = false
+                        itemsToAdd = itemsToAdd.filter(id => id != itemId);
+                    }
+                } 
+            }
+        });
+    });
+
     submitBtn.addEventListener('click', async (event) => {
+
         event.preventDefault()
         console.log(itemsToAdd);
 
@@ -328,18 +350,102 @@ let careMode = async (itemsToAdd, createOutfitDate, submitBtn, outfitId, type) =
             return
         }
 
-        await outfitItems.addItems('care_items', outfitId, itemsToAdd)
-        // if (createOutfitDate) {
-        //     await clothingManager.update('outfit',outfitId, createOutfitDate)
-        //     await updatePoints('style', createOutfitDate)
-        // }
+        await outfitItems.addItems('care_items', outfitId, itemsToAdd);
 
+        //     await updatePoints('style', createOutfitDate)
 
         itemsToAdd = []
 
         displayInPlanner('calendar')
     })
     return itemsToAdd
+}
+
+let confirmBox = () => {
+    return new Promise((resolve) => {
+        let modal = new CreateElement('div').setAttributes({ class: 'modal', tabindex: -1, role: 'dialog' })
+            .appendTo(document.body)
+        setDisplay([modal], 'flex')
+
+        let dialog = new CreateElement('div').setAttributes({ class: 'modal-dialog modal-sm', role: 'document' })
+            .appendTo(modal)
+        let header = new CreateElement('div').setAttributes({ class: 'modal-header' }).appendTo(dialog)
+        let title = new CreateElement('h4').setAttributes({ class: 'modal-title' }).setText('Incompatible Item').appendTo(header)
+        closeBtnX(header, () => {
+            modal.remove()
+            displayInPlanner('clothing')
+            resolve(false)
+        })
+        let body = new CreateElement('div').setAttributes({ class: 'modal-body' }).appendTo(dialog)
+        let text = new CreateElement('p').setAttributes({ class: 'modal-title' })
+            .setText(`This item has care instructions that don't fully match this care event. Would you like to keep it anyway or remove it from your selection?`).appendTo(body)
+        let footer = new CreateElement('div').setAttributes({ class: 'modal-footer' }).appendTo(dialog)
+        let saveBtn = new CreateElement('button').setText('Keep').setAttributes({ class: 'btn btn-primary' }).appendTo(footer)
+        saveBtn.addEventListener('click', () => {
+            modal.remove()
+
+            displayInPlanner('clothing')
+            resolve(true)
+        })
+        let dismissBtn = new CreateElement('button').setText('Remove').setAttributes({ class: 'btn btn-secondary', 'data-dismiss': 'modal' }).appendTo(footer)
+        dismissBtn.addEventListener('click', () => {
+            modal.remove()
+            resolve(false)
+        })
+    })
+}
+
+async function careCompatibility(itemsToAdd, values) {
+    let clothingItems = await outfitItems.getData('clothing_items', [itemsToAdd])
+    let compatibleItems = []
+
+    let careMap = {
+        wash: {
+            'hand wash': 1, 'do not wash': 0, 'wash': 6, 'wash at 30': 2,
+            'wash at 40': 3, 'wash at 50': 4, 'wash at 60': 5
+        },
+        bleach: {
+            'do not bleach': 0, 'bleach': 3, 'ncl bleach': 1, 'cl bleach': 2,
+        },
+        tumble_dry: {
+            'do not tumble dry': 0, 'tumble dry': 3,
+            'tumble dry low': 1, 'tumble dry normal': 2,
+        },
+        natural_dry: {
+            'dry': 1, 'line dry': 1, 'dry flat': 1,
+            'drip dry': 1, 'dry in shade': 0, 'line dry in the shade': 0,
+            'dry flat in shade': 0, 'drip dry in shade': 0
+        },
+        iron: {
+            'do not iron': 0, 'iron': 4, 'iron low': 1, 'iron medium': 2,
+            'iron high': 3,
+        }
+    }
+
+    clothingItems.forEach(item => {
+        console.log(item);
+
+        let itemCare = item.care_instructions
+
+        let isCompatible = Object.keys(itemCare).every(key => {
+
+            if (!values[key]) {
+                return true;
+            }
+
+            let itemCareValue = careMap[key][itemCare[key]]
+            let eventCareValue = careMap[key][values[key]]
+
+            if (itemCareValue == '' || itemCareValue == null) return true
+            return itemCareValue >= eventCareValue
+        })
+
+        if (isCompatible) {
+            compatibleItems.push(item.id)
+        }
+    })
+
+    return compatibleItems
 }
 
 let getOutfitId = (outfitId) => {

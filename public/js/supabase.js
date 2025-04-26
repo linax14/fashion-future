@@ -3,7 +3,7 @@ window.user = null;
 
 window.onload = async (event) => {
     let theme = 'dark'
-    document.documentElement.setAttribute('data-theme', theme)
+    document.documentElement.setAttribute('data-bs-theme', theme)
 }
 
 (async function () {
@@ -196,6 +196,7 @@ class ClothingManager {
         const clothingItemIds = [].concat(...Object.values(outfitItems))
         const clothingItems = await selectUserTable(this.user, 'clothing_items', clothingItemIds)
 
+        let details = outfits.filter(outfit => outfit.id == outfitId);
 
         let outfitDetails = outfits.map(outfit => {
             const outfitItemIds = outfitItems[outfit.id] || [];
@@ -209,11 +210,12 @@ class ClothingManager {
                     clothingItems: itemsForOutfit,
                     worn: outfit.worn
                 };
-            } else{
+            } else {
                 return {
                     outfitId: outfit.id,
                     wornDates: outfit.date,
                     clothingItems: itemsForOutfit,
+                    care_details: details[0]
                 }
             }
 
@@ -267,6 +269,28 @@ class ClothingItems extends ClothingManager {
             console.error(error);
         }
     }
+
+    async getData(tableName, clothingIds) {
+
+        if (clothingIds && !Array.isArray(clothingIds)) clothingIds = [clothingIds];
+        if (!clothingIds || clothingIds.length == 0) throw new Error("At least one clothing item is required to create an outfit.");
+
+        try {
+            const { data, error } = await supabase
+                .from(tableName)
+                .select()
+                .in('id', clothingIds)
+                .eq('user_id', this.user.id)
+
+            if (error) throw error
+
+            return data
+
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
 }
 
 async function getImage(element, appendTo, callback, className = '') {
@@ -342,7 +366,6 @@ let getUserData = async (dateInfo, progressType) => {
         ? { progress }
         : { progress, challengesToday, calendarData }
 }
-
 
 async function updatePoints(type = null, dataDate) {
     let calendarData = await selectUserTable(window.user, 'user_calendar')

@@ -15,6 +15,8 @@ document.body.addEventListener('click', function handleClickOutside(e) {
     }
 });
 
+let header =new CreateElement('h2').setAttributes({ class: 'calendar header' }).appendTo(document.body)
+
 let calendarContainer = new CreateElement('div').setAttributes({ id: 'calendar' }).appendTo(document.body)
 let careBtnContainer = new CreateElement('section').setAttributes({ class: 'care-container' }).appendTo(calendarContainer);
 let careEventContainer = new CreateElement('div').setAttributes({ class: 'care-event-container' }).appendTo(document.body)
@@ -75,7 +77,7 @@ async function renderCalendarDisplay() {
 
 let calendarHeader = () => {
     let main = new CreateElement('div').setAttributes({ class: 'calendar-info' }).appendTo(calendarContainer)
-    new CreateElement('h2').setAttributes({ class: 'calendar header' }).setText(`Your planner for ${year}`).appendTo(main)
+    header.innerText=`Your planner for ${year}`
     let monthHeader = new CreateElement('div').setAttributes({ class: 'month header' }).appendTo(main)
 
     months.forEach((element, index) => {
@@ -192,7 +194,7 @@ async function renderGarmentCareForm(createOutfitDate) {
     careEventContainer.innerHTML = ''
     displayInPlanner('garmentCare')
 
-    new CreateElement('h2').setText('Basket Care Settings').appendTo(careEventContainer)
+    new CreateElement('h3').setText('Basket Care Settings').appendTo(careEventContainer)
     new CreateElement('p').setText(`Select the care options and submit to start adding clothes`)
         .appendTo(careEventContainer)
 
@@ -209,7 +211,7 @@ async function renderGarmentCareForm(createOutfitDate) {
                 'do not wash': '../assets/careLabel/wash7.png'
             }, class: 'care-label'
         }, form),
-        bleaching: new Images('bleaching', {
+        bleach: new Images('bleach', {
             type: 'button', options: {
                 'bleach': '../assets/careLabel/bleach1.png',
                 'cl bleach': '../assets/careLabel/bleach2.png',
@@ -218,7 +220,7 @@ async function renderGarmentCareForm(createOutfitDate) {
                 'do not bleach': '../assets/careLabel/bleach5.png',
             }, class: 'care-label'
         }, form),
-        tumbleDrying: new Images('tumble drying', {
+        tumble_dry: new Images('tumble drying', {
             type: 'button', options: {
                 'tumble dry': '../assets/careLabel/tumble1.png',
                 'tumble dry low': '../assets/careLabel/tumble2.png',
@@ -226,7 +228,7 @@ async function renderGarmentCareForm(createOutfitDate) {
                 'do not tumble dry': '../assets/careLabel/tumble4.png',
             }, class: 'care-label'
         }, form),
-        naturalDrying: new Images('natural drying', {
+        natural_dry: new Images('natural drying', {
             type: 'button', options: {
                 'dry': '../assets/careLabel/dry1.png',
                 'line dry': '../assets/careLabel/dry2.png',
@@ -254,14 +256,14 @@ async function renderGarmentCareForm(createOutfitDate) {
         async (formValues, id) => {
             await clothingManager.update('care_event', id, {
                 date: Array.isArray(createOutfitDate) ? createOutfitDate : [createOutfitDate],
-                wash: formValues.wash, bleach: formValues.bleaching,
-                iron: formValues.iron, normal_dry: formValues.naturalDrying,
-                tumble_dry: formValues.tumbleDrying
+                wash: formValues.wash, bleach: formValues.bleach,
+                iron: formValues.iron, normal_dry: formValues.natural_dry,
+                tumble_dry: formValues.tumble_dry
             })
         }, null,
         (id, values) => {
             displayInPlanner('clothing')
-            renderClothingDisplay(createOutfitDate, 'garmentCare', id);
+            renderClothingDisplay(createOutfitDate, 'garmentCare', id, values);
         })
 }
 

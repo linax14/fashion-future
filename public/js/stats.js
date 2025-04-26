@@ -3,6 +3,7 @@ document.addEventListener("userInitialized", async () => {
     render()
 })
 
+let mainHeader = new CreateElement('h2').setText('Your stats').appendTo(document.body)
 let closetOverview = new CreateElement('section').setAttributes({ class: 'overview-section' }).appendTo(document.body)
 
 async function render() {
@@ -13,7 +14,6 @@ async function render() {
 
     //stats
     //brand category colour season occasion origin
-    let mainHeader = new CreateElement('h2').setText('Your stats').appendTo(closetOverview)
     let header1 = new CreateElement('h3').setText('General Wardrobe Stats').appendTo(closetOverview)
     let stats1 = new CreateElement('div').setAttributes({ class: 'stats-container' }).appendTo(closetOverview)
     let header2 = new CreateElement('h3').setText('Wear Stats').appendTo(closetOverview)
