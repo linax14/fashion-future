@@ -3,7 +3,10 @@ document.addEventListener("userInitialized", async () => {
     clothingManager = new ClothingManager(window.user)
     outfitItems = new ClothingItems(window.user)
 
-    await getChallengeAction()
+    let completed = localStorage.getItem('challengeCompleted')
+    if (!completed) {
+        await getChallengeAction()
+    }
 })
 
 let clothingManager
@@ -30,7 +33,6 @@ async function renderOutfits(dataDate, outfitsContainer) {
             }))
 
         outfitImagesDisplay(outfitContainer, count)
-        // await updateWearCount(element);
     }
 
     return true
@@ -80,7 +82,7 @@ async function updateWearCount(itemWearMap) {
         let wearCount = dates.size;
 
         let { error } = await supabase.from('clothing_items')
-            .update('outfit', { wear_count: wearCount })
+            .update({ wear_count: wearCount })
             .eq('id', itemId);
 
         if (error) {
@@ -91,7 +93,7 @@ async function updateWearCount(itemWearMap) {
     return itemWearMap
 }
 
-async function renderClothingDisplay(createOutfitDate, type, outfitId, values) {
+async function renderClothingDisplay(createOutfitDate, type, outfitId, formValues, filteredItems) {
     clothingContainer.innerHTML = ''
     displayInPlanner('clothing')
     closeBtnX(clothingContainer, () => displayInPlanner('calendar'))
@@ -116,6 +118,11 @@ async function renderClothingDisplay(createOutfitDate, type, outfitId, values) {
 
     let filtersContainer = new CreateElement('div').setAttributes({ class: 'filters-container' }).appendTo(clothingContainer)
     let clothingList = new CreateElement('div').setAttributes({ class: 'clothing-list' }).appendTo(clothingContainer)
+
+    if (filteredItems.length > 0) {
+        new CreateElement('h4').setText('Challenge Items').appendTo(clothingContainer)
+        await renderClothingItem(null, clothingList, filteredItems, itemsToAdd)
+    }
 
     let clothingItemElements = await renderClothingItem(null, clothingList, null, itemsToAdd)
 
@@ -157,7 +164,7 @@ async function renderClothingDisplay(createOutfitDate, type, outfitId, values) {
             itemsToAdd = await editMode(outfitId, clothingItemElements, itemsToAdd, submitBtn, deleteBtn);
             break;
         case 'garmentCare':
-            itemsToAdd = await careMode(itemsToAdd, createOutfitDate, submitBtn, outfitId, values)
+            itemsToAdd = await careMode(itemsToAdd, createOutfitDate, submitBtn, outfitId, formValues)
             break
         default:
             setDisplay([deleteBtn], 'none')
@@ -456,7 +463,7 @@ let getOutfitId = (outfitId) => {
     outfitContainer.forEach(container => {
         container.addEventListener('click', () => {
             outfitId = container.getAttribute('data-id')
-            renderClothingDisplay(null, 'editOutfit', outfitId)
+            renderClothingDisplay(null, 'editOutfit', outfitId, null)
         })
     })
     return outfitId
@@ -512,14 +519,19 @@ async function getDaily(user, dateInfo, type, appendTo) {
 
     return calendarData
 }
+
 async function getChallengeAction() {
     let challengeAction = localStorage.getItem('challengeAction')
+    let clothingData = JSON.parse(localStorage.getItem('filteredData'))
+
+    console.log(clothingData);
+
     let actionData = null
     if (challengeAction) {
         actionData = JSON.parse(challengeAction)
 
         if (actionData.action == 'addOutfit') {
-            await renderClothingDisplay(actionData.dateInfo, 'addOutfit', null)
+            await renderClothingDisplay(actionData.dateInfo, 'addOutfit', null, null, clothingData)
         }
     }
 }
@@ -543,6 +555,8 @@ async function completeChallenge() {
         localStorage.removeItem('challengeAction')
         window.location.href = './dashboard.html'
     }
+
+
 }
 
 // quiz

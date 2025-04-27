@@ -56,8 +56,10 @@ async function renderDashboard(user) {
     //from global.js
     let day = date.getDate()
     // let today = `${year}-${month + 1}-${day}`
-    let today = `${year}-${month + 1}-27`
+    let today = `${year}-5-4`
     // console.log(today);
+
+    localStorageReset(today)
 
     await renderOutfitStreak(today, main)
     await getDaily(window.user, today, 'quiz', main)
@@ -66,6 +68,16 @@ async function renderDashboard(user) {
     await dailyTips(window.user, today, main)
     await dailyChallenge(window.user, today, main)
 
+}
+
+let localStorageReset = (today) => {
+    let lastDay = localStorage.getItem('lastDay')
+
+    if (lastDay != today) {
+        localStorage.removeItem('challengeCompleted')
+    }
+
+    localStorage.setItem('lastDay', today)
 }
 
 async function renderQuiz(currentQuiz, challengeDate, container, complete = false, handleQuiz) {
@@ -316,12 +328,12 @@ async function dailyChallenge(user, dateInfo, appendTo) {
     let [year, month, day] = dateInfo.split('-')
     let currentMonth = months[month - 1].toLowerCase()
 
-    let { data, error } = await supabase.from('challenges').select()
+    let { data: defaultChallenges, error } = await supabase.from('challenges').select()
     if (error) { console.error(error) }
 
     let challenges = new Set()
-    let availableChallenges = data.filter(challenge => !challenges.has(challenge.id))
-    let usableChallenges = availableChallenges.length > 0 ? availableChallenges : data
+    let availableChallenges = defaultChallenges.filter(challenge => !challenges.has(challenge.id))
+    let usableChallenges = availableChallenges.length > 0 ? availableChallenges : defaultChallenges
 
     for (const element of calendarData) {
         if (element.year == year) {
@@ -345,8 +357,19 @@ async function dailyChallenge(user, dateInfo, appendTo) {
                 target = targetMonth[day]
                 if (!target.challenge) {
 
-                    let getRandom = usableChallenges[Math.floor(Math.random() * usableChallenges.length)]
-                    target.challenge = getRandom
+                    let clothingDataTypes = ['colour', 'season', 'occasion', 'category', 'origin']
+                    let randomType = clothingDataTypes[Math.floor(Math.random() * clothingDataTypes.length)]
+
+                    let data = await generateChallenge('colour')
+
+                    if (data.challenge) {
+                        target.challenge = data.challenge
+                        localStorage.setItem('filteredData',JSON.stringify(data.filteredClothingData))
+                    } else {
+                        let getRandom = usableChallenges[Math.floor(Math.random() * usableChallenges.length)]
+                        target.challenge = getRandom
+                    }
+
                     await updateUserTable(window.user, 'user_calendar', { calendar: element.calendar });
 
                 }
@@ -360,6 +383,8 @@ async function dailyChallenge(user, dateInfo, appendTo) {
 
 async function challengeCompleted(target, element) {
     let challengeElement = document.querySelector('.challenge.container')
+    // console.log(target);
+
     let renderChallengeCompleted = () => {
         let heading = challengeElement.querySelector('span')
         if (heading) {
@@ -379,8 +404,6 @@ async function challengeCompleted(target, element) {
             target.challenge.complete = true
             await updateUserTable(window.user, 'user_calendar', { calendar: element.calendar })
         };
-
-        localStorage.removeItem('challengeCompleted')
     }
 }
 
@@ -398,7 +421,9 @@ function renderChallenge(target, dateInfo, appendTo) {
     }
 }
 
-function completeChallengeEvent(target, dateInfo) {
+async function completeChallengeEvent(target, dateInfo) {
+    let clothingData = await selectUserTable(window.user, 'clothing_items')
+
     if (target.challenge.event_type) {
         let event = target.challenge.target
         let eventType = target.challenge.event_type
@@ -412,7 +437,7 @@ function completeChallengeEvent(target, dateInfo) {
                             action: 'addOutfit',
                             dateInfo: dateInfo,
                             fromChallenge: true,
-                            challengeId: target.challenge.id
+                            challengeId: target.challenge.id,
                         }))
                         window.location.href = './planner.html'
 
@@ -427,4 +452,67 @@ function completeChallengeEvent(target, dateInfo) {
                 break
         }
     }
+}
+
+async function prepareChallengeData(clothingDataType, appendTo) {
+    let data = await selectUserTable(window.user, 'clothing_items')
+
+    let clothingDataTypeMap = {}
+    let itemMap = {}
+
+    for (let item of data) {
+
+        let wear_count = item.wear_count ?? 0
+
+        if (!item[clothingDataType]) continue
+
+        let values = typeof item[clothingDataType] == 'string'
+            ? item[clothingDataType].split(',').map(v => v.trim().toLowerCase())
+            : [String(item[clothingDataType]).toLowerCase()]
+
+        for (let value of values) {
+            clothingDataTypeMap[value] = (itemMap[value] || 0) + wear_count
+
+            if (!itemMap[value]) itemMap[value] = []
+            itemMap[value].push(item)
+        }
+    }
+
+    let minWear = Math.min(...Object.values(clothingDataTypeMap))
+    let leastWorn = Object.entries(clothingDataTypeMap)
+        .filter(([value, totalWear]) => totalWear == minWear)
+        .map(([value]) => value)
+
+    let selectedItems = []
+
+    for (let item of leastWorn) {
+        selectedItems.push(...itemMap[item])
+    }
+
+    return { leastWorn, selectedItems }
+}
+
+async function generateChallenge(clothingDataType) {
+    let data = await prepareChallengeData(clothingDataType)
+
+    let challenge = {}
+    let challengeId = `auto-generated`
+
+    switch (clothingDataType) {
+        case 'colour':
+            challenge = {
+                "id": `${challengeId}`,
+                "title": `${capitalise(data.leastWorn[0])} Revival`,
+                "details": `${capitalise(data.leastWorn[0])} is your least worn ${clothingDataType}. Create a new outfit that incorporates at least 1 ${data.leastWorn[0]} item.`,
+                "target": "outfit",
+                "event_type": "new_outfit",
+                "filtered_data": true
+            }
+            break;
+
+        default:
+            break;
+    }
+
+    return { challenge, filteredClothingData: data.selectedItems }
 }

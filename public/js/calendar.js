@@ -1,7 +1,6 @@
 document.addEventListener("userInitialized", async () => {
     renderCalendarDisplay()
     clothingManager = new ClothingManager(window.user)
-
 });
 
 let navBtn
@@ -163,7 +162,7 @@ let handleDayClick = async (dayContainer, dataDate, createOutfitDate, outfitsCon
         let createOutfit = document.querySelector('.create-outfit-btn')
         if (createOutfit) {
             createOutfit.addEventListener('click', async () => {
-                await renderClothingDisplay(createOutfitDate, 'addOutfit', null);
+                await renderClothingDisplay(createOutfitDate, 'addOutfit', null,null);
             });
         }
         let addCareBtn = document.querySelector('.add-care-btn')
