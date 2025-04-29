@@ -24,20 +24,23 @@ let displayInDashboard = (type) => {
     let outfitsContainer = document.querySelector('.outfits-streak')
     let quizContainer = document.querySelector('.quiz-container')
     let unwornItemContainer = document.querySelector('.unworn-container')
+    let sustainabilityTips = document.querySelector('.sustainability-tips.container')
+    let challengeContainer = document.querySelector('.challenge.container')
+    let header = document.querySelector('.header')
     console.log(outfitsContainer);
 
     switch (type) {
         case 'quiz':
 
-            setDisplay([outfitsContainer], 'none')
+            setDisplay([outfitsContainer, sustainabilityTips, challengeContainer, header], 'none')
             if (unwornItemContainer) setDisplay([unwornItemContainer], 'none')
             quizContainer.style.gridColumn = 'span 4'
             setDisplay([quizContainer], 'block')
-
             break;
 
         default:
             setDisplay([outfitsContainer, unwornItemContainer, quizContainer], 'block')
+            setDisplay([sustainabilityTips, challengeContainer, header], 'flex')
             quizContainer.style.gridColumn = 'span 2'
             break;
     }
@@ -211,7 +214,7 @@ async function renderOutfitStreak(createOutfitDate, appendTo) {
     if (data == null) {
         new CreateElement('p').setText(`Log today's to keep up with your streak`).appendTo(div)
     } else {
-        new CreateElement('h2').setText(`${data.target.streak} DAY streak`).appendTo(div)
+        new CreateElement('h3').setText(`${data.target.streak} DAY streak`).appendTo(div)
     }
 
     return div
