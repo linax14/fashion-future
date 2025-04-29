@@ -56,7 +56,7 @@ async function renderDashboard(user) {
     //from global.js
     let day = date.getDate()
     // let today = `${year}-${month + 1}-${day}`
-    let today = `${year}-5-4`
+    let today = `${year}-4-29`
     // console.log(today);
 
     localStorageReset(today)
@@ -67,7 +67,6 @@ async function renderDashboard(user) {
 
     await dailyTips(window.user, today, main)
     await dailyChallenge(window.user, today, main)
-
 }
 
 let localStorageReset = (today) => {
@@ -182,7 +181,7 @@ async function renderQuiz(currentQuiz, challengeDate, container, complete = fals
 
                     percentage = (answeredQuestions / totalQuestions * 100)
                     if (percentage == 100) {
-                        await updatePoints('mastery', challengeDate)
+                        await updatePoints(['mastery'], challengeDate)
                     }
                     progressBarWrapper.setAttribute("aria-valuenow", percentage)
                     progressbar.style.width = `${percentage}%`
@@ -193,8 +192,7 @@ async function renderQuiz(currentQuiz, challengeDate, container, complete = fals
                         let result = (score / totalQuestions) * 100
                         console.log(result);
                         localStorage.setItem(`quiz_${challengeDate}_completed`, true);
-                        await updatePoints('curiosity', challengeDate)
-                        await updatePoints('knowledge', challengeDate)
+                        await updatePoints(['curiosity', 'knowledge'], challengeDate)
                     }
 
                     answerUI.style.pointerEvents = 'none';
@@ -364,7 +362,8 @@ async function dailyChallenge(user, dateInfo, appendTo) {
 
                     if (data.challenge) {
                         target.challenge = data.challenge
-                        localStorage.setItem('filteredData',JSON.stringify(data.filteredClothingData))
+                        localStorage.setItem('filteredData', JSON.stringify(data.filteredClothingData))
+                        localStorage.setItem('challengeData', JSON.stringify(data.challengeData))
                     } else {
                         let getRandom = usableChallenges[Math.floor(Math.random() * usableChallenges.length)]
                         target.challenge = getRandom
@@ -391,9 +390,9 @@ async function challengeCompleted(target, element) {
             heading.textContent += '✔'
         }
     }
-    if (target.challenge.complete == true) {
-        renderChallengeCompleted()
-    }
+    // if (target.challenge.complete == true) {
+    //     renderChallengeCompleted()
+    // }
 
     let completedChallenge = localStorage.getItem('challengeCompleted')
     if (completedChallenge) {
@@ -498,6 +497,10 @@ async function generateChallenge(clothingDataType) {
     let challenge = {}
     let challengeId = `auto-generated`
 
+    let challengeData = {
+        leastWorn: data.leastWorn[0],
+        clothingDataType: clothingDataType
+    }
     switch (clothingDataType) {
         case 'colour':
             challenge = {
@@ -514,5 +517,5 @@ async function generateChallenge(clothingDataType) {
             break;
     }
 
-    return { challenge, filteredClothingData: data.selectedItems }
+    return { challenge, filteredClothingData: data.selectedItems, challengeData }
 }

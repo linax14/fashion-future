@@ -93,84 +93,104 @@ async function updateWearCount(itemWearMap) {
     return itemWearMap
 }
 
-async function renderClothingDisplay(createOutfitDate, type, outfitId, formValues, filteredItems) {
+async function renderClothingDisplay(createOutfitDate, settings) {
     clothingContainer.innerHTML = ''
     displayInPlanner('clothing')
     closeBtnX(clothingContainer, () => displayInPlanner('calendar'))
 
     let itemsToAdd = []
-
     let header = new CreateElement('h3')
+    renderClothingDisplayHeader(settings, header)
 
-    switch (type) {
+    let filtersContainer = new CreateElement('div').setAttributes({ class: 'filters-container' }).appendTo(clothingContainer)
+    let filters = new CreateElement('h4').setText('Filters').appendTo(filtersContainer);
+    let clothingList = new CreateElement('div').setAttributes({ class: 'clothing-list' }).appendTo(clothingContainer)
+    let clothingItemElements
+
+    let data = await selectUserTable(window.user, 'clothing_items')
+
+    if (settings.challenge) {
+        let filtered = settings.challenge.filtered
+        if (filtered && filtered.length > 0) {
+            let challengeContainer = new CreateElement('div').setAttributes({ class: 'clothing-list' }).appendTo(clothingContainer)
+            new CreateElement('h4').setText('Challenge Items').appendTo(challengeContainer)
+            let clothingItems = await renderClothingItem(null, challengeContainer, filtered, itemsToAdd)
+            console.log(clothingItems);
+
+            data = data.filter(item => filtered.some(filteredItem => filteredItem.id != item.id))
+        }
+    }
+
+    new CreateElement('h4').setText('Other Items').appendTo(clothingList)
+    filters.addEventListener('click', async () => {
+        let filtersSection = document.querySelector('.filters');
+
+        if (!filtersSection) {
+            await renderFilters(filtersContainer, clothingList, (data) => {
+                clothingList.innerHTML = '';
+                data.forEach(e => renderClothingItem(null, clothingList, [e], itemsToAdd));
+
+                setDisplay([submitBtn, deleteBtn], 'block');
+                setDisplay([clothingList], 'grid');
+            });
+            filtersSection = document.querySelector('.filters');
+        }
+
+        let isExpanded = filtersSection.classList.toggle('expanded');
+
+        setDisplay([clothingList], isExpanded ? 'none' : 'grid');
+        setDisplay([filtersSection], isExpanded ? 'block' : 'none');
+        setDisplay([btnContainer], isExpanded ? 'none' : 'block');
+    })
+
+    clothingItemElements = await renderClothingItem(null, clothingList, data, itemsToAdd)
+
+    let btnContainer = new CreateElement('div').setAttributes({ class: 'btn-container bottom' }).appendTo(clothingContainer)
+    let btns = document.querySelectorAll('.btn').forEach(btn => btn.remove())
+    let submitBtn = new CreateElement('button').setText('Save').setAttributes({ class: 'submit btn' }).appendTo(btnContainer)
+    let deleteBtn = new CreateElement('button').setText('Delete').setAttributes({ class: 'delete btn' }).appendTo(btnContainer)
+
+    if (settings.challenge?.challengeData) {
+        if (settings.mode == 'addOutfit') {
+            setDisplay([deleteBtn], 'none')
+            deleteBtn.disabled = true
+            itemsToAdd = await addMode(itemsToAdd, createOutfitDate, submitBtn, settings.challenge.filtered)
+        }
+    } else {
+        switch (settings.mode) {
+            case 'addOutfit':
+                setDisplay([deleteBtn], 'none')
+                deleteBtn.disabled = true
+                itemsToAdd = await addMode(itemsToAdd, createOutfitDate, submitBtn)
+                break;
+            case 'editOutfit':
+                itemsToAdd = await editMode(settings.outfitId, clothingItemElements, itemsToAdd, submitBtn, deleteBtn);
+                break;
+            case 'garmentCare':
+                itemsToAdd = await careMode(itemsToAdd, createOutfitDate, submitBtn, settings.outfitId, settings.formValues)
+                break
+            default:
+                setDisplay([deleteBtn], 'none')
+                deleteBtn.disabled = true
+                itemsToAdd = await addMode(itemsToAdd, createOutfitDate, submitBtn)
+                break;
+        }
+    }
+}
+
+function renderClothingDisplayHeader(settings, header) {
+    switch (settings.mode) {
         case 'addOutfit':
             header.setText('New outfit').appendTo(clothingContainer)
-            break;
+            break
         case 'editOutfit':
             header.setText('Edit outfit').appendTo(clothingContainer)
-            break;
+            break
         case 'garmentCare':
             header.setText('Add items to basket').appendTo(clothingContainer)
             break
         default:
-            break;
-    }
-
-    let filtersContainer = new CreateElement('div').setAttributes({ class: 'filters-container' }).appendTo(clothingContainer)
-    let clothingList = new CreateElement('div').setAttributes({ class: 'clothing-list' }).appendTo(clothingContainer)
-
-    if (filteredItems.length > 0) {
-        new CreateElement('h4').setText('Challenge Items').appendTo(clothingContainer)
-        await renderClothingItem(null, clothingList, filteredItems, itemsToAdd)
-    }
-
-    let clothingItemElements = await renderClothingItem(null, clothingList, null, itemsToAdd)
-
-    new CreateElement('h4').setText('Filters')
-        .addEventListener('click', async () => {
-            let filtersSection = document.querySelector('.filters');
-
-            if (!filtersSection) {
-                await renderFilters(filtersContainer, clothingList, (filteredItems) => {
-                    clothingList.innerHTML = '';
-                    filteredItems.forEach(e => renderClothingItem(null, clothingList, [e], itemsToAdd));
-                    console.log(filteredItems);
-                    setDisplay([submitBtn, deleteBtn], 'block');
-                    setDisplay([clothingList], 'grid');
-                });
-                filtersSection = document.querySelector('.filters');
-            }
-
-            let isExpanded = filtersSection.classList.toggle('expanded');
-
-            setDisplay([clothingList], isExpanded ? 'none' : 'grid');
-            setDisplay([filtersSection], isExpanded ? 'block' : 'none');
-            setDisplay([btnContainer], isExpanded ? 'none' : 'block');
-        })
-        .appendTo(filtersContainer);
-
-    let btnContainer = new CreateElement('div').setAttributes({ class: 'btn-container bottom' }).appendTo(clothingContainer)
-    let btns = document.querySelectorAll('.btn').forEach(btn => btn.remove());
-    let submitBtn = new CreateElement('button').setText('Save').setAttributes({ class: 'submit btn' }).appendTo(btnContainer)
-    let deleteBtn = new CreateElement('button').setText('Delete').setAttributes({ class: 'delete btn' }).appendTo(btnContainer)
-
-    switch (type) {
-        case 'addOutfit':
-            setDisplay([deleteBtn], 'none')
-            deleteBtn.disabled = true
-            itemsToAdd = await addMode(itemsToAdd, createOutfitDate, submitBtn)
-            break;
-        case 'editOutfit':
-            itemsToAdd = await editMode(outfitId, clothingItemElements, itemsToAdd, submitBtn, deleteBtn);
-            break;
-        case 'garmentCare':
-            itemsToAdd = await careMode(itemsToAdd, createOutfitDate, submitBtn, outfitId, formValues)
             break
-        default:
-            setDisplay([deleteBtn], 'none')
-            deleteBtn.disabled = true
-            itemsToAdd = await addMode(itemsToAdd, createOutfitDate, submitBtn)
-            break;
     }
 }
 
@@ -213,8 +233,7 @@ async function addOutfitStreak(createOutfitDate) {
                 target.streak = streakCount
             }
             await updateUserTable(window.user, 'user_calendar', { calendar: calendar });
-            await updatePoints('discipline', createOutfitDate);
-
+            await updatePoints(['discipline'], createOutfitDate);
         } prevDate = dateStr;
     }
     return { target };
@@ -274,13 +293,13 @@ let editMode = async (outfitId, clothingItemElements, itemsToAdd, submitBtn, del
 
     return itemsToAdd;
 }
-
 let itemWearMap = new Map()
 
-let addMode = async (itemsToAdd, createOutfitDate, submitBtn) => {
+// localStorage.clear()
+let addMode = async (itemsToAdd, createOutfitDate, submitBtn, challengeExtras) => {
+
     submitBtn.addEventListener('click', async (event) => {
         event.preventDefault()
-        console.log(itemsToAdd);
 
         if (itemsToAdd.length <= 0) {
             alert('Please select at least one item')
@@ -296,7 +315,7 @@ let addMode = async (itemsToAdd, createOutfitDate, submitBtn) => {
                 wear_dates: Array.isArray(createOutfitDate) ? createOutfitDate : [createOutfitDate],
                 worn: true
             })
-            await updatePoints('style', createOutfitDate)
+            await updatePoints(['style'], createOutfitDate)
         }
 
         let data = await clothingManager.getData('outfit')
@@ -316,18 +335,34 @@ let addMode = async (itemsToAdd, createOutfitDate, submitBtn) => {
         }
 
         let count = await updateWearCount(itemWearMap);
-        console.log(count);
+        let streak = await addOutfitStreak(createOutfitDate);
+
+        if (challengeExtras) {
+            for (let item of challengeExtras) {
+                if (itemsToAdd.includes(item.id)) {
+                    await updatePoints(['curiosity', 'style'], createOutfitDate)
+                    await completeChallenge()
+
+                    console.log('here');
+                } else {
+                    console.log('sup');
+                    let confirmed = await challengeConfirmBox()
+                    if (confirmed) await completeChallenge()
+                }
+            }
+        } else {
+            updatePoints(['curiosity'], createOutfitDate)
+            completeChallenge()
+        }
 
         itemsToAdd = []
-
-        await addOutfitStreak(createOutfitDate);
-        await completeChallenge()
-
         displayInPlanner('calendar')
     })
     return itemsToAdd
 }
 
+//add mastery and knowledge point for 100 compatibility 
+//add knowledge point for 50 compatibility 
 let careMode = async (itemsToAdd, createOutfitDate, submitBtn, outfitId, values) => {
     let checkboxes = document.querySelectorAll('.wardrobe-checkbox');
 
@@ -362,7 +397,7 @@ let careMode = async (itemsToAdd, createOutfitDate, submitBtn, outfitId, values)
 
         await outfitItems.addItems('care_items', outfitId, itemsToAdd);
 
-        //     await updatePoints('style', createOutfitDate)
+        //     await updatePoints(['style'], createOutfitDate)
 
         itemsToAdd = []
 
@@ -380,7 +415,7 @@ let confirmBox = () => {
         let dialog = new CreateElement('div').setAttributes({ class: 'modal-dialog modal-sm', role: 'document' })
             .appendTo(modal)
         let header = new CreateElement('div').setAttributes({ class: 'modal-header' }).appendTo(dialog)
-        let title = new CreateElement('h4').setAttributes({ class: 'modal-title' }).setText('Incompatible Item').appendTo(header)
+        new CreateElement('h4').setAttributes({ class: 'modal-title' }).setText('Incompatible Item').appendTo(header)
         closeBtnX(header, () => {
             modal.remove()
             displayInPlanner('clothing')
@@ -398,6 +433,40 @@ let confirmBox = () => {
             resolve(true)
         })
         let dismissBtn = new CreateElement('button').setText('Remove').setAttributes({ class: 'btn btn-secondary', 'data-dismiss': 'modal' }).appendTo(footer)
+        dismissBtn.addEventListener('click', () => {
+            modal.remove()
+            resolve(false)
+        })
+    })
+}
+
+let challengeConfirmBox = () => {
+    return new Promise((resolve) => {
+        let modal = new CreateElement('div').setAttributes({ class: 'modal', tabindex: -1, role: 'dialog' })
+            .appendTo(document.body)
+        setDisplay([modal], 'flex')
+
+        let dialog = new CreateElement('div').setAttributes({ class: 'modal-dialog modal-sm', role: 'document' })
+            .appendTo(modal)
+        let header = new CreateElement('div').setAttributes({ class: 'modal-header' }).appendTo(dialog)
+        new CreateElement('h4').setAttributes({ class: 'modal-title' }).setText('Challenge Fail').appendTo(header)
+        closeBtnX(header, () => {
+            modal.remove()
+            displayInPlanner('clothing')
+            resolve(false)
+        })
+        let body = new CreateElement('div').setAttributes({ class: 'modal-body' }).appendTo(dialog)
+        let text = new CreateElement('p').setAttributes({ class: 'modal-title' })
+            .setText(`You did not select a challenge item, if you save the outfit you will not gain challenge points and you will not be able to redo the challenge today`).appendTo(body)
+        let footer = new CreateElement('div').setAttributes({ class: 'modal-footer' }).appendTo(dialog)
+        let saveBtn = new CreateElement('button').setText('Save').setAttributes({ class: 'btn btn-primary' }).appendTo(footer)
+        saveBtn.addEventListener('click', () => {
+            modal.remove()
+
+            displayInPlanner('clothing')
+            resolve(true)
+        })
+        let dismissBtn = new CreateElement('button').setText('Go back').setAttributes({ class: 'btn btn-secondary', 'data-dismiss': 'modal' }).appendTo(footer)
         dismissBtn.addEventListener('click', () => {
             modal.remove()
             resolve(false)
@@ -463,7 +532,7 @@ let getOutfitId = (outfitId) => {
     outfitContainer.forEach(container => {
         container.addEventListener('click', () => {
             outfitId = container.getAttribute('data-id')
-            renderClothingDisplay(null, 'editOutfit', outfitId, null)
+            renderClothingDisplay(null, { mode: 'editOutfit', outfitId: outfitId })
         })
     })
     return outfitId
@@ -523,15 +592,14 @@ async function getDaily(user, dateInfo, type, appendTo) {
 async function getChallengeAction() {
     let challengeAction = localStorage.getItem('challengeAction')
     let clothingData = JSON.parse(localStorage.getItem('filteredData'))
-
-    console.log(clothingData);
+    let challengeData = JSON.parse(localStorage.getItem('challengeData'))
 
     let actionData = null
     if (challengeAction) {
         actionData = JSON.parse(challengeAction)
 
         if (actionData.action == 'addOutfit') {
-            await renderClothingDisplay(actionData.dateInfo, 'addOutfit', null, null, clothingData)
+            await renderClothingDisplay(actionData.dateInfo, { mode: 'addOutfit', challenge: { filtered: clothingData, challengeData: challengeData } })
         }
     }
 }
@@ -555,8 +623,6 @@ async function completeChallenge() {
         localStorage.removeItem('challengeAction')
         window.location.href = './dashboard.html'
     }
-
-
 }
 
 // quiz

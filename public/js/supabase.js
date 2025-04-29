@@ -131,7 +131,7 @@ class ClothingManager {
     }
 
     async getItems(tableName, outfitIds) {
-        if (tableName == 'outfit') {
+        if (tableName == 'outfit' || tableName == 'outfit_items') {
             tableName = 'outfit_items'
             try {
                 const { data, error } = await supabase
@@ -367,13 +367,14 @@ let getUserData = async (dateInfo, progressType) => {
         : { progress, challengesToday, calendarData }
 }
 
-async function updatePoints(type = null, dataDate) {
+async function updatePoints(types = [], dataDate) {
     let calendarData = await selectUserTable(window.user, 'user_calendar')
     let data = await calendarDataTarget(dataDate, 'day')
     let target = data.target
     let calendar = data.calendar
 
     if (target) {
+
         if (!target.points) target.points = {}
         let tags = { 'style': 0, 'discipline': 0, 'curiosity': 0, 'knowledge': 0, 'mastery': 0 }
 
@@ -383,11 +384,10 @@ async function updatePoints(type = null, dataDate) {
             }
         }
 
-        if (type) {
+        for (let type of types) {
             if (isNaN(target.points[type])) target.points[type] = 0;
             target.points[type] += 1
         }
-        console.log(target);
         await updateUserTable(window.user, 'user_calendar', { calendar: calendar })
     }
 

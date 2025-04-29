@@ -14,7 +14,7 @@ document.body.addEventListener('click', function handleClickOutside(e) {
     }
 });
 
-let header =new CreateElement('h2').setAttributes({ class: 'calendar header' }).appendTo(document.body)
+let header = new CreateElement('h2').setAttributes({ class: 'calendar header' }).appendTo(document.body)
 
 let calendarContainer = new CreateElement('div').setAttributes({ id: 'calendar' }).appendTo(document.body)
 let careBtnContainer = new CreateElement('section').setAttributes({ class: 'care-container' }).appendTo(calendarContainer);
@@ -76,7 +76,7 @@ async function renderCalendarDisplay() {
 
 let calendarHeader = () => {
     let main = new CreateElement('div').setAttributes({ class: 'calendar-info' }).appendTo(calendarContainer)
-    header.innerText=`Your planner for ${year}`
+    header.innerText = `Your planner for ${year}`
     let monthHeader = new CreateElement('div').setAttributes({ class: 'month header' }).appendTo(main)
 
     months.forEach((element, index) => {
@@ -162,7 +162,7 @@ let handleDayClick = async (dayContainer, dataDate, createOutfitDate, outfitsCon
         let createOutfit = document.querySelector('.create-outfit-btn')
         if (createOutfit) {
             createOutfit.addEventListener('click', async () => {
-                await renderClothingDisplay(createOutfitDate, 'addOutfit', null,null);
+                await renderClothingDisplay(createOutfitDate, { mode: 'addOutfit' });
             });
         }
         let addCareBtn = document.querySelector('.add-care-btn')
@@ -262,7 +262,7 @@ async function renderGarmentCareForm(createOutfitDate) {
         }, null,
         (id, values) => {
             displayInPlanner('clothing')
-            renderClothingDisplay(createOutfitDate, 'garmentCare', id, values);
+            renderClothingDisplay(createOutfitDate, { mode: 'garmentCare', outfitId: id, formValues: values });
         })
 }
 

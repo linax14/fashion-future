@@ -510,6 +510,10 @@ async function renderFilters(appendTo, currentDisplay, onFilter) {
     let body = new CreateElement('div').appendTo(div);
     let selectedSets = await filters(body);
     setDisplay([currentDisplay], 'none')
+
+    let filtersSection = document.querySelector('.filters');
+    let btnContainer = document.querySelector('.btn-container.bottom')
+
     let btns = new CreateElement('div').setAttributes({ class: 'btn-container' }).appendTo(div)
     new CreateElement('button').setAttributes({ class: 'submit btn' }).setText('Filter')
         .addEventListener('click', () => {
@@ -546,6 +550,14 @@ async function renderFilters(appendTo, currentDisplay, onFilter) {
             console.log('Filtered Items:', filteredItems);
             currentDisplay.innerHTML = '';
             setDisplay([currentDisplay], 'grid')
+            if (filtersSection) {
+                filtersSection.classList.remove('expanded')
+                setDisplay([filtersSection], 'none')
+            }
+
+            if (btnContainer) {
+                setDisplay([btnContainer], 'block')
+            }
 
             onFilter(filteredItems);
 
@@ -565,6 +577,8 @@ async function renderFilters(appendTo, currentDisplay, onFilter) {
             });
             currentDisplay.innerHTML = '';
             setDisplay([currentDisplay], 'grid')
+            filtersSection.classList.remove('expanded')
+
             onFilter(clothingItems);
             div.style.display = 'none';
         })
@@ -605,7 +619,6 @@ async function renderClothingItem(clothingFormContainer = null, appendTo, filter
 
         let p = new CreateElement('p').setText(element.brand).appendTo(container)
 
-        //for delete functionality
         let checkbox = new CreateElement('input')
             .setAttributes({ type: 'checkbox', class: 'wardrobe-checkbox', style: 'display:none' })
             .appendTo(container)
@@ -617,14 +630,17 @@ async function renderClothingItem(clothingFormContainer = null, appendTo, filter
                 event.preventDefault()
 
                 if (event.target.checked) {
-                    if (!itemsToAdd.includes(element.id)) {
-                        itemsToAdd.push(element.id)
-                    }
+                    itemsToAdd.push(element.id)
                 } else {
-                    itemsToAdd = itemsToAdd.filter(id => id !== element.id);
+                    let indexRemove = itemsToAdd.indexOf(element.id)
+                    if (indexRemove > -1) {
+                        itemsToAdd.splice(indexRemove, 1)
+                    }
                 }
+                return itemsToAdd
             })
         }
+
         return { container, checkbox, itemClickHandler, id: element.id }
     }))
     return itemElements
