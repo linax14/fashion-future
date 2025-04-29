@@ -5,7 +5,6 @@ document.addEventListener("userInitialized", async () => {
 
 let navBtn
 let navModal = new CreateElement('div').setAttributes({ class: 'nav-modal' }).appendTo(document.body)
-setDisplay([navModal], 'none')
 
 document.body.addEventListener('click', function handleClickOutside(e) {
     let isClickInside = navModal.contains(e.target) || navBtn[0].contains(e.target);
@@ -58,40 +57,53 @@ let displayInPlanner = (type) => {
     }
 }
 
-async function renderCalendarDisplay() {
+async function renderCalendarDisplay(monthStart) {
     calendarContainer.innerHTML = ''
-    let main = calendarHeader()
-
+    setDisplay([navModal], 'none')
+    let main = await calendarHeader()
     let weekScrollWrapper = new CreateElement('div').setAttributes({ class: 'week-scroll-wrapper' }).appendTo(main);
     let daysContainer = new CreateElement('div').setAttributes({ class: 'days-container' }).appendTo(weekScrollWrapper);
     let noDaysMonth = new Date(year, month + 1, 0).getDate();
 
     let outfitsContainer = new CreateElement('section').setAttributes({ class: 'outfits-container' }).appendTo(calendarContainer);
     let createOutfitDate = null
-    addNavBtns('create-outfit-btn', 'New outfit', '../assets/createOutfit.png', 'clothing items')
-    addNavBtns('add-care-btn', 'care event', 'https://img.icons8.com/ios/100/laundry-bag.png', 'laundry basket')
+    createOutfitDate = monthStart
+
+    navBtn = document.querySelectorAll('nav ol li button')
+
+    if (monthStart) {
+        setTimeout(() => {
+            let firstDayDiv = document.querySelector(`.day-container .day[data-date="${monthStart}"]`);
+            if (firstDayDiv) {
+                firstDayDiv.click();
+            }
+        }, 0);
+    }
 
     await calendarDays(noDaysMonth, createOutfitDate, daysContainer, outfitsContainer);
     await scrollToday(createOutfitDate, outfitsContainer);
-
-    navBtn = document.querySelectorAll('nav ol li button')
 }
 
-let calendarHeader = () => {
+let calendarHeader = async () => {
     let main = new CreateElement('div').setAttributes({ class: 'calendar-info' }).appendTo(calendarContainer)
     header.innerText = `Your planner for ${year}`
     let monthHeader = new CreateElement('div').setAttributes({ class: 'month header' }).appendTo(main)
 
-    months.forEach((element, index) => {
-        new CreateElement('h3')
-            .setAttributes({ class: index === month ? 'item current' : 'item' })
-            .addEventListener('click', () => {
-                month = index
-                renderCalendarDisplay()
-            })
-            .setText(element.substring(0, 3))
-            .appendTo(monthHeader)
+    new Promise((resolve) => {
+        months.forEach((element, index) => {
+            new CreateElement('h3')
+                .setAttributes({ class: index === month ? 'item current' : 'item' })
+                .addEventListener('click', () => {
+                    month = index
+                    let monthStart = `${year}-${month + 1}-1`
+                    resolve(monthStart)
+                    renderCalendarDisplay(monthStart)
+                })
+                .setText(element.substring(0, 3))
+                .appendTo(monthHeader)
+        })
     })
+
     return main
 }
 
@@ -158,21 +170,21 @@ let handleDayClick = async (dayContainer, dataDate, createOutfitDate, outfitsCon
     let prevWorn = document.querySelector('.prev-worn-container')
     if (prevWorn) prevWorn.remove()
 
-    navBtn[0].addEventListener('click', () => {
-        let isVisible = navModal.style.display == 'flex'
-        setDisplay([navModal], isVisible ? 'none' : 'flex');
+    document.querySelectorAll('.btn').forEach(btn => btn.remove())
+    let createOutfit = addNavBtns('create-outfit-btn btn', 'New outfit', '../assets/createOutfit.png', 'clothing items')
+    let addCareBtn = addNavBtns('add-care-btn btn', 'care event', 'https://img.icons8.com/ios/100/laundry-bag.png', 'laundry basket')
 
-        let createOutfit = document.querySelector('.create-outfit-btn')
-        if (createOutfit) {
-            createOutfit.addEventListener('click', async () => {
-                await renderClothingDisplay(createOutfitDate, { mode: 'addOutfit' });
-            });
-        }
-        let addCareBtn = document.querySelector('.add-care-btn')
-        if (addCareBtn) {
-            addCareBtn.addEventListener('click', () => { renderGarmentCareForm(createOutfitDate) })
-        }
-    })
+    if (!navBtn[0].hasListenerAttached) {
+        navBtn[0].addEventListener('click', () => {
+            let isVisible = navModal.style.display == 'flex';
+            setDisplay([navModal], isVisible ? 'none' : 'flex');
+
+            if (createOutfit) createOutfit.addEventListener('click', async () => { await renderClothingDisplay(createOutfitDate, { mode: 'addOutfit' }); });
+            if (addCareBtn) addCareBtn.addEventListener('click', () => { renderGarmentCareForm(createOutfitDate); });
+        })
+
+        navBtn[0].hasListenerAttached = true
+    }
 
     let render = await renderOutfits(dataDate, outfitsContainer);
     if (render) getOutfitId();
