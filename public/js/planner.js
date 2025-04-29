@@ -94,7 +94,11 @@ async function updateWearCount(itemWearMap) {
 }
 
 async function renderClothingDisplay(createOutfitDate, settings) {
-    clothingContainer.innerHTML = ''
+    clothingContainer = document.querySelector('.clothing-container')
+    if (clothingContainer) {
+        clothingContainer.innerHTML = ''
+    }
+
     displayInPlanner('clothing')
     closeBtnX(clothingContainer, () => displayInPlanner('calendar'))
 
@@ -117,11 +121,13 @@ async function renderClothingDisplay(createOutfitDate, settings) {
             let clothingItems = await renderClothingItem(null, challengeContainer, filtered, itemsToAdd)
             console.log(clothingItems);
 
-            data = data.filter(item => filtered.some(filteredItem => filteredItem.id != item.id))
+            data = data.filter(item => !filtered.some(filteredItem => filteredItem.id == item.id))
         }
     }
 
-    new CreateElement('h4').setText('Other Items').appendTo(clothingList)
+    if (data.length > 0) {
+        new CreateElement('h4').setText('Other Items').appendTo(clothingList)
+    }
     filters.addEventListener('click', async () => {
         let filtersSection = document.querySelector('.filters');
 
@@ -206,17 +212,17 @@ async function addOutfitStreak(createOutfitDate) {
     let sortedDates = [...new Set(allDates)].sort((a, b) => new Date(a) - new Date(b));
     sortedDates = sortedDates.map(date => formatDateUnpadded(date))
 
+    let alreadyLogged = sortedDates.includes(createOutfitDate)
+    if (!alreadyLogged) sortedDates.push(createOutfitDate)
+
+    sortedDates = [...new Set(sortedDates)].sort((a, b) => new Date(a) - new Date(b))
+
     let prevDate = null;
     let streakCount = 0;
 
     let data = await calendarDataTarget(createOutfitDate, 'day')
     let target = data.target
     let calendar = target.calendar
-
-    if (sortedDates.includes(createOutfitDate)) {
-        // console.log('already logged - skip');
-        return { target };
-    }
 
     for (let dateStr of sortedDates) {
         let curr = dateStr;
@@ -232,8 +238,11 @@ async function addOutfitStreak(createOutfitDate) {
             if (target) {
                 target.streak = streakCount
             }
-            await updateUserTable(window.user, 'user_calendar', { calendar: calendar });
-            await updatePoints(['discipline'], createOutfitDate);
+
+            if (!alreadyLogged) {
+                await updateUserTable(window.user, 'user_calendar', { calendar: calendar });
+                await updatePoints(['discipline'], createOutfitDate);
+            }
         } prevDate = dateStr;
     }
     return { target };
@@ -307,7 +316,6 @@ let addMode = async (itemsToAdd, createOutfitDate, submitBtn, challengeExtras) =
         }
 
         let outfitId = await clothingManager.generateId('outfit')
-        console.log(outfitId);
 
         await outfitItems.addItems('outfit_items', outfitId, itemsToAdd)
         if (createOutfitDate) {
@@ -334,20 +342,26 @@ let addMode = async (itemsToAdd, createOutfitDate, submitBtn, challengeExtras) =
             }
         }
 
-        let count = await updateWearCount(itemWearMap);
-        let streak = await addOutfitStreak(createOutfitDate);
-
+        let challengeFailed = false
         if (challengeExtras) {
             for (let item of challengeExtras) {
                 if (itemsToAdd.includes(item.id)) {
                     await updatePoints(['curiosity', 'style'], createOutfitDate)
                     await completeChallenge()
-
-                    console.log('here');
                 } else {
-                    console.log('sup');
-                    let confirmed = await challengeConfirmBox()
-                    if (confirmed) await completeChallenge()
+                    let confirmed = await confirmBox({
+                        title: 'Challenge Fail',
+                        text: `You did not select a challenge item, if you save the outfit you will not gain challenge points and you will not be able to redo the challenge today`,
+                        save: 'Save', dismiss: 'Go back'
+                    })
+
+                    if (confirmed) {
+                        await completeChallenge()
+
+                    } else {
+                        challengeFailed = true
+                        displayInPlanner('clothing')
+                    }
                 }
             }
         } else {
@@ -355,9 +369,16 @@ let addMode = async (itemsToAdd, createOutfitDate, submitBtn, challengeExtras) =
             completeChallenge()
         }
 
-        itemsToAdd = []
-        displayInPlanner('calendar')
+        if (challengeFailed == false) {
+            itemsToAdd = []
+            displayInPlanner('calendar')
+
+            let count = await updateWearCount(itemWearMap);
+            let streak = await addOutfitStreak(createOutfitDate);
+            console.log(streak);
+        }
     })
+
     return itemsToAdd
 }
 
@@ -374,7 +395,11 @@ let careMode = async (itemsToAdd, createOutfitDate, submitBtn, outfitId, values)
                 let compatibility = await careCompatibility([itemId], values);
 
                 if (compatibility.length == 0) {
-                    let confirmed = await confirmBox();
+                    let confirmed = await confirmBox({
+                        title: 'Incompatible Item',
+                        text: `This item has care instructions that don't fully match this care event. Would you like to keep it anyway or remove it from your selection?`,
+                        save: 'Keep', dismiss: 'Remove'
+                    });
 
                     if (!confirmed) {
                         event.target.checked = false
@@ -406,7 +431,7 @@ let careMode = async (itemsToAdd, createOutfitDate, submitBtn, outfitId, values)
     return itemsToAdd
 }
 
-let confirmBox = () => {
+let confirmBox = (settings) => {
     return new Promise((resolve) => {
         let modal = new CreateElement('div').setAttributes({ class: 'modal', tabindex: -1, role: 'dialog' })
             .appendTo(document.body)
@@ -415,7 +440,7 @@ let confirmBox = () => {
         let dialog = new CreateElement('div').setAttributes({ class: 'modal-dialog modal-sm', role: 'document' })
             .appendTo(modal)
         let header = new CreateElement('div').setAttributes({ class: 'modal-header' }).appendTo(dialog)
-        new CreateElement('h4').setAttributes({ class: 'modal-title' }).setText('Incompatible Item').appendTo(header)
+        new CreateElement('h4').setAttributes({ class: 'modal-title' }).setText(settings.title).appendTo(header)
         closeBtnX(header, () => {
             modal.remove()
             displayInPlanner('clothing')
@@ -423,50 +448,16 @@ let confirmBox = () => {
         })
         let body = new CreateElement('div').setAttributes({ class: 'modal-body' }).appendTo(dialog)
         let text = new CreateElement('p').setAttributes({ class: 'modal-title' })
-            .setText(`This item has care instructions that don't fully match this care event. Would you like to keep it anyway or remove it from your selection?`).appendTo(body)
+            .setText(settings.text).appendTo(body)
         let footer = new CreateElement('div').setAttributes({ class: 'modal-footer' }).appendTo(dialog)
-        let saveBtn = new CreateElement('button').setText('Keep').setAttributes({ class: 'btn btn-primary' }).appendTo(footer)
+        let saveBtn = new CreateElement('button').setText(settings.save).setAttributes({ class: 'btn btn-primary' }).appendTo(footer)
         saveBtn.addEventListener('click', () => {
             modal.remove()
-
             displayInPlanner('clothing')
             resolve(true)
         })
-        let dismissBtn = new CreateElement('button').setText('Remove').setAttributes({ class: 'btn btn-secondary', 'data-dismiss': 'modal' }).appendTo(footer)
-        dismissBtn.addEventListener('click', () => {
-            modal.remove()
-            resolve(false)
-        })
-    })
-}
 
-let challengeConfirmBox = () => {
-    return new Promise((resolve) => {
-        let modal = new CreateElement('div').setAttributes({ class: 'modal', tabindex: -1, role: 'dialog' })
-            .appendTo(document.body)
-        setDisplay([modal], 'flex')
-
-        let dialog = new CreateElement('div').setAttributes({ class: 'modal-dialog modal-sm', role: 'document' })
-            .appendTo(modal)
-        let header = new CreateElement('div').setAttributes({ class: 'modal-header' }).appendTo(dialog)
-        new CreateElement('h4').setAttributes({ class: 'modal-title' }).setText('Challenge Fail').appendTo(header)
-        closeBtnX(header, () => {
-            modal.remove()
-            displayInPlanner('clothing')
-            resolve(false)
-        })
-        let body = new CreateElement('div').setAttributes({ class: 'modal-body' }).appendTo(dialog)
-        let text = new CreateElement('p').setAttributes({ class: 'modal-title' })
-            .setText(`You did not select a challenge item, if you save the outfit you will not gain challenge points and you will not be able to redo the challenge today`).appendTo(body)
-        let footer = new CreateElement('div').setAttributes({ class: 'modal-footer' }).appendTo(dialog)
-        let saveBtn = new CreateElement('button').setText('Save').setAttributes({ class: 'btn btn-primary' }).appendTo(footer)
-        saveBtn.addEventListener('click', () => {
-            modal.remove()
-
-            displayInPlanner('clothing')
-            resolve(true)
-        })
-        let dismissBtn = new CreateElement('button').setText('Go back').setAttributes({ class: 'btn btn-secondary', 'data-dismiss': 'modal' }).appendTo(footer)
+        let dismissBtn = new CreateElement('button').setText(settings.dismiss).setAttributes({ class: 'btn btn-secondary', 'data-dismiss': 'modal' }).appendTo(footer)
         dismissBtn.addEventListener('click', () => {
             modal.remove()
             resolve(false)
