@@ -56,7 +56,7 @@ async function renderDashboard(user) {
     //from global.js
     let day = date.getDate()
     // let today = `${year}-${month + 1}-${day}`
-    let today = `${year}-4-29`
+    let today = `${year}-4-26`
     // console.log(today);
 
     localStorageReset(today)
@@ -78,7 +78,6 @@ let localStorageReset = (today) => {
 
     localStorage.setItem('lastDay', today)
 }
-
 async function renderQuiz(currentQuiz, challengeDate, container, complete = false, handleQuiz) {
 
     displayInDashboard('quiz')
@@ -358,9 +357,9 @@ async function dailyChallenge(user, dateInfo, appendTo) {
                     let clothingDataTypes = ['colour', 'season', 'occasion', 'category', 'origin']
                     let randomType = clothingDataTypes[Math.floor(Math.random() * clothingDataTypes.length)]
 
-                    let data = await generateChallenge('colour')
+                    let data = await generateChallenge(randomType)
 
-                    if (data.challenge) {
+                    if (data && data.challenge) {
                         target.challenge = data.challenge
                         localStorage.setItem('filteredData', JSON.stringify(data.filteredClothingData))
                         localStorage.setItem('challengeData', JSON.stringify(data.challengeData))
@@ -382,7 +381,6 @@ async function dailyChallenge(user, dateInfo, appendTo) {
 
 async function challengeCompleted(target, element) {
     let challengeElement = document.querySelector('.challenge.container')
-    // console.log(target);
 
     let renderChallengeCompleted = () => {
         let heading = challengeElement.querySelector('span')
@@ -418,6 +416,8 @@ function renderChallenge(target, dateInfo, appendTo) {
     } else {
         div.addEventListener('click', async () => completeChallengeEvent(target, dateInfo))
     }
+
+    return div
 }
 
 async function completeChallengeEvent(target, dateInfo) {
@@ -485,37 +485,87 @@ async function prepareChallengeData(clothingDataType, appendTo) {
     let selectedItems = []
 
     for (let item of leastWorn) {
-        selectedItems.push(...itemMap[item])
+        for (let clothingItems of itemMap[item]) {
+            if (!selectedItems.some(existing => existing.id == clothingItems.id)) {
+                selectedItems.push(...itemMap[item])
+            }
+        }
     }
 
     return { leastWorn, selectedItems }
 }
-
 async function generateChallenge(clothingDataType) {
     let data = await prepareChallengeData(clothingDataType)
+
+    if (data.leastWorn.length <= 0 || data.selectedItems.length <= 0) return false
 
     let challenge = {}
     let challengeId = `auto-generated`
 
     let challengeData = {
-        leastWorn: data.leastWorn[0],
+        leastWorn: `${(data.leastWorn[0])}`,
         clothingDataType: clothingDataType
     }
+
     switch (clothingDataType) {
         case 'colour':
             challenge = {
                 "id": `${challengeId}`,
-                "title": `${capitalise(data.leastWorn[0])} Revival`,
-                "details": `${capitalise(data.leastWorn[0])} is your least worn ${clothingDataType}. Create a new outfit that incorporates at least 1 ${data.leastWorn[0]} item.`,
+                "title": `${challengeData.leastWorn} Revival`,
+                "details": `${challengeData.leastWorn} is your least worn ${clothingDataType}. Create a new outfit that incorporates at least 1 ${challengeData.leastWorn} item.`,
                 "target": "outfit",
                 "event_type": "new_outfit",
                 "filtered_data": true
             }
             break;
+        case 'season':
+            challenge = {
+                id: `${challengeId}`,
+                title: `Seasonal Switch-Up: ${challengeData.leastWorn}`,
+                details: `You haven't worn many items for ${challengeData.leastWorn} lately. Style an outfit perfect for the ${challengeData.leastWorn} season.`,
+                target: "outfit",
+                event_type: "new_outfit",
+                filtered_data: true
+            }
+            break;
+        case 'occasion':
+            challenge = {
+                id: `${challengeId}`,
+                title: `Time for ${challengeData.leastWorn}`,
+                details: `Your ${challengeData.leastWorn} items deserve the spotlight. Put together a look suited for a ${challengeData.leastWorn} occasion.`,
+                target: "outfit",
+                event_type: "new_outfit",
+                filtered_data: true
+            }
+            break
 
+        case 'category':
+            challenge = {
+                id: `${challengeId}`,
+                title: `Wear More ${challengeData.leastWorn}`,
+                details: `${challengeData.leastWorn} items are the least worn in your wardrobe. Create an outfit that includes one of them.`,
+                target: "outfit",
+                event_type: "new_outfit",
+                filtered_data: true
+            }
+            break;
+
+        case 'origin':
+            challenge = {
+                id: `${challengeId}`,
+                title: `Origin Story: ${challengeData.leastWorn}`,
+                details: `You've barely worn clothing from ${challengeData.leastWorn}. Style an outfit that highlights at least one item from this origin.`,
+                target: "outfit",
+                event_type: "new_outfit",
+                filtered_data: true
+            }
+
+            break;
         default:
             break;
     }
+
+    if (Object.keys(challenge).length == 0) return false
 
     return { challenge, filteredClothingData: data.selectedItems, challengeData }
 }
