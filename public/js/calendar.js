@@ -31,15 +31,18 @@ let displayInPlanner = (type) => {
 
     switch (type) {
         case 'calendar':
+            renderCalendarDisplay()
             setDisplay([calendarContainer, outfitContainer], 'flex')
             setDisplay([clothingContainer], 'none')
             setDisplay([outfitContainer, calendarInfo], 'block')
+            if (careItems) setDisplay([careItems], 'flex')
             break;
 
         case 'clothing':
             setDisplay([clothingContainer], 'block')
             setDisplay([calendarContainer], 'none')
             if (careEvent) setDisplay([careEvent], 'none')
+            if (careItems) setDisplay([careItems], 'none')
             setDisplay([navModal], 'none');
             break;
 
@@ -174,7 +177,7 @@ let handleDayClick = async (dayContainer, dataDate, createOutfitDate, outfitsCon
     let render = await renderOutfits(dataDate, outfitsContainer);
     if (render) getOutfitId();
 
-    await renderGarmetCareItems(dataDate, careEventContainer);
+    await renderGarmetCareItems(dataDate, calendarContainer);
     await renderPreviousOutfits(calendarContainer)
 
     localStorage.setItem('dateInfo', `${dataDate}`);
@@ -313,7 +316,7 @@ let renderGarmetCareItems = async (dataDate, appendTo) => {
 
     if (data.length == 0) return false
 
-    let div = new CreateElement('div').setAttributes({ class: 'care-event-container-items' }).appendTo(document.body)
+    let div = new CreateElement('div').setAttributes({ class: 'care-event-container-items' }).appendTo(appendTo)
 
     new CreateElement('h4').setText('Garment Care').appendTo(div)
     for (const element of data) {
