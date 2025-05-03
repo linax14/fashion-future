@@ -6,11 +6,8 @@ let date = new Date()
 
 let year = date.getFullYear()
 let month = date.getMonth()
-let months = ['january', 'february', 'march',
-    'april', 'may', 'june',
-    'july', 'august', 'september',
-    'october', 'november', 'december'
-]
+let months = ['january', 'february', 'march', 'april', 'may', 'june',
+    'july', 'august', 'september', 'october', 'november', 'december']
 
 class CreateElement {
 
@@ -420,8 +417,8 @@ let addNavBtn = () => {
     let navList = document.querySelector('nav.bottom-nav ol');
     let navItems = navList.querySelectorAll('li');
     navBtn = document.createElement('li')
-    let a =new CreateElement('a').setText('add').appendTo(navBtn)
-    new CreateElement('img').setAttributes({ src:'../assets/icons/plus.png' }).appendTo(a)
+    let a = new CreateElement('a').setText('add').appendTo(navBtn)
+    new CreateElement('img').setAttributes({ src: '../assets/icons/plus.png' }).appendTo(a)
     navBtn.setAttribute('class', 'nav-btn-add')
     let middle = Math.floor(navItems.length / 2);
     navList.insertBefore(navBtn, navItems[middle]);
@@ -674,57 +671,147 @@ let editItemHandler = (clothingFormContainer = null, appendTo, container, elemen
     console.log('item', element.id)
 }
 
-async function renderClothingItem(clothingFormContainer = null, appendTo, filteredData = null, itemsToAdd = null) {
-    let data = filteredData ? filteredData : await selectUserTable(window.user, 'clothing_items')
+async function renderClothingItem(settings) {
+    let data = settings.data ? settings.data : await selectUserTable(window.user, 'clothing_items')
 
     let itemElements = await Promise.all(data.map(async (element) => {
+        let renderer = new RenderClothing(element, null, settings.appendTo, settings.itemsToAdd)
+
+        switch (settings.mode) {
+            case 'care':
+                return renderer.renderCare()
+            default:
+                return renderer.renderDefault()
+        }
+    }))
+    return itemElements
+}
+
+let careMap = {
+    'wash': '../assets/careLabel/wash1.png',
+    'wash at 30': '../assets/careLabel/wash2.png',
+    'wash at 40': '../assets/careLabel/wash3.png',
+    'wash at 50': '../assets/careLabel/wash4.png',
+    'wash at 60': '../assets/careLabel/wash5.png',
+    'hand wash': '../assets/careLabel/wash6.png',
+    'do not wash': '../assets/careLabel/wash7.png',
+    'bleach': '../assets/careLabel/bleach1.png',
+    'cl bleach': '../assets/careLabel/bleach2.png',
+    'ncl bleach': '../assets/careLabel/bleach3.png',
+    'do not bleach': '../assets/careLabel/bleach4.png',
+    'do not bleach': '../assets/careLabel/bleach5.png',
+    'tumble dry': '../assets/careLabel/tumble1.png',
+    'tumble dry low': '../assets/careLabel/tumble2.png',
+    'tumble dry normal': '../assets/careLabel/tumble3.png',
+    'do not tumble dry': '../assets/careLabel/tumble4.png',
+    'dry': '../assets/careLabel/dry1.png',
+    'line dry': '../assets/careLabel/dry2.png',
+    'dry flat': '../assets/careLabel/dry3.png',
+    'drip dry': '../assets/careLabel/dry4.png',
+    'dry in shade': '../assets/careLabel/dry5.png',
+    'line dry in the shade': '../assets/careLabel/dry6.png',
+    'dry flat in shade': '../assets/careLabel/dry7.png',
+    'drip dry in shade': '../assets/careLabel/dry8.png',
+    'iron': '../assets/careLabel/iron1.png',
+    'iron low': '../assets/careLabel/iron2.png',
+    'iron medium': '../assets/careLabel/iron3.png',
+    'iron high': '../assets/careLabel/iron4.png',
+    'do not iron': '../assets/careLabel/iron5.png',
+}
+
+class RenderClothing {
+    constructor(element, container, appendTo, itemsToAdd) {
+        this.element = element
+        this.container = container
+        this.appendTo = appendTo
+        this.itemsToAdd = itemsToAdd
+    }
+
+    async renderDefault() {
         let container = new CreateElement('div')
-            .setAttributes({ class: 'item-container', 'data-id': element.id })
-            .appendTo(appendTo)
+            .setAttributes({ class: 'item-container', 'data-id': this.element.id })
+            .appendTo(this.appendTo)
 
-        //itemClickHandler is removed when the user is deleting clothing items
-        let itemClickHandler = () => editItemHandler(clothingFormContainer, appendTo, container, element)
-        container.itemClickHandler = itemClickHandler
-        container.addEventListener('click', itemClickHandler)
+        let itemClickHandler = this.clickHandler(container);
+        await this.addImage(container);
+        let p = new CreateElement('p').setText(this.element.brand).appendTo(container)
+        this.createCheckbox(container)
+        return { container, checkbox: container.querySelector('.wardrobe-checkbox'), itemClickHandler, id: this.element.id }
+    }
 
-        if (element.image) {
-            await getImage(element, container, renderImage, 'wardrobe image');
+    async renderCare() {
+        let clothingList = document.querySelector('.clothing-list')
+        clothingList.style.gridTemplateColumns = 'repeat(2,1fr)'
+
+        let firstEl = clothingList.firstElementChild
+        if (firstEl) firstEl.style.gridColumn = 'span 2'
+
+        let container = new CreateElement('div')
+            .setAttributes({ class: 'item-container', 'data-id': this.element.id })
+            .appendTo(this.appendTo)
+
+        let itemClickHandler = this.clickHandler(container);
+        await this.addImage(container);
+
+        let ol = new CreateElement('ol').appendTo(container)
+        let hasCareInstructions = false
+        for (const [key, value] of Object.entries(this.element.care_instructions)) {
+            if (value != "") {
+                if (careMap[value.toLowerCase()]) {
+                    new CreateElement('img').setAttributes({ src: careMap[value], alt: `${capitalise(value)}`, class: 'care-label' }).appendTo(ol)
+                    hasCareInstructions = true
+                }
+            }
+        }
+
+        this.createCheckbox(container)
+        if (hasCareInstructions == false) new CreateElement('li').setText(`No care information has been inserted`).appendTo(ol)
+
+        return { container, checkbox: container.querySelector('.wardrobe-checkbox'), itemClickHandler, id: this.element.id }
+    }
+
+    clickHandler(container) {
+        let itemClickHandler = () => editItemHandler(clothingFormContainer, this.appendTo, this.element);
+        container.itemClickHandler = itemClickHandler;
+        container.addEventListener('click', itemClickHandler);
+        return itemClickHandler;
+    }
+
+    async addImage(container) {
+        if (this.element.image) {
+            await getImage(this.element, container, renderImage, 'wardrobe image');
         } else {
             new CreateElement('img')
                 .setAttributes({
                     class: 'wardrobe image fallback', src: '../assets/createOutfit.png',
                     alt: `Fallback image representing a variety of clothing items when no specific image is available`
-                })
-                .appendTo(container)
+                }).appendTo(container);
         }
+    }
 
-        let p = new CreateElement('p').setText(element.brand).appendTo(container)
-
+    createCheckbox(container) {
         let checkbox = new CreateElement('input')
-            .setAttributes({ type: 'checkbox', class: 'wardrobe-checkbox', style: 'display:none' })
+            .setAttributes({ type: 'checkbox', class: 'wardrobe-checkbox', style: 'display:none; position:absolute' })
             .appendTo(container)
 
-        if (itemsToAdd) {
+        if (this.itemsToAdd) {
             setDisplay([checkbox], 'block')
 
             checkbox.addEventListener('change', async (event) => {
                 event.preventDefault()
 
                 if (event.target.checked) {
-                    itemsToAdd.push(element.id)
+                    this.itemsToAdd.push(this.element.id)
                 } else {
-                    let indexRemove = itemsToAdd.indexOf(element.id)
+                    let indexRemove = this.itemsToAdd.indexOf(this.element.id)
                     if (indexRemove > -1) {
-                        itemsToAdd.splice(indexRemove, 1)
+                        this.itemsToAdd.splice(indexRemove, 1)
                     }
                 }
-                return itemsToAdd
+                return this.itemsToAdd
             })
         }
-
-        return { container, checkbox, itemClickHandler, id: element.id }
-    }))
-    return itemElements
+    }
 }
 
 let renderImage = (signedUrlData, appendTo, className) => {

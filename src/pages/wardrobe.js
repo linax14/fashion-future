@@ -301,7 +301,6 @@ async function renderClothingForm(mainForm) {
     [careBtn, aboutBtn].forEach(btn => btn.addEventListener('click', () => { toggleBtns() }))
 }
 
-
 async function renderEditClothingItem(clothingFormContainer, wardrobeContainer, item) {
     displayInHome('form')
 
@@ -467,7 +466,7 @@ async function updateClothingItem(itemId, formContainer, clothingFormContainer) 
         )
 
         displayInHome('wardrobe')
-        renderClothingItem(clothingFormContainer, clothingList)
+        renderClothingItem({ clothingFormContainer: clothingFormContainer, appendTo: clothingList })
 
     } catch (error) {
         console.error('error updating', error)
@@ -486,7 +485,7 @@ async function renderWardrobe() {
     let editWardrobe = new CreateElement('button').setAttributes({ class: 'edit btn' }).appendTo(btnContainer)
     new CreateElement('i').setAttributes({ class: 'fa-trash fa-solid' }).appendTo(editWardrobe)
 
-    let allClothes = await renderClothingItem(clothingFormContainer, clothingList)
+    let allClothes = await renderClothingItem({ appendTo: clothingList })
     renderClothingForm(clothingFormContainer)
 
     let filtersBtn = new CreateElement('button').setAttributes({ class: 'filter btn' }).appendTo(btnContainer)
@@ -516,7 +515,7 @@ async function renderWardrobe() {
         if (!filtersDisplay) {
             renderFilters(wardrobeHeader, clothingList, (filteredItems) => {
                 clothingList.innerHTML = ''
-                filteredItems.forEach(e => renderClothingItem(clothingFormContainer, clothingList, [e]))
+                filteredItems.forEach(e => renderClothingItem({ clothingFormContainer: clothingFormContainer, appendTo: clothingList, data: [e] }))
                 console.log(filteredItems);
             })
             filtersDisplay = document.querySelector('.filters');

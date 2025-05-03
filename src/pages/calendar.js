@@ -26,13 +26,12 @@ let navEvents = () => {
 
     createOutfit.addEventListener('click', async () => {
         let date = createOutfit.dataset.date
-        await renderClothingDisplay(date, { mode: 'addOutfit' });;
+        await renderClothingDisplay(date, { mode: 'addOutfit', itemRender: 'default' });;
     })
     addCareBtn.addEventListener('click', async () => {
         let date = addCareBtn.dataset.date
         await renderGarmentCareForm(date);
     })
-
 
     return navModal
 }
@@ -324,7 +323,7 @@ async function renderGarmentCareForm(createOutfitDate) {
         }, null,
         (id, values) => {
             displayInPlanner('clothing')
-            renderClothingDisplay(createOutfitDate, { mode: 'garmentCare', outfitId: id, formValues: values });
+            renderClothingDisplay(createOutfitDate, { mode: 'garmentCare', outfitId: id, formValues: values, itemRender: 'care' });
         })
 }
 

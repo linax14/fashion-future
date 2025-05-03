@@ -265,7 +265,7 @@ async function renderNotRecentlyWorn(dateInfo, container) {
     new CreateElement('br').appendTo(h2)
     new CreateElement('span').setText(`Let's make a new outfit`).appendTo(h2)
 
-    let render = await renderClothingItem(null, clothes, data.slice(0, 2))
+    let render = await renderClothingItem({ appendTo: clothes, data: data.slice(0, 2) })
 
     if (render.length == 0) {
         unworn.style.display = 'none'

@@ -105,6 +105,7 @@ async function renderClothingDisplay(createOutfitDate, settings) {
     let itemsToAdd = []
     let header = new CreateElement('h3')
     renderClothingDisplayHeader(settings, header)
+    console.log(settings);
 
     let filtersContainer = new CreateElement('div').setAttributes({ class: 'filters-container' }).appendTo(clothingContainer)
     let filters = new CreateElement('h4').setText('Filters').appendTo(filtersContainer);
@@ -118,7 +119,7 @@ async function renderClothingDisplay(createOutfitDate, settings) {
         if (filtered && filtered.length > 0) {
             let challengeContainer = new CreateElement('div').setAttributes({ class: 'clothing-list' }).appendTo(clothingContainer)
             new CreateElement('h4').setText('Challenge Items').appendTo(challengeContainer)
-            let clothingItems = await renderClothingItem(null, challengeContainer, filtered, itemsToAdd)
+            let clothingItems = await renderClothingItem({ appendTo: challengeContainer, data: filtered, itemsToAdd: itemsToAdd })
             console.log(clothingItems);
 
             data = data.filter(item => !filtered.some(filteredItem => filteredItem.id == item.id))
@@ -134,7 +135,7 @@ async function renderClothingDisplay(createOutfitDate, settings) {
         if (!filtersSection) {
             await renderFilters(filtersContainer, clothingList, (data) => {
                 clothingList.innerHTML = '';
-                data.forEach(e => renderClothingItem(null, clothingList, [e], itemsToAdd));
+                data.forEach(e => renderClothingItem({ appendTo: clothingList, data: [e], itemsToAdd: itemsToAdd}));
 
                 setDisplay([submitBtn, deleteBtn], 'block');
                 setDisplay([clothingList], 'grid');
@@ -149,7 +150,7 @@ async function renderClothingDisplay(createOutfitDate, settings) {
         setDisplay([btnContainer], isExpanded ? 'none' : 'block');
     })
 
-    clothingItemElements = await renderClothingItem(null, clothingList, data, itemsToAdd)
+    clothingItemElements = await renderClothingItem({ appendTo: clothingList, data: data, itemsToAdd: itemsToAdd, mode: settings.itemRender })
 
     let btns = document.querySelectorAll('btn-container.bottom .btn').forEach(btn => btn.remove())
     let btnContainer = new CreateElement('div').setAttributes({ class: 'btn-container bottom' }).appendTo(clothingContainer)
@@ -492,7 +493,7 @@ let getOutfitId = (outfitId) => {
     outfitContainer.forEach(container => {
         container.addEventListener('click', () => {
             outfitId = container.getAttribute('data-id')
-            renderClothingDisplay(null, { mode: 'editOutfit', outfitId: outfitId })
+            renderClothingDisplay(null, { mode: 'editOutfit', outfitId: outfitId, itemRender: 'default' })
         })
     })
     return outfitId
@@ -559,7 +560,7 @@ async function getChallengeAction() {
         actionData = JSON.parse(challengeAction)
 
         if (actionData.action == 'addOutfit') {
-            await renderClothingDisplay(actionData.dateInfo, { mode: 'addOutfit', challenge: { filtered: clothingData, challengeData: challengeData } })
+            await renderClothingDisplay(actionData.dateInfo, { mode: 'addOutfit', challenge: { filtered: clothingData, challengeData: challengeData }, itemRender: 'default' })
         }
     }
 }
