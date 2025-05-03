@@ -65,6 +65,8 @@ async function renderDashboard(user) {
 
     await dailyTips(window.user, today, main)
     await dailyChallenge(window.user, today, main)
+    await renderPreviousOutfits(main)
+
 }
 
 let localStorageReset = (today) => {

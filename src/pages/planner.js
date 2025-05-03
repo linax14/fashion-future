@@ -151,8 +151,8 @@ async function renderClothingDisplay(createOutfitDate, settings) {
 
     clothingItemElements = await renderClothingItem(null, clothingList, data, itemsToAdd)
 
+    let btns = document.querySelectorAll('btn-container.bottom .btn').forEach(btn => btn.remove())
     let btnContainer = new CreateElement('div').setAttributes({ class: 'btn-container bottom' }).appendTo(clothingContainer)
-    let btns = document.querySelectorAll('.btn').forEach(btn => btn.remove())
     let submitBtn = new CreateElement('button').setText('Save').setAttributes({ class: 'submit btn' }).appendTo(btnContainer)
     let deleteBtn = new CreateElement('button').setText('Delete').setAttributes({ class: 'delete btn' }).appendTo(btnContainer)
 

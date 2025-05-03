@@ -1,10 +1,41 @@
 document.addEventListener("userInitialized", async () => {
+    navEvents()
     renderCalendarDisplay()
     clothingManager = new ClothingManager(window.user)
 });
 
 let navBtn
 let navModal = new CreateElement('div').setAttributes({ class: 'nav-modal' }).appendTo(document.body)
+setDisplay([navModal], 'none')
+let navEvents = () => {
+    console.log(navModal);
+
+    let addNavBtns = (className, text, src, alt) => {
+        let btn = new CreateElement('button').setAttributes({ class: className }).appendTo(navModal);
+
+        new CreateElement('span').setText(text).appendTo(btn);
+        new CreateElement('img').setAttributes({ src: src, alt: alt }).appendTo(btn);
+        console.log(btn);
+
+        return btn
+    }
+    console.log(navModal);
+
+    let createOutfit = addNavBtns('create-outfit-btn btn', 'New outfit', '../assets/createOutfit.png', 'clothing items')
+    let addCareBtn = addNavBtns('add-care-btn btn', 'care event', 'https://img.icons8.com/ios/100/laundry-bag.png', 'laundry basket')
+
+    createOutfit.addEventListener('click', async () => {
+        let date = createOutfit.dataset.date
+        await renderClothingDisplay(date, { mode: 'addOutfit' });;
+    })
+    addCareBtn.addEventListener('click', async () => {
+        let date = addCareBtn.dataset.date
+        await renderGarmentCareForm(date);
+    })
+
+
+    return navModal
+}
 
 document.body.addEventListener('click', function handleClickOutside(e) {
     let isClickInside = navModal.contains(e.target) || navBtn.contains(e.target);
@@ -35,18 +66,19 @@ let displayInPlanner = (type) => {
             setDisplay([clothingContainer], 'none')
             setDisplay([outfitContainer, calendarInfo], 'block')
             if (careItems) setDisplay([careItems], 'flex')
+            if (careEvent) setDisplay([careEvent], 'none')
             break;
 
         case 'clothing':
             setDisplay([clothingContainer], 'block')
-            setDisplay([calendarContainer], 'none')
+            setDisplay([calendarContainer, header], 'none')
             if (careEvent) setDisplay([careEvent], 'none')
             if (careItems) setDisplay([careItems], 'none')
             setDisplay([navModal], 'none');
             break;
 
         case 'garmentCare':
-            setDisplay([calendarContainer, clothingContainer], 'none')
+            setDisplay([calendarContainer, clothingContainer, header], 'none')
             setDisplay([careEvent], 'flex')
             setDisplay([navModal], 'none');
             if (careItems) setDisplay([careItems], 'none')
@@ -59,7 +91,6 @@ let displayInPlanner = (type) => {
 
 async function renderCalendarDisplay(monthStart) {
     calendarContainer.innerHTML = ''
-    setDisplay([navModal], 'none')
     let main = await calendarHeader()
     let weekScrollWrapper = new CreateElement('div').setAttributes({ class: 'week-scroll-wrapper' }).appendTo(main);
     let daysContainer = new CreateElement('div').setAttributes({ class: 'days-container' }).appendTo(weekScrollWrapper);
@@ -105,6 +136,35 @@ let calendarHeader = async () => {
     })
 
     return main
+}
+
+let renderGarmetCareItems = async (dataDate, appendTo) => {
+    let data = (await clothingManager.getData('care_event'))
+        .filter(item => {
+            return item.wornDates?.some(date => {
+                return formatDateUnpadded(date) == dataDate
+            })
+        });
+
+    if (data.length == 0) return false
+
+    let div = new CreateElement('div').setAttributes({ class: 'care-event-container-items' }).appendTo(appendTo)
+
+    new CreateElement('h4').setText('Garment Care').appendTo(div)
+    for (const element of data) {
+        let outfitContainer = new CreateElement('div').setAttributes({ class: 'outfit', 'data-id': element.outfitId }).appendTo(div)
+        let count = 0
+        await Promise.all(
+            element.clothingItems.map(async (item) => {
+                count++
+                await getImage(item, outfitContainer, renderImage)
+            })
+        )
+
+        outfitImagesDisplay(outfitContainer, count)
+    }
+
+    return data
 }
 
 async function calendarDays(noDaysMonth, createOutfitDate, daysContainer, outfitsContainer) {
@@ -170,43 +230,30 @@ let handleDayClick = async (dayContainer, dataDate, createOutfitDate, outfitsCon
     let prevWorn = document.querySelector('.prev-worn-container')
     if (prevWorn) prevWorn.remove()
 
-    document.querySelectorAll('.btn').forEach(btn => btn.remove())
-    let createOutfit = addNavBtns('create-outfit-btn btn', 'New outfit', '../assets/createOutfit.png', 'clothing items')
-    let addCareBtn = addNavBtns('add-care-btn btn', 'care event', 'https://img.icons8.com/ios/100/laundry-bag.png', 'laundry basket')
+    let createOutfit = document.querySelector('.create-outfit-btn')
+    let addCareBtn = document.querySelector('.add-care-btn')
+    createOutfit.dataset.date = dataDate
+    addCareBtn.dataset.date = dataDate
 
-    if (!navBtn.hasListenerAttached) {
-        navBtn.addEventListener('click', () => {
-            let isVisible = navModal.style.display == 'flex';
-            setDisplay([navModal], isVisible ? 'none' : 'flex');
-
-            if (createOutfit) createOutfit.addEventListener('click', async () => { await renderClothingDisplay(createOutfitDate, { mode: 'addOutfit' }); });
-            if (addCareBtn) addCareBtn.addEventListener('click', () => { renderGarmentCareForm(createOutfitDate); });
-        })
-
-        navBtn.hasListenerAttached = true
-    }
+    let isVisible
+    navBtn.addEventListener('click', () => {
+        isVisible = !isVisible
+        setDisplay([navModal], isVisible ? 'none' : 'flex');
+    })
 
     let render = await renderOutfits(dataDate, outfitsContainer);
     if (render) getOutfitId();
 
     await renderGarmetCareItems(dataDate, calendarContainer);
-    await renderPreviousOutfits(calendarContainer)
 
     localStorage.setItem('dateInfo', `${dataDate}`);
-}
-
-let addNavBtns = (className, text, src, alt) => {
-    let div = new CreateElement('div').setAttributes({ class: className }).appendTo(navModal);
-
-    new CreateElement('p').setText(text).appendTo(div);
-    new CreateElement('img').setAttributes({ src: src, alt: alt }).appendTo(div);
-
-    return div
 }
 
 async function renderGarmentCareForm(createOutfitDate) {
     careEventContainer.innerHTML = ''
     displayInPlanner('garmentCare')
+
+    closeBtnX(careEventContainer, () => displayInPlanner('calendar'))
 
     new CreateElement('h3').setText('Basket Care Settings').appendTo(careEventContainer)
     new CreateElement('p').setText(`Select the care options and submit to start adding clothes`)
@@ -281,6 +328,7 @@ async function renderGarmentCareForm(createOutfitDate) {
         })
 }
 
+
 function handleFormSubmit(form, onSubmitCallback, itemId = null, onSuccess = null) {
     let isDirty = false
 
@@ -318,31 +366,3 @@ function handleFormSubmit(form, onSubmitCallback, itemId = null, onSuccess = nul
     return { form, isDirty: () => isDirty }
 }
 
-let renderGarmetCareItems = async (dataDate, appendTo) => {
-    let data = (await clothingManager.getData('care_event'))
-        .filter(item => {
-            return item.wornDates?.some(date => {
-                return formatDateUnpadded(date) == dataDate
-            })
-        });
-
-    if (data.length == 0) return false
-
-    let div = new CreateElement('div').setAttributes({ class: 'care-event-container-items' }).appendTo(appendTo)
-
-    new CreateElement('h4').setText('Garment Care').appendTo(div)
-    for (const element of data) {
-        let outfitContainer = new CreateElement('div').setAttributes({ class: 'outfit', 'data-id': element.outfitId }).appendTo(div)
-        let count = 0
-        await Promise.all(
-            element.clothingItems.map(async (item) => {
-                count++
-                await getImage(item, outfitContainer, renderImage)
-            })
-        )
-
-        outfitImagesDisplay(outfitContainer, count)
-    }
-
-    return data
-}
