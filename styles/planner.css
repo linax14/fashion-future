@@ -130,6 +130,11 @@
     margin-bottom: 0;
 }
 
+.nav-modal .btn{
+    padding: var(--p-0);
+    padding-left: var(--padding-small);
+}
+
 .outfit {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -241,41 +246,6 @@
 
 .care-event-container form {
     margin-top: 3vh;
-}
-
-.modal {
-    position: relative;
-    background-color: var(--focus-color);
-    padding: var(--padding-small);
-    border-radius: var(--bs-border-radius-sm);
-}
-
-.modal-header button.close {
-    font-size: 20px;
-    position: absolute;
-    font-size: 20px;
-    right: -10px;
-    top: -14px;
-}
-
-.modal-footer {
-    display: flex;
-    flex-direction: row-reverse;
-    justify-content: end;
-    gap: var(--gap-4);
-    padding-right: var(--p-0);
-}
-
-.modal-footer .btn.btn-secondary {
-    background-color: transparent;
-    color: var(--bs-secondary-text-emphasis-focus);
-    padding: var(--p-1);
-}
-
-.modal-footer .btn.btn-primary {
-    background-color: transparent;
-    color: var(--bs-emphasis-color);
-    padding: var(--p-1);
 }
 
 .care-event-container-items {

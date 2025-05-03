@@ -250,11 +250,7 @@
     grid-template-columns: repeat(3, 1fr);
     gap: var(--gap-3);
     height: fit-content;
-}
-
-.header {
-    margin-top: 16px;
-    border-bottom: 1px solid var(--bs-secondary-bg);
+    align-items: baseline;
 }
 
 .header h3,
