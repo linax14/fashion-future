@@ -98,7 +98,7 @@ signUp.addEventListener('click', () => {
         if (signUpUser) {
             let userData = await signInWithEmail(emailInput.value, passwordInput.value)
             if (userData) {
-                window.location.href = './public/views/dashboard.html'
+                window.location.href = './public/dashboard.html'
             } return
         }
     })
@@ -212,7 +212,7 @@ function signInFormClickHandler() {
                 return
             }
 
-            window.location.href = './public/views/dashboard.html'
+            window.location.href = './public/dashboard.html'
 
         } else {
             setTimeout(() => {
