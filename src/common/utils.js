@@ -662,8 +662,7 @@ async function renderFilters(appendTo, currentDisplay, onFilter) {
     return div
 }
 
-let clothingFormContainer = new CreateElement('div').setAttributes({ class: 'clothing-formContainer' }).appendTo(document.body)
-
+clothingFormContainer = document.querySelector('.clothing-formContainer')
 let editItemHandler = (clothingFormContainer = null, appendTo, container, element) => {
     if (clothingFormContainer) {
         renderEditClothingItem(clothingFormContainer, appendTo, element)

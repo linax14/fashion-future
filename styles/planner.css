@@ -1,7 +1,7 @@
 #calendar {
     display: flex;
     flex-direction: column;
-    margin-bottom: 8vh;
+    margin-bottom: 11vh;
     gap: var(--gap-2);
     overflow: scroll;
 }
@@ -143,12 +143,19 @@
     overflow: hidden;
     min-height: 100px;
     height: 20vh;
+    align-items: center;
 }
 
 .outfit img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
+}
+
+.outfit .image.fallback {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
 
 .close {
@@ -173,8 +180,6 @@
     bottom: 10vh;
     right: 5vw;
 } */
-
-
 
 /* filters */
 .filters-container {
@@ -226,17 +231,6 @@
     border-radius: var(--bs-border-radius-lg);
     padding: var(--padding-main);
     gap: var(--gap-4);
-}
-
-.prev-worn-container {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    border-radius: var(--bs-border-radius-lg);
-}
-
-
-.prev-worn-container h4 {
-    grid-column: span 2;
 }
 
 .care-event-container {

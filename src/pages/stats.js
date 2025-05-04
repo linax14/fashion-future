@@ -3,35 +3,59 @@ document.addEventListener("userInitialized", async () => {
     await render()
 })
 
-let mainHeader = new CreateElement('h2').setText('Your stats').appendTo(document.body)
 let closetOverview = new CreateElement('section').setAttributes({ class: 'overview-section' }).appendTo(document.body)
 
 async function render() {
 
     //points
     let data = await getPointsData()
-    console.log(data);
 
-    //stats
-    //brand category colour season occasion origin
-    let header1 = new CreateElement('h3').setText('General Wardrobe Stats').appendTo(closetOverview)
-    let stats1 = new CreateElement('div').setAttributes({ class: 'stats-container' }).appendTo(closetOverview)
-    let header2 = new CreateElement('h3').setText('Wear Stats').appendTo(closetOverview)
-    let stats2 = new CreateElement('div').setAttributes({ class: 'stats-container' }).appendTo(closetOverview)
+    setupStats(false, 'General Wardrobe Stats', closetOverview)
+    setupStats(true, 'Wear Stats', closetOverview)
+}
 
-    await chartInfo('doughnut', withWear = false, 'brand', undefined, stats1)
-    await chartInfo('bar', withWear = false, 'category', undefined, stats1)
-    await chartInfo('doughnut', withWear = false, 'season', seasonColours, stats1)
-    await chartInfo('doughnut', withWear = false, 'colour', clothingColours, stats1)
-    await chartInfo('bar', withWear = false, 'origin', undefined, stats1)
-    await chartInfo('doughnut', withWear = false, 'occasion', undefined, stats1)
+async function setupStats(withWear, title, appendTo) {
+    new CreateElement('h3').setText(title).appendTo(appendTo)
+    let stats = new CreateElement('div').setAttributes({ class: 'stats-container' }).appendTo(appendTo)
 
-    await chartInfo('doughnut', withWear = true, 'brand', undefined, stats2)
-    await chartInfo('bar', withWear = true, 'category', undefined, stats2)
-    await chartInfo('doughnut', withWear = true, 'season', seasonColours, stats2)
-    await chartInfo('doughnut', withWear = true, 'colour', clothingColours, stats2)
-    await chartInfo('bar', withWear = true, 'origin', undefined, stats2)
-    await chartInfo('doughnut', withWear = true, 'occasion', undefined, stats2)
+    let wardrobe = await wardrobeItems(withWear)
+
+    if ((withWear && wardrobe.totalWear < 20) || (!withWear && wardrobe.totalItems < 10)) {
+        let remainingItems = withWear
+            ? 20 - wardrobe.totalWear
+            : 10 - wardrobe.totalItems
+
+        let msg
+        if (withWear) {
+            msg = `
+            Almost there! You need to log ${remainingItems} more ${remainingItems == 1 ? 'item' : 'items'} to unlock wear stats.<br>
+            <a href='planner.html' class='locked-link'>
+            <img src='../assets/icons/calendar.png'/>
+            Log a fit<a/>`
+
+        } else {
+            msg = `Oops! It looks like you haven't added enough items to your wardrobe to unlock wardrobe stats. 
+            Just ${remainingItems} more ${remainingItems == 1 ? 'item' : 'items'} to go! <br>
+            <a href='wardrobe.html' class='locked-link invert-image'>
+            <img src='https://img.icons8.com/pastel-glyph/64/hanger--v1.png'/> Head to wardrobe <a/>`
+        }
+
+        lockedStats(stats, msg)
+        return
+    }
+
+    let clothingAttributes = [
+        { data: 'brand', chart: 'doughnut', colors: undefined },
+        { data: 'colour', chart: 'doughnut', colors: clothingColours },
+        { data: 'season', chart: 'doughnut', colors: seasonColours },
+        { data: 'occasion', chart: 'doughnut', colors: undefined },
+        { data: 'category', chart: 'bar', colors: undefined },
+        { data: 'origin', chart: 'bar', colors: undefined }
+    ]
+
+    for (const value of clothingAttributes) {
+        await chartInfo(value.chart, withWear, value.data, value.colors, stats)
+    }
 }
 
 class Points {
@@ -98,17 +122,19 @@ let getPointsData = async () => {
     let day = date.getDate()
     let today = `${year}-${month + 1}-${day}`
     let points = new Points(window.user, today)
-    let data = await points.detailedData()
 
-    return data
+    return await points.detailedData()
 }
 
 async function wardrobeItems(withWear = false) {
     let data = await selectUserTable(window.user, 'clothing_items')
 
-    let obj = {}
+    let clothingItemsByAttribute = {}
     let multiValues = ['colour', 'season', 'occasion'];
     let wearCount
+    let totalWear = 0
+
+    data.forEach(item => { totalWear += item.wear_count });
 
     for (const item of data) {
 
@@ -118,27 +144,28 @@ async function wardrobeItems(withWear = false) {
         }
 
         for (let [key, value] of Object.entries(item)) {
-            if (!value || key == 'id' || key == 'user_id' || key == 'image' || key == 'wear_count') continue;
+            if (!value || key == 'id' || key == 'user_id' || key == 'image' || key == 'wear_count' || key == 'care_instructions') continue;
 
             let values = multiValues.includes(key)
                 ? value.split(',').map(v => v.trim().toLowerCase())
                 : [value];
 
-            obj[key] = obj[key] || {};
+            clothingItemsByAttribute[key] = clothingItemsByAttribute[key] || {};
 
             if (withWear == true) {
                 for (const val of values) {
-                    obj[key][val] = (obj[key][val] || 0) + wearCount;
+                    clothingItemsByAttribute[key][val] = (clothingItemsByAttribute[key][val] || 0) + wearCount;
                 }
             } else {
                 for (const val of values) {
-                    obj[key][val] = (obj[key][val] || 0) + 1;
+                    clothingItemsByAttribute[key][val] = (clothingItemsByAttribute[key][val] || 0) + 1;
 
                 }
             }
         };
+
     }
-    return obj
+    return { clothingItemsByAttribute, totalItems: data.length, totalWear }
 }
 
 let clothingColours = {
@@ -171,18 +198,15 @@ let randomPastelRGB = () => {
     return `${r},${g},${b}`;
 };
 
-async function createChart(chartType, withWear = false, clothingDataType, dataColours = undefined, appendTo) {
+async function createChart(chartType, withWear = false, clothingAttribute, dataColours = undefined, appendTo) {
     let data = await wardrobeItems(withWear)
-    data = data[clothingDataType]
-    if (!data) {
-        console.log('no data');
-        return
-    }
+    data.clothingItemsByAttribute = data.clothingItemsByAttribute[clothingAttribute]
 
-    data = Object.fromEntries([...Object.entries(data)].sort((a, b) => b[1] - a[1]).slice(0, 5))
+    if (!data.clothingItemsByAttribute) return
+    data.clothingItemsByAttribute = Object.fromEntries([...Object.entries(data.clothingItemsByAttribute)].sort((a, b) => b[1] - a[1]).slice(0, 5))
 
-    let labels = Object.keys(data).map(d => capitalise(d));
-    let values = Object.values(data);
+    let labels = Object.keys(data.clothingItemsByAttribute).map(d => capitalise(d));
+    let values = Object.values(data.clothingItemsByAttribute);
 
     let backgroundColors
     let borderColors
@@ -191,7 +215,7 @@ async function createChart(chartType, withWear = false, clothingDataType, dataCo
         backgroundColors = values.map(() => `rgba(${randomPastelRGB()},0.4)`);
         borderColors = backgroundColors.map(c => c.replace('0.4', '1'))
     } else {
-        let keys = Object.keys(data).map(key => key.toLowerCase())
+        let keys = Object.keys(data.clothingItemsByAttribute).map(key => key.toLowerCase())
 
         let options = Object.fromEntries(Object.entries(dataColours).map(([key, value]) =>
             [key.toLowerCase(), value]))
@@ -201,7 +225,7 @@ async function createChart(chartType, withWear = false, clothingDataType, dataCo
         borderColors = options.map(op => `rgb(${getRGB(op)})`)
     }
 
-    let container = new CreateElement('div').setAttributes({ class: 'chart-container', id: `${clothingDataType}-chart`, 'data-wear': withWear, 'data-chart-type': chartType }).appendTo(appendTo)
+    let container = new CreateElement('div').setAttributes({ class: 'chart-container', id: `${clothingAttribute}-chart`, 'data-wear': withWear, 'data-chart-type': chartType }).appendTo(appendTo)
     let ctx = new CreateElement('canvas').appendTo(container)
 
     ctx.classList.add('chart-canvas', chartType === 'bar' ? 'bar-chart' : 'doughnut-chart');
@@ -225,7 +249,7 @@ async function createChart(chartType, withWear = false, clothingDataType, dataCo
                 },
                 title: {
                     display: false,
-                    text: `${capitalise(clothingDataType)}`
+                    text: `${capitalise(clothingAttribute)}`
                 }
             },
             ...(chartType == 'bar' && {
@@ -254,22 +278,22 @@ async function createChart(chartType, withWear = false, clothingDataType, dataCo
     let span = new CreateElement('span').appendTo(container)
     new CreateElement('i').setAttributes({ class: "fa-solid fa-rotate" }).appendTo(span)
 
-    return data
+    return data.clothingItemsByAttribute
 }
 
-async function chartInfo(chartType, withWear = false, clothingDataType, dataColours = undefined, appendTo) {
-    let data = await createChart(chartType, withWear, clothingDataType, dataColours, appendTo)
+async function chartInfo(chartType, withWear = false, clothingAttribute, dataColours = undefined, appendTo) {
+    let data = await createChart(chartType, withWear, clothingAttribute, dataColours, appendTo)
     if (!data) return
 
-    let chart = document.querySelector(`#${clothingDataType}-chart[data-wear="${withWear}"]`)
+    let chart = document.querySelector(`#${clothingAttribute}-chart[data-wear="${withWear}"]`)
     chart.classList.remove('expanded');
     setDisplay([chart], 'none');
 
-    let cardId = `${clothingDataType}-${withWear ? 'withWear' : 'noWear'}-card`;
+    let cardId = `${clothingAttribute}-${withWear ? 'withWear' : 'noWear'}-card`;
     chart.setAttribute('data-card-id', cardId);
     let card = new CreateElement('div').setAttributes({ class: 'chart-card', id: cardId }).appendTo(appendTo)
 
-    new CreateElement('h4').setText(clothingDataType).appendTo(card)
+    new CreateElement('h4').setText(clothingAttribute).appendTo(card)
     let info = new CreateElement('p').setText().appendTo(card)
     let span = new CreateElement('span').appendTo(card)
     new CreateElement('i').setAttributes({ class: "fa-solid fa-rotate" }).appendTo(span)
@@ -319,7 +343,7 @@ async function chartInfo(chartType, withWear = false, clothingDataType, dataColo
     switch (withWear) {
         case true:
             if (count.length > 1) {
-                switch (clothingDataType) {
+                switch (clothingAttribute) {
                     case 'category':
                         info.innerHTML = `Your most worn categories are ${dataKeys}`;
                         break;
@@ -339,10 +363,10 @@ async function chartInfo(chartType, withWear = false, clothingDataType, dataColo
                         info.innerHTML = `You've been favoring clothes from ${dataKeys}`;
                         break;
                     default:
-                        info.innerHTML = `Your top ${count.length} most worn ${clothingDataType}s are ${dataKeys}`;
+                        info.innerHTML = `Your top ${count.length} most worn ${clothingAttribute}s are ${dataKeys}`;
                 }
             } else {
-                switch (clothingDataType) {
+                switch (clothingAttribute) {
                     case 'season':
                         info.innerHTML = `You've only worn clothes suited for ${dataKeys}. You have worn them ${topCount} times!`;
                         break;
@@ -350,14 +374,14 @@ async function chartInfo(chartType, withWear = false, clothingDataType, dataColo
                         info.innerHTML = `You mostly wear ${dataKeys}`;
                         break;
                     default:
-                        info.innerHTML = `Your most worn ${clothingDataType} is ${dataKeys}`;
+                        info.innerHTML = `Your most worn ${clothingAttribute} is ${dataKeys}`;
                 }
             }
             break;
 
         default:
             if (count.length > 1) {
-                switch (clothingDataType) {
+                switch (clothingAttribute) {
                     case 'category':
                         info.innerHTML = `Your closet includes a variety of categories: ${dataKeys}`;
                         break;
@@ -377,18 +401,27 @@ async function chartInfo(chartType, withWear = false, clothingDataType, dataColo
                         info.innerHTML = `Your clothes come from ${dataKeys}`;
                         break;
                     default:
-                        info.innerHTML = `Your top ${count.length} ${clothingDataType}s are ${dataKeys}`;
+                        info.innerHTML = `Your top ${count.length} ${clothingAttribute}s are ${dataKeys}`;
                 }
             } else {
-                switch (clothingDataType) {
+                switch (clothingAttribute) {
                     case 'season':
                         info.innerHTML = `All your clothes are perfect for ${dataKeys}`;
                         break;
                     default:
-                        info.innerHTML = `The only ${clothingDataType} in your closet is ${dataKeys}`;
+                        info.innerHTML = `The only ${clothingAttribute} in your closet is ${dataKeys}`;
                 }
             }
             break;
     }
 
+}
+
+let lockedStats=(appendTo, message) =>{
+    let div = new CreateElement('div').setAttributes({ class: 'locked-stats' }).appendTo(appendTo)
+    new CreateElement('i').setAttributes({ class: 'fa-solid fa-lock' }).appendTo(div)
+    let msg = new CreateElement('p').appendTo(div)
+    msg.innerHTML = message
+    
+    return div
 }

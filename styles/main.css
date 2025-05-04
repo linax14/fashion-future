@@ -446,11 +446,11 @@ input[type="checkbox"]:checked::before {
     gap: var(--gap-1);
 }
 
-.bottom-nav li{
+.bottom-nav li {
     width: 50px;
 }
 
-.bottom-nav a img{
+.bottom-nav a img {
     width: 26px;
     height: auto;
 }
@@ -755,6 +755,7 @@ li {
     grid-template-columns: repeat(3, 1fr);
     grid-template-rows: auto;
     margin-top: 1vh;
+    gap: var(--gap-1);
 }
 
 .clothing-list>h4:first-child {
@@ -797,6 +798,13 @@ li {
     margin-left: 3px;
 }
 
+.clothing-list .item-container ol {
+    margin-top: 0;
+    padding-left: var(--p-4);
+    padding-right: var(--p-4);
+    grid-column: span 4;
+}
+
 .item-container {
     border: 1px solid var(--bs-secondary-bg);
     background-color: var(--focus-color);
@@ -825,15 +833,14 @@ li {
 
 .image.fallback {
     height: 16dvh;
-    width: -moz-available;
-    object-fit: cover;
+    object-fit: contain;
     opacity: 10%;
 }
 
 .form-group.wash,
 .form-group.bleach,
-.form-group.tumble.drying,
-.form-group.natural.drying,
+.form-group.tumble_dry,
+.form-group.natural_dry,
 .form-group.iron {
     display: grid;
     grid-template-columns: repeat(8, 1fr);
@@ -842,24 +849,24 @@ li {
 
 .form-group.wash>:first-child,
 .form-group.bleach>:first-child,
-.form-group.tumble.drying>:first-child,
-.form-group.natural.drying>:first-child,
+.form-group.tumble_dry>:first-child,
+.form-group.natural_dry>:first-child,
 .form-group.iron>:first-child {
     grid-column: span 8;
 }
 
 .form-group.wash>:not(:first-child),
 .form-group.bleach>:not(:first-child),
-.form-group.tumble.drying>:not(:first-child),
-.form-group.natural.drying>:not(:first-child),
+.form-group.tumble_dry>:not(:first-child),
+.form-group.natural_dry>:not(:first-child),
 .form-group.iron>:not(:first-child) {
     grid-column: span 1;
 }
 
 .form-group.wash .element img.care-label,
 .form-group.bleach .element img.care-label,
-.form-group.tumble.drying .element img.care-label,
-.form-group.natural.drying .element img.care-label,
+.form-group.tumble_dry .element img.care-label,
+.form-group.natural_dry .element img.care-label,
 .form-group.iron .element img.care-label {
     width: 40px;
     height: auto;
@@ -868,8 +875,8 @@ li {
 
 .form-group.wash .element.selected img.care-label,
 .form-group.bleach .element.selected img.care-label,
-.form-group.tumble.drying .element.selected img.care-label,
-.form-group.natural.drying .element.selected img.care-label,
+.form-group.tumble_dry .element.selected img.care-label,
+.form-group.natural_dry .element.selected img.care-label,
 .form-group.iron .element.selected img.care-label {
     border-bottom: 1px solid var(--bs-secondary-bg);
 }
@@ -926,4 +933,10 @@ li {
     background-color: transparent;
     color: var(--bs-emphasis-color);
     padding: var(--p-1);
+}
+
+ol .care-label {
+    width: 34px;
+    height: auto;
+    filter: invert();
 }

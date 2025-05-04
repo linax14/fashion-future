@@ -216,7 +216,7 @@
 .wardrobe-container {
     padding-bottom: 8vh;
     height: auto;
-    padding-bottom: 8vh;
+    margin-bottom: 11vh;
     align-content: baseline;
 }
 
@@ -310,17 +310,6 @@
     grid-template-columns: repeat(2, 1fr);
     grid-template-rows: auto;
 }
-
-.outfit-element {
-    width: 100%;
-}
-
-.outfit-element .image {
-    height: 100px;
-    width: 100px;
-    object-fit: cover;
-}
-
 
 .form-group.image,
 input[type=email],

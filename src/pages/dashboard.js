@@ -53,8 +53,7 @@ async function renderDashboard(user) {
 
     //from global.js
     let day = date.getDate()
-    // let today = `${year}-${month + 1}-${day}`
-    let today = `${year}-4-26`
+    let today = `${year}-${month + 1}-${day}`
     // console.log(today);
 
     localStorageReset(today)
@@ -355,8 +354,8 @@ async function dailyChallenge(user, dateInfo, appendTo) {
                 target = targetMonth[day]
                 if (!target.challenge) {
 
-                    let clothingDataTypes = ['colour', 'season', 'occasion', 'category', 'origin']
-                    let randomType = clothingDataTypes[Math.floor(Math.random() * clothingDataTypes.length)]
+                    let clothingAttributes = ['colour', 'season', 'occasion', 'category', 'origin']
+                    let randomType = clothingAttributes[Math.floor(Math.random() * clothingAttributes.length)]
 
                     let data = await generateChallenge(randomType)
 
@@ -454,32 +453,32 @@ async function completeChallengeEvent(target, dateInfo) {
     }
 }
 
-async function prepareChallengeData(clothingDataType, appendTo) {
+async function prepareChallengeData(clothingAttribute, appendTo) {
     let data = await selectUserTable(window.user, 'clothing_items')
 
-    let clothingDataTypeMap = {}
+    let clothingAttributeMap = {}
     let itemMap = {}
 
     for (let item of data) {
 
         let wear_count = item.wear_count ?? 0
 
-        if (!item[clothingDataType]) continue
+        if (!item[clothingAttribute]) continue
 
-        let values = typeof item[clothingDataType] == 'string'
-            ? item[clothingDataType].split(',').map(v => v.trim().toLowerCase())
-            : [String(item[clothingDataType]).toLowerCase()]
+        let values = typeof item[clothingAttribute] == 'string'
+            ? item[clothingAttribute].split(',').map(v => v.trim().toLowerCase())
+            : [String(item[clothingAttribute]).toLowerCase()]
 
         for (let value of values) {
-            clothingDataTypeMap[value] = (itemMap[value] || 0) + wear_count
+            clothingAttributeMap[value] = (itemMap[value] || 0) + wear_count
 
             if (!itemMap[value]) itemMap[value] = []
             itemMap[value].push(item)
         }
     }
 
-    let minWear = Math.min(...Object.values(clothingDataTypeMap))
-    let leastWorn = Object.entries(clothingDataTypeMap)
+    let minWear = Math.min(...Object.values(clothingAttributeMap))
+    let leastWorn = Object.entries(clothingAttributeMap)
         .filter(([value, totalWear]) => totalWear == minWear)
         .map(([value]) => value)
 
@@ -496,8 +495,8 @@ async function prepareChallengeData(clothingDataType, appendTo) {
     return { leastWorn, selectedItems }
 }
 
-async function generateChallenge(clothingDataType) {
-    let data = await prepareChallengeData(clothingDataType)
+async function generateChallenge(clothingAttribute) {
+    let data = await prepareChallengeData(clothingAttribute)
 
     if (data.leastWorn.length <= 0 || data.selectedItems.length <= 0) return false
 
@@ -506,15 +505,15 @@ async function generateChallenge(clothingDataType) {
 
     let challengeData = {
         leastWorn: `${(data.leastWorn[0])}`,
-        clothingDataType: clothingDataType
+        clothingAttribute: clothingAttribute
     }
 
-    switch (clothingDataType) {
+    switch (clothingAttribute) {
         case 'colour':
             challenge = {
                 "id": `${challengeId}`,
                 "title": `${challengeData.leastWorn} Revival`,
-                "details": `${challengeData.leastWorn} is your least worn ${clothingDataType}. Create a new outfit that incorporates at least 1 ${challengeData.leastWorn} item.`,
+                "details": `${challengeData.leastWorn} is your least worn ${clothingAttribute}. Create a new outfit that incorporates at least 1 ${challengeData.leastWorn} item.`,
                 "target": "outfit",
                 "event_type": "new_outfit",
                 "filtered_data": true
