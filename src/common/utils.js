@@ -372,9 +372,7 @@ let bootstrap = new CreateElement('link').setAttributes({
     crossorigin: "anonymous", referrerpolicy: "no-referrer"
 })
 
-if (mainCss) {
-    document.head.insertBefore(bootstrap, mainCss)
-}
+if (mainCss) { document.head.insertBefore(bootstrap, mainCss) }
 
 function renderNavigation() {
     let navigation = new CreateElement('nav').setAttributes({ class: 'bottom-nav' }).appendTo(document.body)
@@ -664,11 +662,12 @@ async function renderFilters(appendTo, currentDisplay, onFilter) {
     return div
 }
 
+let clothingFormContainer = new CreateElement('div').setAttributes({ class: 'clothing-formContainer' }).appendTo(document.body)
+
 let editItemHandler = (clothingFormContainer = null, appendTo, container, element) => {
     if (clothingFormContainer) {
         renderEditClothingItem(clothingFormContainer, appendTo, element)
     }
-    console.log('item', element.id)
 }
 
 async function renderClothingItem(settings) {
@@ -765,13 +764,13 @@ class RenderClothing {
         }
 
         this.createCheckbox(container)
-        if (hasCareInstructions == false) new CreateElement('li').setText(`No care information has been inserted`).appendTo(ol)
+        if (hasCareInstructions == false) new CreateElement('li').setText(`You haven't added any care information yet`).appendTo(ol)
 
         return { container, checkbox: container.querySelector('.wardrobe-checkbox'), itemClickHandler, id: this.element.id }
     }
 
     clickHandler(container) {
-        let itemClickHandler = () => editItemHandler(clothingFormContainer, this.appendTo, this.element);
+        let itemClickHandler = () => editItemHandler(null, this.appendTo, this.element);
         container.itemClickHandler = itemClickHandler;
         container.addEventListener('click', itemClickHandler);
         return itemClickHandler;

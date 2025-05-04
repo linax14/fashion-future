@@ -155,7 +155,7 @@ class ClothingManager {
             } catch (error) {
                 console.error(error);
             }
-        } else if (tableName == 'care_event') {
+        } else if (tableName == 'care_event' || tableName == 'care_items') {
             tableName = 'care_items'
             try {
                 const { data, error } = await supabase
@@ -197,7 +197,8 @@ class ClothingManager {
         const clothingItemIds = [].concat(...Object.values(outfitItems))
         const clothingItems = await selectUserTable(this.user, 'clothing_items', clothingItemIds)
 
-        let details = outfits.filter(outfit => outfit.id == outfitId);
+        let details = outfits.filter(outfit => outfit.id == outfitId)
+            .map(({ date, user_id, id, ...rest }) => rest)
 
         let outfitDetails = outfits.map(outfit => {
             const outfitItemIds = outfitItems[outfit.id] || [];
@@ -260,9 +261,9 @@ class ClothingItems extends ClothingManager {
         }
     }
 
-    async removeItems(outfitId, itemsToRemove) {
+    async removeItems(tableName, outfitId, itemsToRemove) {
         try {
-            const { data, error } = await supabase.from('outfit_items')
+            const { data, error } = await supabase.from(tableName)
                 .delete().eq('outfit_id', outfitId)
                 .in('clothing_item_id', itemsToRemove);
             if (error) console.error("error removing items:", error);

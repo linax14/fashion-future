@@ -12,37 +12,12 @@ document.addEventListener("userInitialized", async () => {
 let clothingManager
 let outfit
 
-async function renderOutfits(dataDate, outfitsContainer) {
-    let data = (await clothingManager.getData('outfit'))
-        .filter(item => {
-            if (item.worn == true) {
-                return item.wornDates?.some(date => {
-                    return formatDateUnpadded(date) == dataDate
-                })
-            }
-            return false
-        });
-
-    for (const element of data) {
-        let outfitContainer = new CreateElement('div').setAttributes({ class: 'outfit', 'data-id': element.outfitId }).appendTo(outfitsContainer)
-        let count = 0
-        await Promise.all(
-            element.clothingItems.map(async (item) => {
-                count++
-                await getImage(item, outfitContainer, renderImage)
-            }))
-
-        outfitImagesDisplay(outfitContainer, count)
-    }
-
-    return true
-}
-
 async function renderPreviousOutfits(container) {
     let data = (await clothingManager.getData('outfit')).sort(() => Math.random() - 0.5).slice(0, 2)
     let prevDiv = new CreateElement('div').setAttributes({ class: 'prev-worn-container' }).appendTo(container)
 
-    new CreateElement('h4').setText('Previously worn').appendTo(prevDiv)
+    if (data) new CreateElement('h3').setText('Previously worn outfits').appendTo(prevDiv)
+
     for (const element of data) {
         let outfitContainer = new CreateElement('div').setAttributes({ class: 'outfit', 'data-id': element.outfitId }).appendTo(prevDiv)
         let count = 0
@@ -135,7 +110,7 @@ async function renderClothingDisplay(createOutfitDate, settings) {
         if (!filtersSection) {
             await renderFilters(filtersContainer, clothingList, (data) => {
                 clothingList.innerHTML = '';
-                data.forEach(e => renderClothingItem({ appendTo: clothingList, data: [e], itemsToAdd: itemsToAdd}));
+                data.forEach(e => renderClothingItem({ appendTo: clothingList, data: [e], itemsToAdd: itemsToAdd }));
 
                 setDisplay([submitBtn, deleteBtn], 'block');
                 setDisplay([clothingList], 'grid');
@@ -171,10 +146,10 @@ async function renderClothingDisplay(createOutfitDate, settings) {
                 itemsToAdd = await addMode(itemsToAdd, createOutfitDate, submitBtn)
                 break;
             case 'editOutfit':
-                itemsToAdd = await editMode(settings.outfitId, clothingItemElements, itemsToAdd, submitBtn, deleteBtn);
+                itemsToAdd = await editMode({ mode: 'outfit', outfitId: settings.outfitId, domEl: clothingItemElements, items: itemsToAdd, btns: { submitBtn, deleteBtn } });
                 break;
             case 'garmentCare':
-                itemsToAdd = await careMode(itemsToAdd, createOutfitDate, submitBtn, settings.outfitId, settings.formValues)
+                itemsToAdd = await editMode({ mode: 'care_event', items: itemsToAdd, domEl: clothingItemElements, btns: { submitBtn, deleteBtn }, outfitId: settings.outfitId, values: settings.formValues })
                 break
             default:
                 setDisplay([deleteBtn], 'none')
@@ -249,10 +224,35 @@ async function addOutfitStreak(createOutfitDate) {
     return { target };
 }
 
-let editMode = async (outfitId, clothingItemElements, itemsToAdd, submitBtn, deleteBtn) => {
+let editMode = async (settings) => {
+    let submitBtn = settings.btns.submitBtn
+    let deleteBtn = settings.btns.deleteBtn
+    let clothingItemElements = settings.domEl
+    let itemsToAdd = settings.items
+    let outfitId = settings.outfitId
+    let mode = settings.mode
+    let values = settings.values
 
-    let id = getOutfitId(outfitId);
-    let outfit = await clothingManager.getData('outfit', outfitId);
+    let secondTable
+    let container
+    let planner
+
+    switch (mode) {
+        case 'outfit':
+            secondTable = 'outfit_items'
+            container = 'outfits-container'
+            planner = 'calendar'
+            break;
+        case 'care_event':
+            secondTable = 'care_items'
+            container = 'care-event-container-items'
+            planner = 'calendar'
+            break
+        default:
+            break;
+    }
+
+    let outfit = await clothingManager.getData(mode, outfitId);
     let inOutfit;
     let itemsToRemove = [];
 
@@ -264,8 +264,28 @@ let editMode = async (outfitId, clothingItemElements, itemsToAdd, submitBtn, del
             itemsToAdd.push(element.id);
         }
 
-        element.checkbox.addEventListener('change', () => {
+        element.checkbox.addEventListener('change', async (event) => {
             if (element.checkbox.checked) {
+                let itemId = element.id
+
+                if (mode == 'care_event') {
+                    let compatibility = await careCompatibility([itemId], values);
+
+                    if (compatibility.length == 0) {
+                        let confirmed = await confirmBox({
+                            title: 'Incompatible Item',
+                            text: `This item has care instructions that don't fully match this care event. Would you like to keep it anyway or remove it from your selection?`,
+                            save: 'Keep', dismiss: 'Remove'
+                        });
+
+                        if (!confirmed) {
+                            event.target.checked = false
+                            itemsToAdd = itemsToAdd.filter(id => id != itemId);
+                        } else {
+                            displayInPlanner('clothing')
+                        }
+                    }
+                }
                 itemsToAdd.push(element.id);
                 itemsToRemove = itemsToRemove.filter(id => id !== element.id);
             } else {
@@ -276,36 +296,18 @@ let editMode = async (outfitId, clothingItemElements, itemsToAdd, submitBtn, del
     });
 
     submitBtn.addEventListener('click', async (event) => {
-        event.preventDefault();
-        let data = await clothingManager.getItems('outfit_items', [id])
-        let existingIds = new Set(Object.values(data)[0]);
-        let newItems = [...new Set(itemsToAdd)].filter(item => !existingIds.has(item));
-
-        if (newItems.length > 0) await outfitItems.addItems('outfit_items', id, newItems)
-        if (itemsToRemove.length > 0) await outfitItems.removeItems(id, itemsToRemove)
-
-        renderCalendarDisplay();
-        displayInPlanner('calendar')
+        await submitEditMode(event, secondTable, outfitId, itemsToAdd, itemsToRemove, planner)
     })
 
     deleteBtn.addEventListener('click', async (event) => {
-        event.preventDefault();
-        await clothingManager.deleteRecord('outfit', id)
-
-        let outfitContainer = document.querySelectorAll('outfits-container');
-        outfitContainer.forEach(container => {
-            if (container.getAttribute('data-date') == id) container.remove();
-        });
-
-        renderCalendarDisplay();
-        displayInPlanner('calendar')
+        await deleteEditMode(event, mode, outfitId, container, planner)
     })
 
     return itemsToAdd;
 }
+
 let itemWearMap = new Map()
 
-// localStorage.clear()
 let addMode = async (itemsToAdd, createOutfitDate, submitBtn, challengeExtras) => {
 
     submitBtn.addEventListener('click', async (event) => {
@@ -385,54 +387,31 @@ let addMode = async (itemsToAdd, createOutfitDate, submitBtn, challengeExtras) =
 
 //add mastery and knowledge point for 100 compatibility 
 //add knowledge point for 50 compatibility 
-let careMode = async (itemsToAdd, createOutfitDate, submitBtn, outfitId, values) => {
-    let checkboxes = document.querySelectorAll('.wardrobe-checkbox');
+async function deleteEditMode(event, mode, outfitId, container, planner) {
+    event.preventDefault()
+    await clothingManager.deleteRecord(mode, outfitId)
 
-    checkboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', async (event) => {
-            let itemId = event.target.closest('.item-container').dataset.id;
-
-            if (event.target.checked) {
-                let compatibility = await careCompatibility([itemId], values);
-
-                if (compatibility.length == 0) {
-                    let confirmed = await confirmBox({
-                        title: 'Incompatible Item',
-                        text: `This item has care instructions that don't fully match this care event. Would you like to keep it anyway or remove it from your selection?`,
-                        save: 'Keep', dismiss: 'Remove'
-                    });
-
-                    if (!confirmed) {
-                        event.target.checked = false
-                        itemsToAdd = itemsToAdd.filter(id => id != itemId);
-                    } else {
-                        displayInPlanner('clothing')
-
-                    }
-                }
-            }
-        });
-    });
-
-    submitBtn.addEventListener('click', async (event) => {
-
-        event.preventDefault()
-        console.log(itemsToAdd);
-
-        if (itemsToAdd.length <= 0) {
-            alert('Please select at least one item')
-            return
-        }
-
-        await outfitItems.addItems('care_items', outfitId, itemsToAdd);
-
-        //     await updatePoints(['style'], createOutfitDate)
-
-        itemsToAdd = []
-
-        displayInPlanner('calendar')
+    let outfitContainer = document.querySelectorAll(container)
+    outfitContainer.forEach(container => {
+        if (container.getAttribute('data-id') == outfitId) container.remove()
     })
-    return itemsToAdd
+
+    displayInPlanner(planner)
+}
+
+async function submitEditMode(event, secondTable, outfitId, itemsToAdd, itemsToRemove, planner) {
+    event.preventDefault()
+
+    let data = await clothingManager.getItems(secondTable, [outfitId])
+    let existingIds = new Set(Object.values(data)[0])
+    let newItems = [...new Set(itemsToAdd)].filter(item => !existingIds.has(item))
+
+    if (newItems.length > 0) await outfitItems.addItems(secondTable, outfitId, newItems)
+    if (itemsToRemove.length > 0) await outfitItems.removeItems(secondTable, outfitId, itemsToRemove)
+
+    //     await updatePoints(['style'], createOutfitDate)
+
+    displayInPlanner(planner)
 }
 
 async function careCompatibility(itemsToAdd, values) {
@@ -486,17 +465,6 @@ async function careCompatibility(itemsToAdd, values) {
     })
 
     return compatibleItems
-}
-
-let getOutfitId = (outfitId) => {
-    let outfitContainer = document.querySelectorAll('.outfit');
-    outfitContainer.forEach(container => {
-        container.addEventListener('click', () => {
-            outfitId = container.getAttribute('data-id')
-            renderClothingDisplay(null, { mode: 'editOutfit', outfitId: outfitId, itemRender: 'default' })
-        })
-    })
-    return outfitId
 }
 
 //daily challenges and quiz

@@ -545,7 +545,7 @@ async function generateChallenge(clothingDataType) {
             challenge = {
                 id: `${challengeId}`,
                 title: `Wear More ${challengeData.leastWorn}`,
-                details: `${challengeData.leastWorn} items are the least worn in your wardrobe. Create an outfit that includes one of them.`,
+                details: `${capitalise(challengeData.leastWorn)} are the least worn in your wardrobe. Create an outfit that includes one of them.`,
                 target: "outfit",
                 event_type: "new_outfit",
                 filtered_data: true

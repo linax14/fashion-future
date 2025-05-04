@@ -7,7 +7,6 @@ new CreateElement('h2').setText('Your wardrobe').appendTo(document.body)
 let wardrobeSection = new CreateElement('div').setAttributes({ class: 'wardrobe-container' }).appendTo(document.body)
 let wardrobeHeader = new CreateElement('div').setAttributes({ class: 'header' }).appendTo(wardrobeSection)
 let clothingList = new CreateElement('div').setAttributes({ class: 'clothing-list' }).appendTo(wardrobeSection)
-let clothingFormContainer = new CreateElement('div').setAttributes({ class: 'clothing-formContainer' }).appendTo(document.body)
 
 let wardrobeManager
 let displayInHome = (type) => {
@@ -144,12 +143,7 @@ function handleFormSubmit(form, onSubmitCallback, itemId = null) {
         })
 
         let imageFile = formValues.image
-        console.log(imageFile)
-
-        if (Array.isArray(imageFile)) {
-            imageFile = imageFile[imageFile.length - 1]
-        }
-
+        if (Array.isArray(imageFile)) { imageFile = imageFile[imageFile.length - 1] }
         let imageName = null
 
         if (imageFile) {
@@ -238,7 +232,7 @@ async function renderClothingForm(mainForm) {
                 'do not bleach': '../assets/careLabel/bleach5.png',
             }, class: 'care-label'
         }, formPart2),
-        tumble_dry: new Images('tumble drying', {
+        tumble_dry: new Images('tumble_dry', {
             type: 'button', options: {
                 'tumble dry': '../assets/careLabel/tumble1.png',
                 'tumble dry low': '../assets/careLabel/tumble2.png',
@@ -246,7 +240,7 @@ async function renderClothingForm(mainForm) {
                 'do not tumble dry': '../assets/careLabel/tumble4.png',
             }, class: 'care-label'
         }, formPart2),
-        natural_dry: new Images('natural drying', {
+        natural_dry: new Images('natural_dry', {
             type: 'button', options: {
                 'dry': '../assets/careLabel/dry1.png',
                 'line dry': '../assets/careLabel/dry2.png',
@@ -293,7 +287,6 @@ async function renderClothingForm(mainForm) {
 
     let toggleBtns = () => {
         [formPart1, formPart2].forEach(el => el.classList.toggle('hidden'))
-        // [careBtn, aboutBtn].forEach(btn => btn.classList.toggle('selected'))
         careBtn.classList.toggle('selected')
         aboutBtn.classList.toggle('selected')
     }
@@ -321,7 +314,6 @@ async function renderEditClothingItem(clothingFormContainer, wardrobeContainer, 
         if (!name) return
         let selectInput = container.querySelector(`input[name="${name}"]`)
         if (selectInput) selectInput.value = value
-        // console.log(name)
 
         let elements = document.querySelectorAll(`.form-group.${name} .element`)
         elements.forEach(element => {
@@ -383,8 +375,8 @@ async function renderEditClothingItem(clothingFormContainer, wardrobeContainer, 
 
     setSingleSelection(aboutFormContainer, "wash", item.care_instructions.wash)
     setSingleSelection(aboutFormContainer, "bleach", item.care_instructions.bleach)
-    setSingleSelection(aboutFormContainer, "tumble drying", item.care_instructions.tumble_drying)
-    setSingleSelection(aboutFormContainer, "normal drying", item.care_instructions.normal_drying)
+    setSingleSelection(aboutFormContainer, "tumble_dry", item.care_instructions.tumble_drying)
+    setSingleSelection(aboutFormContainer, "normal_dry", item.care_instructions.natural_drying)
     setSingleSelection(aboutFormContainer, "iron", item.care_instructions.iron)
 
     let image = aboutFormContainer.querySelector('.image')
