@@ -1,4 +1,5 @@
-let sideNav = new CreateElement('nav').setAttributes({ class: 'side-nav' }).appendTo(document.body)
+document.querySelector('#logged-side-nav').remove()
+let sideNav = new CreateElement('nav').setAttributes({ class: 'side-nav', id: 'main-side-nav' }).appendTo(document.body)
 let main = new CreateElement('div').appendTo(document.body)
 
 let authContainer = new CreateElement('div').setAttributes({ class: 'auth-container' }).appendTo(main)
@@ -143,8 +144,8 @@ let signInWithEmail = async (emailInput, passwordInput) => {
 
 function renderSideNav() {
     let header = new CreateElement('div').setAttributes({ class: 'header' }).appendTo(sideNav)
-    let name = new CreateElement('h1').setText('Fashion Future').appendTo(header)
     let icon = new CreateElement('i').setAttributes({ class: 'fa-solid fa-bars' }).appendTo(header)
+    let name = new CreateElement('h2').setText('Fashion Future').appendTo(header)
     let ol = new CreateElement('ol').appendTo(sideNav)
 
     icon.addEventListener('click', () => {

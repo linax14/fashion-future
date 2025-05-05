@@ -70,9 +70,7 @@ async function updateWearCount(itemWearMap) {
 
 async function renderClothingDisplay(createOutfitDate, settings) {
     clothingContainer = document.querySelector('.clothing-container')
-    if (clothingContainer) {
-        clothingContainer.innerHTML = ''
-    }
+    if (clothingContainer) clothingContainer.innerHTML = ''
 
     displayInPlanner('clothing')
     closeBtnX(clothingContainer, () => displayInPlanner('calendar'))
@@ -101,9 +99,7 @@ async function renderClothingDisplay(createOutfitDate, settings) {
         }
     }
 
-    if (data.length > 0) {
-        new CreateElement('h4').setText('Other Items').appendTo(clothingList)
-    }
+    if (data.length > 0) { new CreateElement('h4').setText('Other Items').appendTo(clothingList) }
     filters.addEventListener('click', async () => {
         let filtersSection = document.querySelector('.filters');
 
@@ -146,10 +142,10 @@ async function renderClothingDisplay(createOutfitDate, settings) {
                 itemsToAdd = await addMode(itemsToAdd, createOutfitDate, submitBtn)
                 break;
             case 'editOutfit':
-                itemsToAdd = await editMode({ mode: 'outfit', outfitId: settings.outfitId, domEl: clothingItemElements, items: itemsToAdd, btns: { submitBtn, deleteBtn } });
+                itemsToAdd = await editMode({ mode: 'outfit', outfitId: settings.outfitId, domEl: clothingItemElements, items: itemsToAdd, btns: { submitBtn, deleteBtn }, date: createOutfitDate });
                 break;
             case 'garmentCare':
-                itemsToAdd = await editMode({ mode: 'care_event', items: itemsToAdd, domEl: clothingItemElements, btns: { submitBtn, deleteBtn }, outfitId: settings.outfitId, values: settings.formValues })
+                itemsToAdd = await editMode({ mode: 'care_event', items: itemsToAdd, domEl: clothingItemElements, btns: { submitBtn, deleteBtn }, outfitId: settings.outfitId, values: settings.formValues, date: createOutfitDate })
                 break
             default:
                 setDisplay([deleteBtn], 'none')
@@ -184,21 +180,27 @@ async function addOutfitStreak(createOutfitDate) {
         return { target: null }
     }
 
+    let date = new Date(createOutfitDate)
+    let month = date.toLocaleString('default', { month: 'long' }).toLowerCase()
+    let day = date.getDate()
+
     let allDates = outfitData.flatMap(entry => entry.wear_dates || []);
     let sortedDates = [...new Set(allDates)].sort((a, b) => new Date(a) - new Date(b));
     sortedDates = sortedDates.map(date => formatDateUnpadded(date))
 
     let alreadyLogged = sortedDates.includes(createOutfitDate)
-    if (!alreadyLogged) sortedDates.push(createOutfitDate)
-
-    sortedDates = [...new Set(sortedDates)].sort((a, b) => new Date(a) - new Date(b))
+    if (!alreadyLogged) {
+        sortedDates.push(createOutfitDate)
+        sortedDates = [...new Set(sortedDates)].sort((a, b) => new Date(a) - new Date(b))
+        await updatePoints(['discipline'], createOutfitDate);
+    }
 
     let prevDate = null;
     let streakCount = 0;
 
     let data = await calendarDataTarget(createOutfitDate, 'day')
-    let target = data.target
-    let calendar = target.calendar
+    let calendar = data.calendar
+    let target = calendar[month][day]
 
     for (let dateStr of sortedDates) {
         let curr = dateStr;
@@ -213,14 +215,13 @@ async function addOutfitStreak(createOutfitDate) {
         if (dateStr == createOutfitDate) {
             if (target) {
                 target.streak = streakCount
+
+                await updateUserTable(window.user, 'user_calendar', { calendar: calendar });
             }
 
-            if (!alreadyLogged) {
-                await updateUserTable(window.user, 'user_calendar', { calendar: calendar });
-                await updatePoints(['discipline'], createOutfitDate);
-            }
         } prevDate = dateStr;
     }
+
     return { target };
 }
 
@@ -232,6 +233,7 @@ let editMode = async (settings) => {
     let outfitId = settings.outfitId
     let mode = settings.mode
     let values = settings.values
+    let dataDate = settings.date
 
     let secondTable
     let container
@@ -270,7 +272,6 @@ let editMode = async (settings) => {
 
                 if (mode == 'care_event') {
                     let compatibility = await careCompatibility([itemId], values);
-
                     if (compatibility.length == 0) {
                         let confirmed = await confirmBox({
                             title: 'Incompatible Item',
@@ -280,24 +281,47 @@ let editMode = async (settings) => {
 
                         if (!confirmed) {
                             event.target.checked = false
-                            itemsToAdd = itemsToAdd.filter(id => id != itemId);
+                            let index = itemsToAdd.indexOf(itemId)
+                            if (index != -1) itemsToAdd.splice(index, 1)
+                            return
                         } else {
                             displayInPlanner('clothing')
                         }
                     }
                 }
                 itemsToAdd.push(element.id);
-                itemsToRemove = itemsToRemove.filter(id => id !== element.id);
+                let index = itemsToRemove.indexOf(itemId)
+                if (index != -1) itemsToRemove.splice(index, 1)
+                console.log(itemsToAdd);
+
             } else {
                 itemsToRemove.push(element.id);
-                itemsToAdd = itemsToAdd.filter(id => id !== element.id);
+                let index = itemsToAdd.indexOf(itemId)
+                if (index != -1) itemsToAdd.splice(index, 1)
             }
         });
     });
 
-    submitBtn.addEventListener('click', async (event) => {
-        await submitEditMode(event, secondTable, outfitId, itemsToAdd, itemsToRemove, planner)
-    })
+    if (mode == 'care_event') {
+        submitBtn.addEventListener('click', async (event) => {
+
+            itemsToAdd = [...new Set(itemsToAdd)]
+            let compatibility = await careCompatibility(itemsToAdd, values);
+
+            if (compatibility.length == itemsToAdd.length) {
+                updatePoints(['mastery', 'knowledge'], dataDate)
+            } else if (compatibility.length >= (itemsToAdd.length / 2)) {
+                updatePoints(['knowledge'], dataDate)
+            }
+
+            await submitEditMode(event, secondTable, outfitId, itemsToAdd, itemsToRemove, planner)
+        })
+
+    } else {
+        submitBtn.addEventListener('click', async (event) => {
+            await submitEditMode(event, secondTable, outfitId, itemsToAdd, itemsToRemove, planner)
+        })
+    }
 
     deleteBtn.addEventListener('click', async (event) => {
         await deleteEditMode(event, mode, outfitId, container, planner)
@@ -385,8 +409,6 @@ let addMode = async (itemsToAdd, createOutfitDate, submitBtn, challengeExtras) =
     return itemsToAdd
 }
 
-//add mastery and knowledge point for 100 compatibility 
-//add knowledge point for 50 compatibility 
 async function deleteEditMode(event, mode, outfitId, container, planner) {
     event.preventDefault()
     await clothingManager.deleteRecord(mode, outfitId)
@@ -408,8 +430,6 @@ async function submitEditMode(event, secondTable, outfitId, itemsToAdd, itemsToR
 
     if (newItems.length > 0) await outfitItems.addItems(secondTable, outfitId, newItems)
     if (itemsToRemove.length > 0) await outfitItems.removeItems(secondTable, outfitId, itemsToRemove)
-
-    //     await updatePoints(['style'], createOutfitDate)
 
     displayInPlanner(planner)
 }
@@ -442,8 +462,6 @@ async function careCompatibility(itemsToAdd, values) {
     }
 
     clothingItems.forEach(item => {
-        console.log(item);
-
         let itemCare = item.care_instructions
 
         let isCompatible = Object.keys(itemCare).every(key => {

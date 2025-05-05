@@ -425,7 +425,7 @@ let addNavBtn = () => {
 }
 
 function renderSideNav() {
-    let sideNav = new CreateElement('nav').setAttributes({ class: 'side-nav' }).appendTo(document.body)
+    let sideNav = new CreateElement('nav').setAttributes({ class: 'side-nav', id: 'logged-side-nav' }).appendTo(document.body)
     let header = new CreateElement('div').setAttributes({ class: 'header' }).appendTo(sideNav)
 
     let time = getTimePeriod()
@@ -597,8 +597,6 @@ async function renderFilters(appendTo, currentDisplay, onFilter) {
                 for (const [key, selectedValues] of Object.entries(selectedSets)) {
                     if (selectedValues.size === 0) continue;
                     let itemValue = e[key];
-
-                    console.log(e);
 
                     if (key === "colour" || key === "season" || key == "occasion" || key == "origin") {
 

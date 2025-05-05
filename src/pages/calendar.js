@@ -7,19 +7,19 @@ document.addEventListener("userInitialized", async () => {
 let navBtn
 let navModal = new CreateElement('div').setAttributes({ class: 'nav-modal' }).appendTo(document.body)
 setDisplay([navModal], 'none')
+
+let createIconBtn = (className, text, src, alt, appendTo) => {
+    let btn = new CreateElement('button').setAttributes({ class: className }).appendTo(appendTo);
+
+    new CreateElement('span').setText(text).appendTo(btn);
+    new CreateElement('img').setAttributes({ src: src, alt: alt }).appendTo(btn);
+
+    return btn
+}
+
 let navEvents = () => {
-
-    let addNavBtns = (className, text, src, alt) => {
-        let btn = new CreateElement('button').setAttributes({ class: className }).appendTo(navModal);
-
-        new CreateElement('span').setText(text).appendTo(btn);
-        new CreateElement('img').setAttributes({ src: src, alt: alt }).appendTo(btn);
-
-        return btn
-    }
-
-    let createOutfit = addNavBtns('create-outfit-btn btn', 'New outfit', '../assets/createOutfit.png', 'clothing items')
-    let addCareBtn = addNavBtns('add-care-btn btn', 'care event', 'https://img.icons8.com/ios/100/laundry-bag.png', 'laundry basket')
+    let createOutfit = createIconBtn('create-outfit-btn btn', 'New outfit', '../assets/createOutfit.png', 'clothing items', navModal)
+    let addCareBtn = createIconBtn('add-care-btn btn', 'care event', 'https://img.icons8.com/ios/100/laundry-bag.png', 'laundry basket', navModal)
 
     createOutfit.addEventListener('click', async () => {
         let date = createOutfit.dataset.date
@@ -44,16 +44,16 @@ let header = new CreateElement('h2').setAttributes({ class: 'calendar header' })
 
 let calendarContainer = new CreateElement('div').setAttributes({ id: 'calendar' }).appendTo(document.body)
 let careBtnContainer = new CreateElement('section').setAttributes({ class: 'care-container' }).appendTo(calendarContainer);
-let careEventContainer = new CreateElement('div').setAttributes({ class: 'care-event-container' }).appendTo(document.body)
-
 let clothingContainer = new CreateElement('div').setAttributes({ class: 'clothing-container' })
     .appendTo(document.body)
+
+let careContainer = new CreateElement('div').setAttributes({ class: 'care-event-container' }).appendTo(document.body)
 
 let displayInPlanner = (type) => {
     let outfitContainer = document.querySelector('.outfits-container')
     let calendarInfo = document.querySelector('.calendar-info')
-    let careEvent = document.querySelector('.care-event-container')
     let careItems = document.querySelector('.care-event-container-items')
+    let careEventContainer = document.querySelector('.care-event-container')
 
     switch (type) {
         case 'calendar':
@@ -69,20 +69,22 @@ let displayInPlanner = (type) => {
                 careItems.innerHTML = ''
                 setDisplay([careItems], 'flex')
             }
-            if (careEvent) setDisplay([careEvent], 'none')
+            if (careEventContainer) setDisplay([careEventContainer], 'none')
+            if (careContainer) setDisplay([careContainer], 'none')
             break;
 
         case 'clothing':
             setDisplay([clothingContainer], 'block')
             setDisplay([calendarContainer, header], 'none')
-            if (careEvent) setDisplay([careEvent], 'none')
+            if (careEventContainer) setDisplay([careEventContainer], 'none')
             if (careItems) setDisplay([careItems], 'none')
+            if (careContainer) setDisplay([careContainer], 'none')
             setDisplay([navModal], 'none');
             break;
 
         case 'garmentCare':
-            setDisplay([calendarContainer, clothingContainer, header], 'none')
-            setDisplay([careEvent], 'flex')
+            setDisplay([calendarContainer, clothingContainer, header, careEventContainer], 'none')
+            setDisplay([careContainer], 'flex')
             setDisplay([navModal], 'none');
             if (careItems) setDisplay([careItems], 'none')
             break;
@@ -103,6 +105,8 @@ async function renderCalendarDisplay(monthStart) {
     let createOutfitDate = null
     createOutfitDate = monthStart
 
+    let careEventContainer = new CreateElement('section').setAttributes({ class: 'care-event-container' }).appendTo(calendarContainer)
+
     addNavBtn();
 
     if (monthStart) {
@@ -114,8 +118,8 @@ async function renderCalendarDisplay(monthStart) {
         }, 0);
     }
 
-    await calendarDays(noDaysMonth, createOutfitDate, daysContainer, outfitsContainer);
-    await scrollToday(createOutfitDate, outfitsContainer);
+    await calendarDays(noDaysMonth, createOutfitDate, daysContainer, outfitsContainer, careEventContainer);
+    await scrollToday(createOutfitDate, outfitsContainer, careEventContainer);
 }
 
 let calendarHeader = async () => {
@@ -153,7 +157,6 @@ let renderGarmentCareItems = async (dataDate, appendTo) => {
 
     let div = new CreateElement('div').setAttributes({ class: 'care-event-container-items' }).appendTo(appendTo)
 
-    new CreateElement('h4').setText('Garment Care').appendTo(div)
     for (const element of data) {
         let outfitContainer = new CreateElement('div').setAttributes({ class: 'outfit', 'data-id': element.outfitId }).appendTo(div)
         let count = 0
@@ -175,7 +178,7 @@ let renderGarmentCareItems = async (dataDate, appendTo) => {
     return data
 }
 
-async function calendarDays(noDaysMonth, createOutfitDate, daysContainer, outfitsContainer) {
+async function calendarDays(noDaysMonth, createOutfitDate, daysContainer, outfitsContainer, careEventContainer) {
     for (let day = 1; day <= noDaysMonth; day++) {
         let date = new Date()
         let currentDate = new Date(year, month, day);
@@ -195,13 +198,13 @@ async function calendarDays(noDaysMonth, createOutfitDate, daysContainer, outfit
             .setAttributes({ class: className, 'data-date': dataDate })
             .setText(day)
             .addEventListener('click', async () => {
-                await handleDayClick(dayContainer, dataDate, createOutfitDate, outfitsContainer)
+                await handleDayClick(dayContainer, dataDate, createOutfitDate, outfitsContainer, careEventContainer)
             })
             .appendTo(dayContainer);
     }
 }
 
-async function scrollToday(createOutfitDate, outfitsContainer) {
+async function scrollToday(createOutfitDate, outfitsContainer, careEventContainer) {
     setTimeout(() => {
         (async () => {
             let todayDiv = document.querySelector('.day-container.today');
@@ -218,7 +221,7 @@ async function scrollToday(createOutfitDate, outfitsContainer) {
 
                 if (div.hasAttribute('data-date')) {
                     let dataDate = div.getAttribute('data-date');
-                    await handleDayClick(todayDiv, dataDate, createOutfitDate, outfitsContainer);
+                    await handleDayClick(todayDiv, dataDate, createOutfitDate, outfitsContainer, careEventContainer);
                     localStorage.setItem('dateInfo', `${dataDate}`);
                 }
             }
@@ -253,10 +256,10 @@ async function renderOutfits(dataDate, outfitsContainer) {
         })
     }
 
-    return true
+    return data
 }
 
-let handleDayClick = async (dayContainer, dataDate, createOutfitDate, outfitsContainer) => {
+let handleDayClick = async (dayContainer, dataDate, createOutfitDate, outfitsContainer, careEventContainer) => {
     document.querySelectorAll('.day-container.selected').forEach(el => el.classList.remove('selected'));
     dayContainer.classList.add('selected');
 
@@ -279,23 +282,30 @@ let handleDayClick = async (dayContainer, dataDate, createOutfitDate, outfitsCon
         setDisplay([navModal], isVisible ? 'none' : 'flex');
     })
 
-    await renderOutfits(dataDate, outfitsContainer);
-    await renderGarmentCareItems(dataDate, calendarContainer);
+    outfitsContainer.innerHTML = ''
+    new CreateElement('h4').setText('Outfits of the day').setAttributes({ class: 'planner-section-heading' }).appendTo(outfitsContainer)
+    let outfits = await renderOutfits(dataDate, outfitsContainer);
+    if (outfits.length == 0) placeholder(outfitsContainer, 'outfit', createOutfitDate)
+
+    careEventContainer.innerHTML = ''
+    new CreateElement('h4').setText('Garment Care').setAttributes({ class: 'planner-section-heading' }).appendTo(careEventContainer)
+    let garmentCare = await renderGarmentCareItems(dataDate, careEventContainer);
+    if (!garmentCare) placeholder(careEventContainer, 'care', createOutfitDate)
 
     localStorage.setItem('dateInfo', `${dataDate}`);
 }
 
 async function renderGarmentCareForm(settings) {
-    careEventContainer.innerHTML = ''
+    careContainer.innerHTML = ''
     displayInPlanner('garmentCare')
 
-    closeBtnX(careEventContainer, () => displayInPlanner('calendar'))
+    closeBtnX(careContainer, () => displayInPlanner('calendar'))
 
-    new CreateElement('h3').setText('Basket Care Settings').appendTo(careEventContainer)
+    new CreateElement('h3').setText('Basket Care Settings').appendTo(careContainer)
     new CreateElement('p').setText(`Select the care options and submit to start adding clothes`)
-        .appendTo(careEventContainer)
+        .appendTo(careContainer)
 
-    let form = new CreateElement('form').setAttributes({ id: 'care-form' }).appendTo(careEventContainer)
+    let form = new CreateElement('form').setAttributes({ id: 'care-form' }).appendTo(careContainer)
     let careFields = {
         wash: new Images('wash', {
             type: 'button', options: {
@@ -437,3 +447,71 @@ function handleFormSubmit(form, onSubmitCallback, itemId = null, onSuccess = nul
     return { form, isDirty: () => isDirty }
 }
 
+let placeholder = (appendTo, mode, dataDate) => {
+    let div = new CreateElement('div').setAttributes({ class: 'outfit placeholder' }).appendTo(appendTo)
+    let msg = new CreateElement('p').appendTo(div)
+    msg.innerHTML = getDailyCTA(mode)
+
+    let btn
+
+    if (mode == 'outfit') {
+        btn = createIconBtn('create-outfit-btn btn', 'Add fit', '../assets/createOutfit.png', 'clothing items', div)
+        btn.addEventListener('click', async () => {
+            await renderClothingDisplay(dataDate, { mode: 'addOutfit', itemRender: 'default' });;
+        })
+    } else if (mode == 'care') {
+        btn = createIconBtn('add-care-btn btn', 'Add care', 'https://img.icons8.com/ios/100/laundry-bag.png', 'laundry basket', div)
+        btn.addEventListener('click', async () => {
+            await renderGarmentCareForm({ date: dataDate, mode: 'add' });
+        })
+    }
+
+    return div
+}
+
+let ctaMessages = {
+    outfit:
+        ['Nothing planned yet! Start styling by logging your oufit of the day.',
+            'Got a look in mind?', 'No outfit logged yet - fashionably late?',
+            `Style it, log it, own it!`,
+            `A day without a fit is a missed opprtunity.`,
+            `Still deciding what to wear? Your planner is ready when you are!`,
+            `Planning makes perfect - drop your look here.`,
+            `Get your fit down before you forget it!`,
+            `Don't ghost your closet - log that outfit!`,
+            `Outfit of the day? Or of the week? Let's plan it out.`,
+            `The day is a blank canvas - dress it up!`,
+            `Your planner's craving some style - give it a fit to love.`,
+            `A well-dressed day starts with one tap.`,
+            `No outfit yet -  but the runway (planner) is open.`,
+            `Got a great outfit today? Save it for the memories.`,
+            `Dressed up for the day? Pop it in your planner`
+        ],
+    care: ['Laundry day? Keep your clothes fresh by logging a care event!',
+        `Your clothes deserve some love. Don't forget to log a wash.`,
+        `Time for a rinse? Your wardrobe's waiting for a wash log.`,
+        `No washes yet - your clothes are starting to side-eye you!`,
+        `Washed and wonderful? Don't forget to log it.`,
+        `Air it out, then log it!`,
+        `Wrinkles? What wrinkles? Add an iron task to stay smooth.`,
+        `Freshen things up - today's care log is calling for you!`,
+        `Closet care is self care. Got anything to add?`,
+        `Iron, bleach, dry, or wash - nothing logged yet!`,
+        `Pressed for time? A quick log goes a long way.`,
+        `Ironed anything lately? Let your planner know.`,
+        `Handle with care - bleach is powerful stuff. Log responsibly!`,
+        `Bleach belongs in the logbook, not just the laundry.`,
+        `Nothing bleached yet... pristine or procrastinating`
+    ]
+}
+
+let getDailyCTA = (mode) => {
+    let stored = localStorage.getItem(`placeholderMessage-${mode}`)
+    if (stored) return stored
+
+    let messages = ctaMessages[mode]
+    let selected = messages[Math.floor(Math.random() * messages.length)]
+    localStorage.setItem(`placeholderMessage-${mode}`, selected)
+
+    return selected
+}

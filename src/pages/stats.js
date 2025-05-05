@@ -6,10 +6,6 @@ document.addEventListener("userInitialized", async () => {
 let closetOverview = new CreateElement('section').setAttributes({ class: 'overview-section' }).appendTo(document.body)
 
 async function render() {
-
-    //points
-    let data = await getPointsData()
-
     setupStats(false, 'General Wardrobe Stats', closetOverview)
     setupStats(true, 'Wear Stats', closetOverview)
 }
@@ -28,7 +24,7 @@ async function setupStats(withWear, title, appendTo) {
         let msg
         if (withWear) {
             msg = `
-            Almost there! You need to log ${remainingItems} more ${remainingItems == 1 ? 'item' : 'items'} to unlock wear stats.<br>
+            Almost there! You need to log ${remainingItems} more ${remainingItems == 1 ? 'item' : 'items'} in your outfits to unlock wear stats.<br>
             <a href='planner.html' class='locked-link'>
             <img src='../assets/icons/calendar.png'/>
             Log a fit<a/>`
@@ -56,74 +52,6 @@ async function setupStats(withWear, title, appendTo) {
     for (const value of clothingAttributes) {
         await chartInfo(value.chart, withWear, value.data, value.colors, stats)
     }
-}
-
-class Points {
-    constructor(user, date) {
-        this.user = user
-        this.date = date
-        this.currentMonth = months[month].toLowerCase()
-    }
-
-    async getData() {
-        this.calendarData = await selectUserTable(this.user, 'user_calendar')
-        this.data = await calendarDataTarget(this.date, 'month')
-    }
-
-    async perCategory() {
-        if (!this.data) await this.getData();
-
-        let totalPoints = {}
-        let targetMonth = this.data.targetMonth
-
-        if (targetMonth) {
-
-            for (const key in targetMonth) {
-                let value = targetMonth[key]
-                for (let tag in value.points) {
-                    let point = value.points[tag]
-                    if (!totalPoints[tag]) totalPoints[tag] = 0
-                    totalPoints[tag] += point
-                }
-            }
-        }
-        return totalPoints
-    }
-
-    async total() {
-        let points = await this.perCategory();
-        return Object.values(points).reduce((acc, val) => acc + val, 0);
-    }
-
-    async percentages() {
-        let perTag = await this.perCategory()
-        let total = Object.values(perTag).reduce((acc, val) => acc + val, 0);
-        let percentages = {}
-
-        for (const [tag, value] of Object.entries(perTag)) {
-            percentages[tag] = total ? Math.round((value / total) * 100) : 0;
-        }
-
-        return percentages
-    }
-
-    async detailedData() {
-        let data = {
-            percategory: await this.perCategory(),
-            sum: await this.total(),
-            percentages: await this.percentages()
-        }
-
-        return data
-    }
-}
-
-let getPointsData = async () => {
-    let day = date.getDate()
-    let today = `${year}-${month + 1}-${day}`
-    let points = new Points(window.user, today)
-
-    return await points.detailedData()
 }
 
 async function wardrobeItems(withWear = false) {
@@ -241,7 +169,7 @@ async function createChart(chartType, withWear = false, clothingAttribute, dataC
             }]
         },
         options: {
-            indexAxis: chartType == 'bar' ? 'x' : undefined,
+            indexAxis: chartType == 'bar' ? 'y' : undefined,
             responsive: true,
             plugins: {
                 legend: {
@@ -417,11 +345,11 @@ async function chartInfo(chartType, withWear = false, clothingAttribute, dataCol
 
 }
 
-let lockedStats=(appendTo, message) =>{
+let lockedStats = (appendTo, message) => {
     let div = new CreateElement('div').setAttributes({ class: 'locked-stats' }).appendTo(appendTo)
     new CreateElement('i').setAttributes({ class: 'fa-solid fa-lock' }).appendTo(div)
     let msg = new CreateElement('p').appendTo(div)
     msg.innerHTML = message
-    
+
     return div
 }
