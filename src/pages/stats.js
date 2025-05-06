@@ -36,7 +36,7 @@ async function setupStats(withWear, title, appendTo) {
             <img src='https://img.icons8.com/pastel-glyph/64/hanger--v1.png'/> Head to wardrobe <a/>`
         }
 
-        lockedStats(stats, msg)
+        lockedState(stats, msg)
         return
     }
 
@@ -107,15 +107,6 @@ let clothingColours = {
 
 let seasonColours = {
     'spring': '#ffc2c3', 'summer': '#70e7ff', 'autumn': '#f5c25d', 'winter': '#536299'
-}
-
-let getRGB = (hex) => {
-    hex = hex.replace('#', '')
-    let r = parseInt(hex.slice(0, 2), 16);
-    let g = parseInt(hex.slice(2, 4), 16);
-    let b = parseInt(hex.slice(4, 6), 16);
-
-    return `${r},${g},${b}`;
 }
 
 let randomPastelRGB = () => {
@@ -273,19 +264,19 @@ async function chartInfo(chartType, withWear = false, clothingAttribute, dataCol
             if (count.length > 1) {
                 switch (clothingAttribute) {
                     case 'category':
-                        info.innerHTML = `Your most worn categories are ${dataKeys}`;
+                        info.innerHTML = `Most worn items came from ${dataKeys}`;
                         break;
                     case 'brand':
-                        info.innerHTML = `You've been repping ${dataKeys} the most`;
+                        info.innerHTML = `${dataKeys}  keeps showing up - clearly a go-to label`;
                         break;
                     case 'colour':
-                        info.innerHTML = `You've worn ${dataKeys} tones more than any others. You wore ${topItem} tones ${topCount} times — your fave shade?`;
+                        info.innerHTML = `${dataKeys} tones are on heavy rotation. ${capitalise(topItem)} alone was worn ${topCount} times — is it your fave shade?`;
                         break;
                     case 'season':
                         info.innerHTML = `You've been dressing mostly for ${dataKeys} weather. You have worn ${topItem} items ${topCount} times!`;
                         break;
                     case 'occasion':
-                        info.innerHTML = `Your outfits are mostly worn for ${dataKeys}`;
+                        info.innerHTML = `Your clothing is getting the most mileage during ${dataKeys} occasion`;
                         break;
                     case 'origin':
                         info.innerHTML = `You've been favoring clothes from ${dataKeys}`;
@@ -296,10 +287,10 @@ async function chartInfo(chartType, withWear = false, clothingAttribute, dataCol
             } else {
                 switch (clothingAttribute) {
                     case 'season':
-                        info.innerHTML = `You've only worn clothes suited for ${dataKeys}. You have worn them ${topCount} times!`;
+                        info.innerHTML = `${capitalise(dataKeys)} season clothes were worn the most. You have worn them ${topCount} times!`;
                         break;
                     case 'brand':
-                        info.innerHTML = `You mostly wear ${dataKeys}`;
+                        info.innerHTML = `${capitalise(dataKeys)} dominates the rotation lately.`;
                         break;
                     default:
                         info.innerHTML = `Your most worn ${clothingAttribute} is ${dataKeys}`;
@@ -314,19 +305,19 @@ async function chartInfo(chartType, withWear = false, clothingAttribute, dataCol
                         info.innerHTML = `Your closet includes a variety of categories: ${dataKeys}`;
                         break;
                     case 'brand':
-                        info.innerHTML = `Your wardrobe spans ${dataKeys}`;
+                        info.innerHTML = `${capitalise(dataKeys)} labels make up your wardrobe - nice mix!`;
                         break;
                     case 'colour':
-                        info.innerHTML = `Your clothes come in ${dataKeys} shades`;
+                        info.innerHTML = `This palette covers: ${dataKeys} shades`;
                         break;
                     case 'season':
                         info.innerHTML = `Your wardrobe is ready for ${dataKeys} seasons`;
                         break;
                     case 'occasion':
-                        info.innerHTML = `You're covered for all sorts of events: ${dataKeys}`;
+                        info.innerHTML = `Pieces are suited for: ${dataKeys}. Life's many moods, covered`;
                         break;
                     case 'origin':
-                        info.innerHTML = `Your clothes come from ${dataKeys}`;
+                        info.innerHTML = `Garments come from ${dataKeys}`;
                         break;
                     default:
                         info.innerHTML = `Your top ${count.length} ${clothingAttribute}s are ${dataKeys}`;
@@ -345,11 +336,3 @@ async function chartInfo(chartType, withWear = false, clothingAttribute, dataCol
 
 }
 
-let lockedStats = (appendTo, message) => {
-    let div = new CreateElement('div').setAttributes({ class: 'locked-stats' }).appendTo(appendTo)
-    new CreateElement('i').setAttributes({ class: 'fa-solid fa-lock' }).appendTo(div)
-    let msg = new CreateElement('p').appendTo(div)
-    msg.innerHTML = message
-
-    return div
-}

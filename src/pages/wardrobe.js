@@ -1,9 +1,13 @@
 document.addEventListener("userInitialized", async () => {
     wardrobeManager = new WardrobeManager(window.user)
     await renderWardrobe()
+
+    let completed = localStorage.getItem('challengeCompleted')
+    if (!completed) {
+        await getChallengeAction()
+    }
 })
 
-new CreateElement('h2').setText('Your wardrobe').appendTo(document.body)
 let wardrobeSection = new CreateElement('div').setAttributes({ class: 'wardrobe-container' }).appendTo(document.body)
 let wardrobeHeader = new CreateElement('div').setAttributes({ class: 'header' }).appendTo(wardrobeSection)
 let clothingList = new CreateElement('div').setAttributes({ class: 'clothing-list' }).appendTo(wardrobeSection)
@@ -154,7 +158,7 @@ function handleFormSubmit(form, onSubmitCallback, itemId = null) {
 
         await onSubmitCallback(formValues, imageName)
         isDirty = false
-        displayInHome('wardrobe')
+        renderWardrobe()
     })
 
     return { form, isDirty: () => isDirty }
@@ -295,7 +299,7 @@ async function renderClothingForm(mainForm) {
     [careBtn, aboutBtn].forEach(btn => btn.addEventListener('click', () => { toggleBtns() }))
 }
 
-async function renderEditClothingItem(clothingFormContainer, wardrobeContainer, item) {
+async function renderEditClothingItem(clothingFormContainer, wardrobeContainer, item, fromChallenge = false) {
     displayInHome('form')
 
     let aboutFormContainer = clothingFormContainer.querySelector('#about-form')
@@ -317,13 +321,11 @@ async function renderEditClothingItem(clothingFormContainer, wardrobeContainer, 
         if (selectInput) selectInput.value = value
 
         let elements = document.querySelectorAll(`.form-group.${name} .element`)
+        elements.forEach(el => el.classList.remove('selected'))
+
         elements.forEach(element => {
-
-            if (element.getAttribute('value')) {
-                element.classList.toggle('selected', element.getAttribute('value') == value)
-            } else {
-                element.classList.toggle('selected', element.getAttribute('name') == value)
-
+            if (element.getAttribute('data-value') == value) {
+                element.classList.add('selected')
             }
         })
     }
@@ -363,7 +365,7 @@ async function renderEditClothingItem(clothingFormContainer, wardrobeContainer, 
         } else {
             let elements = container.querySelectorAll(`.form-group.${name} .element`)
             elements.forEach(element => {
-                let value = element.value || element.getAttribute('value')
+                let value = element.value || element.getAttribute('data-value')
                 element.classList.toggle('selected', selectedValues.includes(value))
             })
         }
@@ -374,10 +376,11 @@ async function renderEditClothingItem(clothingFormContainer, wardrobeContainer, 
     setMultiSelection(aboutFormContainer, "occasion", item.occasion)
     setMultiSelection(aboutFormContainer, "origin", item.origin)
 
+    let originalCare = { ...item.care_instructions }
     setSingleSelection(aboutFormContainer, "wash", item.care_instructions.wash)
     setSingleSelection(aboutFormContainer, "bleach", item.care_instructions.bleach)
-    setSingleSelection(aboutFormContainer, "tumble_dry", item.care_instructions.tumble_drying)
-    setSingleSelection(aboutFormContainer, "normal_dry", item.care_instructions.natural_drying)
+    setSingleSelection(aboutFormContainer, "tumble_dry", item.care_instructions.tumble_dry)
+    setSingleSelection(aboutFormContainer, "normal_dry", item.care_instructions.natural_dry)
     setSingleSelection(aboutFormContainer, "iron", item.care_instructions.iron)
 
     let image = aboutFormContainer.querySelector('.image')
@@ -396,9 +399,38 @@ async function renderEditClothingItem(clothingFormContainer, wardrobeContainer, 
     }
 
     let submitBtn = clothingFormContainer.querySelector('.submit')
+    if (fromChallenge == true) {
+        submitBtn.addEventListener('click', (e) => {
+            e.preventDefault()
+
+            let updatedCare = {
+                wash: aboutFormContainer.querySelector(`input[name="wash"]`)?.value,
+                bleach: aboutFormContainer.querySelector(`input[name="bleach"]`)?.value,
+                tumble_dry: aboutFormContainer.querySelector(`input[name="tumble_dry"]`)?.value,
+                natural_dry: aboutFormContainer.querySelector(`input[name="normal_dry"]`)?.value,
+                iron: aboutFormContainer.querySelector(`input[name="iron"]`)?.value
+            }
+            console.log(updatedCare);
+
+            let changes = {}
+            for (let key in updatedCare) {
+                if (originalCare[key] != updatedCare[key]) {
+                    changes[key] = { before: originalCare[key], after: updatedCare[key] }
+                }
+            }
+
+            console.log(Object.keys(changes).length);
+
+            if (Object.keys(changes).length > 0) {
+                updateClothingItem(item.id, aboutFormContainer, clothingFormContainer, true)
+            }
+
+        })
+    }
+
     submitBtn.addEventListener('click', (e) => {
         e.preventDefault()
-        updateClothingItem(item.id, aboutFormContainer, clothingFormContainer)
+        updateClothingItem(item.id, aboutFormContainer, clothingFormContainer, false)
     })
 
     //do not add it inside the form again!!
@@ -410,7 +442,7 @@ async function renderEditClothingItem(clothingFormContainer, wardrobeContainer, 
         }).appendTo(clothingFormContainer)
 }
 
-async function updateClothingItem(itemId, formContainer, clothingFormContainer) {
+async function updateClothingItem(itemId, formContainer, clothingFormContainer, fromChallenge = false) {
     let formData = new FormData(formContainer)
     let formValues = {}
 
@@ -458,15 +490,21 @@ async function updateClothingItem(itemId, formContainer, clothingFormContainer) 
             }
         )
 
-        displayInHome('wardrobe')
-        renderClothingItem({ clothingFormContainer: clothingFormContainer, appendTo: clothingList })
+        if (fromChallenge == true) {
+            let challengeAction = JSON.parse(localStorage.getItem('challengeAction'))
+            await updatePoints(['discipline', 'style'], challengeAction.dateInfo)
+            completeChallenge()
+        } else {
+            displayInHome('wardrobe')
+            renderClothingItem({ clothingFormContainer: clothingFormContainer, appendTo: clothingList })
+        }
 
     } catch (error) {
         console.error('error updating', error)
     }
 }
 
-async function renderWardrobe() {
+async function renderWardrobe(settings = null) {
     let editMode = false
     let filterMode = false
 
@@ -478,7 +516,22 @@ async function renderWardrobe() {
     let editWardrobe = new CreateElement('button').setAttributes({ class: 'edit btn' }).appendTo(btnContainer)
     new CreateElement('i').setAttributes({ class: 'fa-trash fa-solid' }).appendTo(editWardrobe)
 
-    let allClothes = await renderClothingItem({ appendTo: clothingList })
+    let allClothes
+    let data = await selectUserTable(window.user, 'clothing_items')
+
+    if (settings && settings.challenge) {
+        let filtered = settings.challenge.filtered
+        if (filtered && filtered.length > 0) {
+            let challengeContainer = new CreateElement('div').setAttributes({ class: 'challenge clothing-list' }).appendTo(clothingList)
+            new CreateElement('h4').setText('Challenge Items').appendTo(challengeContainer)
+            let clothingItems = await renderClothingItem({ appendTo: challengeContainer, data: filtered, mode: 'careChallenge' })
+            data = data.filter(item => !filtered.some(filteredItem => filteredItem.id == item.id))
+        }
+    }
+
+    if (data.length > 0) { new CreateElement('h4').setText('Other Items').appendTo(clothingList) }
+    allClothes = await renderClothingItem({ appendTo: clothingList, data: data })
+
     renderClothingForm(clothingFormContainer)
 
     let filtersBtn = new CreateElement('button').setAttributes({ class: 'filter btn' }).appendTo(btnContainer)

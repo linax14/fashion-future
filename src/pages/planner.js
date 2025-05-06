@@ -14,7 +14,7 @@ let outfit
 
 async function renderPreviousOutfits(container) {
     let data = (await clothingManager.getData('outfit')).sort(() => Math.random() - 0.5).slice(0, 2)
-    let prevDiv = new CreateElement('div').setAttributes({ class: 'prev-worn-container' }).appendTo(container)
+    let prevDiv = new CreateElement('div').setAttributes({ class: 'prev-worn-container dashboard-container' }).appendTo(container)
 
     if (data) new CreateElement('h3').setText('Previously worn outfits').appendTo(prevDiv)
 
@@ -305,6 +305,10 @@ let editMode = async (settings) => {
     if (mode == 'care_event') {
         submitBtn.addEventListener('click', async (event) => {
 
+            if (itemsToAdd.length == 0) {
+                await deleteEditMode(event, mode, outfitId, container, planner)
+            }
+
             itemsToAdd = [...new Set(itemsToAdd)]
             let compatibility = await careCompatibility(itemsToAdd, values);
 
@@ -516,7 +520,7 @@ async function getDaily(user, dateInfo, type, appendTo) {
                         await updateUserTable(window.user, 'user_calendar', { calendar: element.calendar });
                     }
                     let sessionCompleted = localStorage.getItem(`quiz_${dateInfo}_completed`);
-                    quiz = new CreateElement('div').setAttributes({ class: 'quiz-container' }).appendTo(appendTo)
+                    quiz = new CreateElement('div').setAttributes({ class: 'quiz-container dashboard-container' }).appendTo(appendTo)
                     header = new CreateElement('div').setAttributes({ class: 'header' }).addEventListener('click', handleQuiz).appendTo(quiz)
                     let h3 = new CreateElement('h3').setText('quiz').appendTo(header)
                     new CreateElement('i').setAttributes({ class: 'fa-solid fa-question' }).appendTo(header)
@@ -534,42 +538,6 @@ async function getDaily(user, dateInfo, type, appendTo) {
     }
 
     return calendarData
-}
-
-async function getChallengeAction() {
-    let challengeAction = localStorage.getItem('challengeAction')
-    let clothingData = JSON.parse(localStorage.getItem('filteredData'))
-    let challengeData = JSON.parse(localStorage.getItem('challengeData'))
-
-    let actionData = null
-    if (challengeAction) {
-        actionData = JSON.parse(challengeAction)
-
-        if (actionData.action == 'addOutfit') {
-            await renderClothingDisplay(actionData.dateInfo, { mode: 'addOutfit', challenge: { filtered: clothingData, challengeData: challengeData }, itemRender: 'default' })
-        }
-    }
-}
-
-async function completeChallenge() {
-
-    let challenge = JSON.parse(localStorage.getItem('challengeAction'))
-
-    if (challenge && challenge.fromChallenge) {
-        let { progress, challengesToday, calendarData } = await getUserData(challenge.dateInfo, 'challenges')
-        let updateChallenge = progress.challengesProgress.find(item => item.id == challenge.challengeId)
-        if (updateChallenge) updateChallenge.complete_count += 1
-
-        await updateUserTable(window.user, 'user_details', { user_id: user.id, challenges_progress: progress.challengesProgress })
-
-        localStorage.setItem('challengeCompleted', JSON.stringify({
-            challengeId: challenge.challengeId,
-            dateInfo: challenge.dateInfo
-        }))
-
-        localStorage.removeItem('challengeAction')
-        window.location.href = './dashboard.html'
-    }
 }
 
 // quiz

@@ -189,21 +189,20 @@ class SelectOption extends FormField {
 
         config.options.sort().forEach(option => {
             let element = new CreateElement(config.type)
-                .setAttributes({ value: option, class: 'element' })
+                .setAttributes({ 'data-value': option, class: 'element' })
                 .addEventListener('click', (event) => {
                     event.stopPropagation()
                     if (this.allowMultiple) {
                         if (this.selected.includes(option)) {
-                            this.selected = this.selected.filter(c => c !== option);
+                            this.selected = this.selected.filter(c => c != option);
                             element.classList.remove('selected');
                         } else {
                             this.selected.push(option);
                             element.classList.add('selected');
                         }
-
                         this.hiddenInput.value = this.selected.join(',');
                     } else {
-                        if (this.selected === option) {
+                        if (this.selected == option) {
                             this.selected = null;
                             element.classList.remove('selected');
                             this.hiddenInput.value = '';
@@ -331,8 +330,8 @@ class Images extends FormField {
         this.selected = ''
 
         Object.entries(config.options).forEach(([option, value]) => {
-            let element = new CreateElement('div')
-                .setAttributes({ class: 'element', name: option })
+            let element = new CreateElement('span')
+                .setAttributes({ class: 'element', 'data-value': option })
                 .appendTo(this.wrapper)
 
             let item = new CreateElement('img')
@@ -660,10 +659,9 @@ async function renderFilters(appendTo, currentDisplay, onFilter) {
     return div
 }
 
-clothingFormContainer = document.querySelector('.clothing-formContainer')
-let editItemHandler = (clothingFormContainer = null, appendTo, container, element) => {
+let editItemHandler = (clothingFormContainer, appendTo, element, fromChallenge) => {
     if (clothingFormContainer) {
-        renderEditClothingItem(clothingFormContainer, appendTo, element)
+        renderEditClothingItem(clothingFormContainer, appendTo, element, fromChallenge)
     }
 }
 
@@ -676,6 +674,10 @@ async function renderClothingItem(settings) {
         switch (settings.mode) {
             case 'care':
                 return renderer.renderCare()
+
+            case 'careChallenge':
+                return renderer.renderCareChallenge()
+
             default:
                 return renderer.renderDefault()
         }
@@ -766,12 +768,37 @@ class RenderClothing {
         return { container, checkbox: container.querySelector('.wardrobe-checkbox'), itemClickHandler, id: this.element.id }
     }
 
+    async renderCareChallenge() {
+        let container = new CreateElement('div')
+            .setAttributes({ class: 'item-container', 'data-id': this.element.id })
+            .appendTo(this.appendTo)
+
+        let itemClickHandler = this.clickHandlerChallenge(container);
+        await this.addImage(container);
+        let p = new CreateElement('p').setText(this.element.brand).appendTo(container)
+        this.createCheckbox(container)
+        return { container, checkbox: container.querySelector('.wardrobe-checkbox'), itemClickHandler, id: this.element.id }
+
+    }
+
     clickHandler(container) {
-        let itemClickHandler = () => editItemHandler(null, this.appendTo, this.element);
+        let clothingFormContainer = document.querySelector('.clothing-formContainer')
+
+        let itemClickHandler = () => editItemHandler(clothingFormContainer, this.appendTo, this.element, false);
         container.itemClickHandler = itemClickHandler;
         container.addEventListener('click', itemClickHandler);
         return itemClickHandler;
     }
+
+    clickHandlerChallenge(container) {
+        let clothingFormContainer = document.querySelector('.clothing-formContainer')
+
+        let itemClickHandler = () => editItemHandler(clothingFormContainer, this.appendTo, this.element, true);
+        container.itemClickHandler = itemClickHandler;
+        container.addEventListener('click', itemClickHandler);
+        return itemClickHandler;
+    }
+
 
     async addImage(container) {
         if (this.element.image) {
@@ -853,4 +880,61 @@ let confirmBox = (settings) => {
             resolve(false)
         })
     })
+}
+
+let getRGB = (hex) => {
+    hex = hex.replace('#', '')
+    let r = parseInt(hex.slice(0, 2), 16);
+    let g = parseInt(hex.slice(2, 4), 16);
+    let b = parseInt(hex.slice(4, 6), 16);
+
+    return `${r},${g},${b}`;
+}
+
+let lockedState = (appendTo, message) => {
+    let div = new CreateElement('div').setAttributes({ class: 'locked-state' }).appendTo(appendTo)
+    new CreateElement('i').setAttributes({ class: 'fa-solid fa-lock' }).appendTo(div)
+    let msg = new CreateElement('p').appendTo(div)
+    msg.innerHTML = message
+
+    return div
+}
+
+async function getChallengeAction() {
+    let challengeAction = localStorage.getItem('challengeAction')
+    let clothingData = JSON.parse(localStorage.getItem('filteredData'))
+
+    let actionData = null
+    if (challengeAction) {
+        actionData = JSON.parse(challengeAction)
+
+        if (actionData.action == 'addOutfit') {
+            let challengeData = JSON.parse(localStorage.getItem('challengeData'))
+            await renderClothingDisplay(actionData.dateInfo, { mode: 'addOutfit', challenge: { filtered: clothingData, challengeData: challengeData }, itemRender: 'default' })
+        } else if (actionData.action == 'addCare') {
+            await renderWardrobe({ challenge: { filtered: clothingData } })
+        }
+    }
+}
+
+async function completeChallenge() {
+
+    let challenge = JSON.parse(localStorage.getItem('challengeAction'))
+    console.log(challenge);
+
+    if (challenge && challenge.fromChallenge) {
+        let { progress, challengesToday, calendarData } = await getUserData(challenge.dateInfo, 'challenges')
+        let updateChallenge = progress.challengesProgress.find(item => item.id == challenge.challengeId)
+        if (updateChallenge) updateChallenge.complete_count += 1
+
+        await updateUserTable(window.user, 'user_details', { user_id: user.id, challenges_progress: progress.challengesProgress })
+
+        localStorage.setItem('challengeCompleted', JSON.stringify({
+            challengeId: challenge.challengeId,
+            dateInfo: challenge.dateInfo
+        }))
+
+        localStorage.removeItem('challengeAction')
+        window.location.href = './dashboard.html'
+    }
 }
