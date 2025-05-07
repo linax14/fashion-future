@@ -4,74 +4,67 @@ document.addEventListener("userInitialized", async () => {
     clothingManager = new ClothingManager(window.user)
 })
 
-let displayInDashboard = (type) => {
-    let outfitsContainer = document.querySelector('.outfit-streak')
+let displayInDashboard = async (type) => {
+    let streakContainer = document.querySelector('#outfit-streak')
+    let sustainabilityTips = document.querySelector('.sustainability-tips-container')
+    let challengeContainer = document.querySelector('.challenge-container')
     let quizContainer = document.querySelector('.quiz-container')
-    let unwornItemContainer = document.querySelector('.unworn-container')
-    let sustainabilityTips = document.querySelector('.sustainability-tips.container')
-    let challengeContainer = document.querySelector('.challenge.container')
+    let personality = document.querySelector('.chart-container')
+
     let header = document.querySelector('.header')
     let sideNav = document.querySelector('.side-nav')
 
     switch (type) {
         case 'quiz':
-            if (outfitsContainer) setDisplay([outfitsContainer], 'none')
+            if (streakContainer) setDisplay([streakContainer], 'none')
             if (sustainabilityTips) setDisplay([sustainabilityTips], 'none')
             if (challengeContainer) setDisplay([challengeContainer], 'none')
-            if (header) setDisplay([header], 'none')
-            if (unwornItemContainer) setDisplay([unwornItemContainer], 'none')
+            if (personality) setDisplay([challengeContainer], 'none')
+
             quizContainer.style.gridColumn = 'span 4'
-            setDisplay([quizContainer], 'block')
+            setDisplay([quizContainer], 'flex')
             break;
+
         case 'dash':
+            if (streakContainer) setDisplay([streakContainer], 'block')
+            if (sustainabilityTips) setDisplay([sustainabilityTips], 'flex')
+
             if (quizContainer) {
                 setDisplay([quizContainer], 'block')
                 quizContainer.style.gridColumn = 'span 2'
             }
-            if (sustainabilityTips) setDisplay([sustainabilityTips], 'flex')
             if (challengeContainer) setDisplay([challengeContainer], 'flex')
+            if (personality) setDisplay([challengeContainer], 'flex')
             if (header) setDisplay([header], 'flex')
-            if (unwornItemContainer) setDisplay([unwornItemContainer], 'block')
-            if (outfitsContainer) setDisplay([outfitsContainer], 'block')
             break;
+
         case 'settings':
             setDisplay([document.querySelector('.dashboard')], 'none')
             sideNav.classList.remove('expanded')
             window.location.href = './settings.html'
             break
+
         default:
-            // setDisplay([outfitsContainer, unwornItemContainer, quizContainer], 'block')
-            // setDisplay([sustainabilityTips, challengeContainer, header], 'flex')
-            // if (authContainer) {
-            //     setDisplay([authContainer], 'none')
-            // }
-            // quizContainer.style.gridColumn = 'span 2'
             break;
     }
 }
 
 async function renderDashboard(user) {
-    displayInDashboard('dash')
+    await displayInDashboard('dash')
     let main = new CreateElement('div').setAttributes({ class: 'dashboard' }).appendTo(document.body)
 
     //from global.js
     let day = date.getDate()
     // let today = `${year}-${month + 1}-${day}`
-    let today = `${year}-${month + 1}-19`
-    console.log(today);
-    // prepareChallengeData('brand', main)
-    // careChallenges()
+    let today = `${year}-${month + 1}-10`
 
     localStorageReset(today)
 
     await renderOutfitStreak(today, main)
-    await getDaily(window.user, today, 'quiz', main)
-    // await renderNotRecentlyWorn(today, main)
+    await getQuiz(window.user, today, main)
     await dailyTips(window.user, today, main)
     await dailyChallenge(window.user, today, main)
     await generatePersonality(main)
-    await renderPreviousOutfits(main)
-
 }
 
 let localStorageReset = (today) => {
@@ -82,123 +75,6 @@ let localStorageReset = (today) => {
     }
 
     localStorage.setItem('lastDay', today)
-}
-
-async function renderQuiz(currentQuiz, challengeDate, container, complete = false, handleQuiz) {
-
-    displayInDashboard('quiz')
-    closeBtnX(container, () => {
-        let header = document.querySelector('.quiz-container .header')
-        setDisplay([header], 'grid')
-        displayInDashboard()
-        container.style.gridColumn = 'span 2'
-        Array.from(container.children).forEach((el, index) => {
-            if (index != 0) {
-                el.remove()
-            }
-        })
-
-        container.classList.remove('expanded')
-    })
-
-    let { data: answersData } = await supabase.from('answers').select()
-
-    let quiz = new CreateElement('div').setAttributes({ class: 'quiz' }).appendTo(container)
-    let main = new CreateElement('div').setAttributes({ class: 'questions-container' }).appendTo(quiz)
-    new CreateElement('h2').setText(`Let's get more sustainable`).appendTo(main)
-
-    let groupedQuestionsAnswers = answersData.reduce((obj, answer) => {
-        if (currentQuiz.some(calendarItem => calendarItem.id == answer.question_id)) {
-            if (!obj[answer.question_id]) { obj[answer.question_id] = [] }
-            obj[answer.question_id].push(answer)
-        }
-        return obj
-    }, {})
-
-    let { progress } = await getUserData(challengeDate, 'questions')
-    let totalQuestions = currentQuiz.length
-    let answeredQuestions = 0
-    let score = 0
-
-    let progressBarWrapper = new CreateElement('div').setAttributes({ class: 'progress', role: 'progressbar', aria: 'quiz progress bar', 'aria-valuemin': 0, 'aria-valuemax': 100 }).appendTo(main)
-    let progressbar = new CreateElement('div').setAttributes({ class: 'progress-bar', style: 'width:0%' }).appendTo(progressBarWrapper)
-    let percentage = 0
-
-    let wrapper = new CreateElement('div').setAttributes({ class: 'wrapper' }).appendTo(main)
-    currentQuiz.forEach(question => {
-        let qId = question.id
-        let questionGroup = new CreateElement('div').setAttributes({ class: 'question-group' }).appendTo(wrapper);
-        new CreateElement('h3').setText(question.question).appendTo(questionGroup)
-        new CreateElement('div').setAttributes({ class: 'image-placeholder' }).appendTo(questionGroup)
-        let answers = groupedQuestionsAnswers[qId] || [];
-
-        let isAnswered = false
-        answers.forEach(answer => {
-            let update = progress.questionsProgress.find(item => item.id == question.id)
-
-            let answerUI = new CreateElement('p').setText(answer.answer)
-                .addEventListener('click', async function handleAnswer() {
-
-                    if (question.answered) return;
-                    question.answered = true;
-
-                    update = update || { attempts: 0, correctAnswers: 0 };
-
-                    if (!isAnswered) {
-                        isAnswered = true
-                        answeredQuestions++
-                    }
-
-                    if (isNaN(update.attempts)) update.attempts = 0;
-                    if (isNaN(update.correctAnswers)) update.correctAnswers = 0;
-
-                    if (answer.is_correct == true) {
-                        console.log('correct');
-                        score++
-                        if (update) {
-                            update.attempts += 1
-                            update.correctAnswers += 1
-                        }
-
-                        answerUI.classList.add('correct')
-                        new CreateElement('span').appendTo(answerUI)
-                        new CreateElement('i').setAttributes({ class: 'fa-solid fa-check' }).appendTo(answerUI)
-
-
-                    } else {
-                        console.log(`u'll get it next time`);
-                        if (update) {
-                            update.attempts += 1
-                        }
-                        answerUI.classList.add('incorrect')
-                        new CreateElement('span').appendTo(answerUI)
-                        new CreateElement('i').setAttributes({ class: 'fa-solid fa-x' }).appendTo(answerUI)
-
-                    }
-
-                    percentage = (answeredQuestions / totalQuestions * 100)
-                    if (percentage == 100) {
-                        await updatePoints(['mastery'], challengeDate)
-                    }
-                    progressBarWrapper.setAttribute("aria-valuenow", percentage)
-                    progressbar.style.width = `${percentage}%`
-
-                    await updateUserTable(window.user, 'user_details', { user_id: user.id, questions_progress: progress.questionsProgress })
-
-                    if (answeredQuestions === totalQuestions) {
-                        let result = (score / totalQuestions) * 100
-                        console.log(result);
-                        localStorage.setItem(`quiz_${challengeDate}_completed`, true);
-                        await updatePoints(['curiosity', 'knowledge'], challengeDate)
-                    }
-
-                    answerUI.style.pointerEvents = 'none';
-                }).appendTo(questionGroup);
-        });
-    })
-
-    console.log({ progress });
-
 }
 
 async function renderOutfitStreak(createOutfitDate, appendTo) {
@@ -212,60 +88,6 @@ async function renderOutfitStreak(createOutfitDate, appendTo) {
     }
 
     return div
-}
-
-async function getUnwornItems(dateInfo) {
-    let data = await clothingManager.getData('outfit')
-    data = data.filter(item => item.worn == true)
-
-    let itemWearMap = new Map()
-    let unwornItems = []
-
-    for (let outfit of data) {
-        for (let item of outfit.clothingItems) {
-            if (!itemWearMap.has(item.id)) {
-                itemWearMap.set(item.id, new Set());
-            } for (let date of outfit.wornDates) {
-                itemWearMap.get(item.id).add(date);
-            }
-        }
-    }
-
-    for (let [itemId, dates] of itemWearMap.entries()) {
-        let datesArray = [...dates].map(date => formatDateUnpadded(date));
-
-        let latestDate = datesArray.sort((a, b) => new Date(b) - new Date(a))[0];
-
-        if (datesDifference(latestDate, dateInfo) > 5) {
-            for (let outfit of data) {
-                for (let item of outfit.clothingItems) {
-                    if (item.id == itemId) {
-                        unwornItems.push(item)
-                        break
-                    }
-                }
-            }
-        }
-    }
-
-    return unwornItems
-}
-
-async function renderNotRecentlyWorn(dateInfo, container) {
-    let data = await getUnwornItems(dateInfo)
-    data = data.sort(() => Math.random() - 0.5)
-    let unworn = new CreateElement('div').setAttributes({ class: 'unworn-container dashboard-container' }).appendTo(container)
-    let cards = new CreateElement('div').setAttributes({ class: 'cards' }).appendTo(unworn)
-    let clothes = new CreateElement('div').setAttributes({ class: 'clothes' }).appendTo(unworn)
-    let h2 = new CreateElement('h2').setText(`Did you forget about us?`).appendTo(cards)
-    new CreateElement('br').appendTo(h2)
-    new CreateElement('span').setText(`Let's make a new outfit`).appendTo(h2)
-
-    let render = await renderClothingItem({ appendTo: clothes, data: data.slice(0, 2) })
-
-    if (render.length == 0) {
-        unworn.style.display = 'none'
-    }
 }
 
 async function dailyTips(user, dateInfo, appendTo) {
@@ -718,24 +540,24 @@ async function generatePersonality(appendTo) {
     let personalityTypes = {
         alchemist: {
             order: ['knowledge', 'mastery', 'discipline', 'curiosity', 'style'],
-            description: `Seeker of patterns and pursuer of precision. 
-            You engage deeply — completing quizzes and aiming for that 100%. This reflects your thoughtful,
+            description: `Seeker of patterns and pursuer of precision.<br>
+            You engage deeply — completing quizzes and aiming for that 100%.<br>This reflects your thoughtful,
             introspective style and drive to truly understand and master what interests you.`
         },
         nomad: {
-            uniform: true, description: `A wanderer at heart. You explore many things but rarely stick to just one.
-            Your journey is spontaneous and open ended - it is marked by bursts of curiosity and experimentation.
+            uniform: true, description: `A wanderer at heart.<br>You explore many things but rarely stick to just one.<br>
+            Your journey is spontaneous and open ended - it is marked by bursts of curiosity and experimentation.<br>
             This openness and curiosity are part of what make your journey unique.` },
         curator: {
             order: ['style', 'mastery', 'knowledge', 'discipline', 'curiosity',],
-            description: `A visual storyteller and expressive thinker. You treat your wardrobe like an evolving gallery -
-            logging outfits regularly and curating your look with care. Style is more than appearance; it is your way of showing up with intention and flair.`
+            description: `A visual storyteller and expressive thinker.<br>You treat your wardrobe like an evolving gallery -
+            logging outfits regularly and curating your look with care.<br>Style is more than appearance; it is your way of showing up with intention and flair.`
         },
         strategist: {
             order: ['curiosity', 'knowledge', 'mastery', 'style', 'discipline',],
-            description: `Focused, intentional, and results-oriented. 
+            description: `Focused, intentional, and results-oriented.<br>
             You show up with a plan — completing challenges with purpose, valuing structure, 
-            and blending discipline with curiosity. Your process is intentional and your results speak for themselves.`
+            and blending discipline with curiosity.<br>Your process is intentional and your results speak for themselves.`
         }
     }
 
@@ -780,7 +602,8 @@ function personalityChart(appendTo, data, personality) {
     let container = new CreateElement('div').setAttributes({ class: 'chart-container dashboard-container' }).appendTo(appendTo)
     new CreateElement('h3').setText(capitalise(personality.bestMatch)).appendTo(container)
     new CreateElement('p').setText(`This month your personality is closest to a ${personality.bestMatch}.`).setAttributes({ style: `font-size:small` }).appendTo(container)
-    new CreateElement('p').setText(`${personality.description}`).appendTo(container)
+    let description = new CreateElement('p').appendTo(container)
+    description.innerHTML = `${personality.description}`
     let viewPoints = new CreateElement('button').setAttributes({ class: 'btn' }).setText(`Reveal scores`).appendTo(container)
 
     let ctx = new CreateElement('canvas').setAttributes({ class: 'chart' }).appendTo(container)

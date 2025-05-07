@@ -390,10 +390,42 @@ async function updatePoints(types = [], dataDate) {
             if (isNaN(target.points[type])) target.points[type] = 0;
             target.points[type] += 1
         }
+
+        let formatted = formatWithAnd(types)
+        await renderPoints(formatted)
         await updateUserTable(window.user, 'user_calendar', { calendar: calendar })
     }
 
     return { calendarData, target }
+}
+
+function formatWithAnd(arr) {
+    if (arr.length == 1) return arr[0];
+    if (arr.length == 2) return `${arr[0]} and ${arr[1]}`;
+    return `${arr.slice(0, -1).join(', ')}, and ${arr[arr.length - 1]}`;
+}
+
+function renderPoints(text) {
+    let div = new CreateElement('div').setAttributes({ class: 'modal', id: 'points-modal', style: 'z-index:2' }).appendTo(document.body)
+    let body = new CreateElement('div').setAttributes({ class: 'body-block', style: 'z-index:1' }).appendTo(document.body)
+
+    new CreateElement('img').setAttributes({ src: 'https://img.icons8.com/ios/50/leaf--v1.png', class: 'invert-image' }).appendTo(div)
+    new CreateElement('h4').setText('Congratulations').appendTo(div)
+    let p = new CreateElement('p').appendTo(div)
+    p.innerHTML = `You earned ${text} points`
+
+    setTimeout(() => {
+
+        div.classList.add('fade-out')
+        body.classList.add('fade-out')
+
+        setTimeout(() => {
+            div.remove()
+            body.remove()
+        }, 1000);
+    }, 4000);
+
+    return div
 }
 
 let calendarDataTarget = async (dataDate, type) => {

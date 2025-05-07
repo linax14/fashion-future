@@ -268,8 +268,6 @@ let handleDayClick = async (dayContainer, dataDate, createOutfitDate, outfitsCon
     document.querySelectorAll('.outfit').forEach(el => el.parentNode.removeChild(el));
 
     displayInPlanner()
-    let prevWorn = document.querySelector('.prev-worn-container')
-    if (prevWorn) prevWorn.remove()
 
     let createOutfit = document.querySelector('.create-outfit-btn')
     let addCareBtn = document.querySelector('.add-care-btn')

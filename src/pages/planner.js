@@ -12,27 +12,6 @@ document.addEventListener("userInitialized", async () => {
 let clothingManager
 let outfit
 
-async function renderPreviousOutfits(container) {
-    let data = (await clothingManager.getData('outfit')).sort(() => Math.random() - 0.5).slice(0, 2)
-    let prevDiv = new CreateElement('div').setAttributes({ class: 'prev-worn-container dashboard-container' }).appendTo(container)
-
-    if (data) new CreateElement('h3').setText('Previously worn outfits').appendTo(prevDiv)
-
-    for (const element of data) {
-        let outfitContainer = new CreateElement('div').setAttributes({ class: 'outfit', 'data-id': element.outfitId }).appendTo(prevDiv)
-        let count = 0
-        await Promise.all(
-            element.clothingItems.map(async (item) => {
-                count++
-                await getImage(item, outfitContainer, renderImage)
-            })
-        )
-
-        outfitImagesDisplay(outfitContainer, count)
-    }
-    return true
-}
-
 function outfitImagesDisplay(outfitContainer, count) {
     let images = outfitContainer.querySelectorAll('img');
     let c = images.length;
@@ -354,7 +333,6 @@ let addMode = async (itemsToAdd, createOutfitDate, submitBtn, challengeExtras) =
                 wear_dates: Array.isArray(createOutfitDate) ? createOutfitDate : [createOutfitDate],
                 worn: true
             })
-            await updatePoints(['style'], createOutfitDate)
         }
 
         let data = await clothingManager.getData('outfit')
@@ -396,7 +374,7 @@ let addMode = async (itemsToAdd, createOutfitDate, submitBtn, challengeExtras) =
                 }
             }
         } else {
-            updatePoints(['curiosity'], createOutfitDate)
+            updatePoints(['style', 'curiosity'], createOutfitDate)
             completeChallenge()
         }
 
@@ -489,133 +467,3 @@ async function careCompatibility(itemsToAdd, values) {
     return compatibleItems
 }
 
-//daily challenges and quiz
-async function getDaily(user, dateInfo, type, appendTo) {
-
-    let calendarData = await selectUserTable(window.user, 'user_calendar')
-    let [year, month, day] = dateInfo.split('-')
-    let currentMonth = months[month - 1].toLowerCase()
-    let quiz
-    let header
-
-    for (const element of calendarData) {
-        if (element.year == year) {
-            let targetMonth = element.calendar[currentMonth]
-
-            if (targetMonth) {
-                let target = targetMonth[day]
-
-                async function handleQuiz() {
-                    localStorage.setItem('targetQuiz', JSON.stringify(target.quiz));
-                    localStorage.setItem('dateInfo', `${dateInfo}`);
-                    await renderQuiz(target.quiz, dateInfo, quiz, handleQuiz)
-                    quiz.classList.toggle('expanded')
-                    setDisplay([header], 'none')
-                }
-
-                if (type == 'quiz') {
-                    let quizData = await userQuiz()
-                    if (target.quiz.length == 0) {
-                        target.quiz.push(...quizData)
-                        await updateUserTable(window.user, 'user_calendar', { calendar: element.calendar });
-                    }
-                    let sessionCompleted = localStorage.getItem(`quiz_${dateInfo}_completed`);
-                    quiz = new CreateElement('div').setAttributes({ class: 'quiz-container dashboard-container' }).appendTo(appendTo)
-                    header = new CreateElement('div').setAttributes({ class: 'header' }).addEventListener('click', handleQuiz).appendTo(quiz)
-                    let h3 = new CreateElement('h3').setText('quiz').appendTo(header)
-                    new CreateElement('i').setAttributes({ class: 'fa-solid fa-question' }).appendTo(header)
-
-                    if (sessionCompleted) {
-                        header.removeEventListener('click', handleQuiz)
-                        h3.innerText += ' completed'
-                        new CreateElement('br').appendTo(h3)
-                        new CreateElement('span').setText('check back tomorrow').appendTo(h3)
-                    }
-                }
-            }
-
-        }
-    }
-
-    return calendarData
-}
-
-// quiz
-class UserQuiz {
-    constructor(questions) {
-        this.questions = questions
-        this.grouped = this.groupQuestions()
-        this.tags = Object.keys(this.grouped)
-    }
-
-    groupQuestions() {
-        let byTag = {}
-        this.questions.forEach(question => {
-            if (question.tag) question.tag.forEach(t => {
-                if (!byTag[t]) byTag[t] = []
-                byTag[t].push(question)
-            })
-        })
-        return byTag
-    }
-
-    getRandomTags() {
-        let shuffled = [...this.tags].sort(() => Math.random() - 0.5)
-        return shuffled.slice(0, 2)
-    }
-
-    tagSplit() {
-        return Math.floor(Math.random() * 5 + 1)
-    }
-
-    getFilteredQuestions(tag) {
-        return (this.grouped[tag] || []).filter(q => q.correctAnswers < 2);
-    }
-
-    getQuestionsTag(tag, count) {
-        let shuffled = [...(this.getFilteredQuestions(tag))].sort(() => Math.random() - 0.5);
-        return shuffled.length >= count ? shuffled.slice(0, count) : shuffled;
-    }
-
-    newQuestions = (selected, tag) => {
-        let extra = 6 - selected.length;
-        let extraQuestions = [...(this.getFilteredQuestions(tag))]
-            .filter(q => !selected.includes(q))
-            .sort(() => Math.random() - 0.5)
-            .slice(0, extra);
-
-        return extraQuestions;
-    }
-
-    generateQuiz() {
-        if (this.tags.length < 2) return console.log('not enough tags');
-
-        let tags = this.getRandomTags()
-
-        let countTag1 = this.tagSplit()
-        let countTag2 = 6 - countTag1
-
-        let selected = [
-            ...this.getQuestionsTag(tags[0], countTag1),
-            ...this.getQuestionsTag(tags[1], countTag2)
-        ]
-
-        let attempts = 0;
-        while (selected.length < 6 && attempts < 2) {
-            selected.push(
-                ...this.newQuestions(selected, tags[0]),
-                ...this.newQuestions(selected, tags[1])
-            );
-            attempts++;
-        }
-
-        return selected.sort(() => Math.random(-0.5))
-    }
-}
-
-async function userQuiz() {
-    let userQuestions = await initializeUserDetails('questions', 'questions_progress');
-    let questions = userQuestions[0].questions_progress;
-    let quiz = new UserQuiz(questions);
-    return quiz.generateQuiz();
-}

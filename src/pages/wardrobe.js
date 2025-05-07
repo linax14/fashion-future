@@ -18,7 +18,7 @@ let displayInHome = (type) => {
 
     switch (type) {
         case 'form':
-            setDisplay([clothingFormContainer], 'block')
+            setDisplay([clothingFormContainer], 'flex')
             clothingFormContainer.style.visibility = 'visible'
             setDisplay([wardrobeSection, wardrobeHeader], 'none')
             break;
@@ -150,6 +150,7 @@ function handleFormSubmit(form, onSubmitCallback, itemId = null) {
         let imageFile = formValues.image
         if (Array.isArray(imageFile)) { imageFile = imageFile[imageFile.length - 1] }
         let imageName = null
+        console.log(imageFile);
 
         if (imageFile) {
             imageName = imageFile.name
@@ -166,16 +167,19 @@ function handleFormSubmit(form, onSubmitCallback, itemId = null) {
 
 async function renderClothingForm(mainForm) {
     mainForm.innerHTML = ''
-    closeBtnX(mainForm, () => {
+
+    let btnContainer = new CreateElement('div').setAttributes({ class: 'btn-container' }).appendTo(mainForm)
+
+    let tabContainer = new CreateElement('div').setAttributes({ class: 'tab-container' }).appendTo(mainForm)
+    let aboutBtn = new CreateElement('button').setText('about').setAttributes({ class: 'tab-btn' }).appendTo(tabContainer)
+    let careBtn = new CreateElement('button').setText('care').setAttributes({ class: 'tab-btn' }).appendTo(tabContainer)
+
+    closeBtnX(btnContainer, () => {
         setDisplay([mainForm], 'none')
         mainForm.style.visibility = 'hidden'
         renderWardrobe()
         setDisplay([clothingList, wardrobeHeader], 'grid')
     })
-
-    let btnContainer = new CreateElement('div').setAttributes({ class: 'btn-container' }).appendTo(mainForm)
-    let aboutBtn = new CreateElement('button').setText('about').setAttributes({ class: 'tab-btn' }).appendTo(btnContainer)
-    let careBtn = new CreateElement('button').setText('care').setAttributes({ class: 'tab-btn' }).appendTo(btnContainer)
 
     let form = new CreateElement('form')
         .setAttributes({ id: 'about-form', class: 'form-container' }).appendTo(mainForm)
@@ -433,13 +437,14 @@ async function renderEditClothingItem(clothingFormContainer, wardrobeContainer, 
         updateClothingItem(item.id, aboutFormContainer, clothingFormContainer, false)
     })
 
+    let btns = clothingFormContainer.querySelector('.btn-container')
     //do not add it inside the form again!!
-    let deleteBtn = new CreateElement('button').setAttributes({ class: 'delete btn' }).setText('delete')
+    let deleteBtn = new CreateElement('button').setAttributes({ class: 'delete btn' }).setText('delete item')
         .addEventListener('click', async () => {
             await wardrobeManager.deleteItems([item.id])
             renderWardrobe()
             displayInHome('wardrobe')
-        }).appendTo(clothingFormContainer)
+        }).appendTo(btns)
 }
 
 async function updateClothingItem(itemId, formContainer, clothingFormContainer, fromChallenge = false) {
@@ -464,10 +469,7 @@ async function updateClothingItem(itemId, formContainer, clothingFormContainer, 
     let imageFile = formValues.image
     let imageName
 
-    if (imageFile && Array.isArray(imageFile)) {
-        imageFile = imageFile[imageFile.length - 1]
-    }
-
+    if (imageFile && Array.isArray(imageFile)) { imageFile = imageFile[imageFile.length - 1] }
     if (imageFile) {
         imageName = imageFile.name
         await uploadFile(window.user, imageName, imageFile)
@@ -516,22 +518,27 @@ async function renderWardrobe(settings = null) {
     let editWardrobe = new CreateElement('button').setAttributes({ class: 'edit btn' }).appendTo(btnContainer)
     new CreateElement('i').setAttributes({ class: 'fa-trash fa-solid' }).appendTo(editWardrobe)
 
-    let allClothes
     let data = await selectUserTable(window.user, 'clothing_items')
+    let clothingListHeader
+    let allClothes
 
-    if (settings && settings.challenge) {
+    if (settings?.settings.challenge) {
         let filtered = settings.challenge.filtered
-        if (filtered && filtered.length > 0) {
-            let challengeContainer = new CreateElement('div').setAttributes({ class: 'challenge clothing-list' }).appendTo(clothingList)
+
+        if (filtered?.filtered.length > 0) {
             new CreateElement('h4').setText('Challenge Items').appendTo(challengeContainer)
-            let clothingItems = await renderClothingItem({ appendTo: challengeContainer, data: filtered, mode: 'careChallenge' })
+            await renderClothingItem({ appendTo: clothingList, data: filtered, mode: 'careChallenge' })
             data = data.filter(item => !filtered.some(filteredItem => filteredItem.id == item.id))
         }
     }
 
-    if (data.length > 0) { new CreateElement('h4').setText('Other Items').appendTo(clothingList) }
-    allClothes = await renderClothingItem({ appendTo: clothingList, data: data })
+    if (settings?.settings.challenge && data.length > 0) {
+        clothingListHeader = new CreateElement('h4').setText('Other Items').appendTo(clothingList)
+    } else {
+        clothingListHeader = new CreateElement('h4').setText('All Clothes').appendTo(clothingList)
+    }
 
+    await renderClothingItem({ appendTo: clothingList, data: data })
     renderClothingForm(clothingFormContainer)
 
     let filtersBtn = new CreateElement('button').setAttributes({ class: 'filter btn' }).appendTo(btnContainer)
@@ -589,13 +596,11 @@ async function renderWardrobe(settings = null) {
     deleteButton.addEventListener('click', async () => {
 
         let selectedClothesCheckbox = allClothes.filter(({ checkbox }) => checkbox.checked)
-        console.log(selectedClothesCheckbox);
 
         if (selectedClothesCheckbox.length === 0) {
             alert('No items selected.')
             return
         }
-        console.log(selectedClothesCheckbox);
 
         let clothesIdFromCheckbox = selectedClothesCheckbox.map(({ id }) => id)
         allClothes = await wardrobeManager.deleteItems(clothesIdFromCheckbox, selectedClothesCheckbox, allClothes)
