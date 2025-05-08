@@ -300,23 +300,23 @@ class ClothingItems extends ClothingManager {
 
 async function getImage(element, appendTo, callback, className = '') {
     try {
-        // const { data: signedUrlData, error: urlError } = await supabase.storage
-        //     .from('fashion-future')
-        //     .createSignedUrl(`${element.user_id}/${element.image}`, 60);
+        const { data: signedUrlData, error: urlError } = await supabase.storage
+            .from('fashion-future')
+            .createSignedUrl(`${element.user_id}/${element.image}`, 60);
 
-        // if (urlError) throw urlError;
-        // if (signedUrlData.signedUrl) {
-        //     if (typeof callback === 'function') {
-        //         callback(signedUrlData, appendTo, className)
-        //     } else { return signedUrlData }
-        // }
+        if (urlError) throw urlError;
+        if (signedUrlData.signedUrl) {
+            if (typeof callback === 'function') {
+                callback(signedUrlData, appendTo, className)
+            } else { return signedUrlData }
+        }
 
-        new CreateElement('img')
-            .setAttributes({
-                class: 'wardrobe image fallback', src: '../assets/createOutfit.png',
-                alt: `Fallback image representing a variety of clothing items when no specific image is available`
-            })
-            .appendTo(appendTo)
+        // new CreateElement('img')
+        //     .setAttributes({
+        //         class: 'wardrobe image fallback', src: '../assets/createOutfit.png',
+        //         alt: `Fallback image representing a variety of clothing items when no specific image is available`
+        //     })
+        //     .appendTo(appendTo)
 
     } catch (urlError) {
         console.error(`Error fetching image URL: ${urlError}`);
