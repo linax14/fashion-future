@@ -513,12 +513,28 @@ async function renderWardrobe(settings = null) {
     displayInHome('wardrobe')
 
     new CreateElement('h3').setText('Clothing items').appendTo(wardrobeHeader)
+
+    let nav = addNavBtn()
+    nav.addEventListener('click', () => {
+        if (clothingFormContainer.hasChildNodes()) {
+            displayInHome('form')
+        } else {
+            renderClothingForm(clothingFormContainer)
+        }
+    })
+
+    let data = await selectUserTable(window.user, 'clothing_items')
+
+    if (data.length == 0) {
+        clothesPlaceholder(wardrobeSection)
+        return
+    }
+
     let btnContainer = new CreateElement('div').setAttributes({ class: 'btn-container' }).appendTo(wardrobeHeader)
     let deleteButton = new CreateElement('button').setText('Delete').setAttributes({ style: 'display:none', class: 'delete btn' }).appendTo(wardrobeHeader)
     let editWardrobe = new CreateElement('button').setAttributes({ class: 'edit btn' }).appendTo(btnContainer)
     new CreateElement('i').setAttributes({ class: 'fa-trash fa-solid' }).appendTo(editWardrobe)
 
-    let data = await selectUserTable(window.user, 'clothing_items')
     let clothingListHeader
     let allClothes
 
@@ -614,12 +630,12 @@ async function renderWardrobe(settings = null) {
         setDisplay([clothingFormContainer, deleteButton], 'none')
         setDisplay([clothingList], 'grid')
     })
-
-    let nav = addNavBtn()
-    nav.addEventListener('click', () => {
-        if (clothingFormContainer.hasChildNodes()) {
-            displayInHome('form')
-        }
-    })
 }
 
+let clothesPlaceholder = (appendTo) => {
+    let div = new CreateElement('div').setAttributes({ class: 'main-placeholder invert-image' }).appendTo(appendTo)
+    new CreateElement('img').setAttributes({ src: 'https://img.icons8.com/pastel-glyph/64/hanger--v1.png' }).appendTo(div)
+    let p = new CreateElement('p').setText().appendTo(div)
+    p.innerHTML = `Your wardrobe is a blank canvas. <br>Start adding your favourite pieces today!`
+    return div
+}
