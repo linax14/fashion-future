@@ -56,7 +56,7 @@ async function renderDashboard(user) {
     //from global.js
     let day = date.getDate()
     let today = `${year}-${month + 1}-${day}`
-    
+
     localStorageReset(today)
 
     await renderOutfitStreak(today, main)
