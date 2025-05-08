@@ -80,7 +80,7 @@ function renderSettings() {
             })
 
             if (confirm) {
-                window.location.href = './public/index.html'
+                window.location.href = 'index.html'
             }
         }
     })

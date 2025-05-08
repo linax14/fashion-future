@@ -129,7 +129,7 @@ function renderSideNav() {
     signOut.addEventListener('click', async () => {
         const { error } = await supabase.auth.signOut()
         console.error(error);
-        window.location.href = './public/index.html'
+        window.location.href = 'index.html'
     })
 
     return { icon }
