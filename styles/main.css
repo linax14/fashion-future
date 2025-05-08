@@ -933,14 +933,14 @@ body>:has(.body-block) div#calendar {
 }
 
 .wardrobe-container .main-placeholder {
+    margin-top: var(--p-3);
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-}
-
-.wardrobe-container .main-placeholder {
     text-align: center;
+    padding-top: var(--p-3);
+    height: auto;
 }
 
 #logged-side-nav {

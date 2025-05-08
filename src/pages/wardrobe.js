@@ -526,6 +526,7 @@ async function renderWardrobe(settings = null) {
     let data = await selectUserTable(window.user, 'clothing_items')
 
     if (data.length == 0) {
+        setDisplay([clothingList], 'none')
         clothesPlaceholder(wardrobeSection)
         return
     }
