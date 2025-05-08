@@ -109,8 +109,8 @@ function renderSideNav() {
     let page = new CreateElement('h2').setText(`${capitalise(window.location.href.split('/').pop().split('.')[0])}`).appendTo(header)
     let ol = new CreateElement('ol').appendTo(sideNav)
 
-    let settings = new CreateElement('li').setText('Settings').appendTo(ol)
-    let signOut = new CreateElement('li').setText('Signout').appendTo(ol)
+    let settings = new CreateElement('li').setText('Settings').setAttributes({ class: 'btn' }).appendTo(ol)
+    let signOut = new CreateElement('li').setText('Signout').setAttributes({ class: 'btn' }).appendTo(ol)
 
     icon.addEventListener('click', () => {
         let isExpanded = sideNav.classList.toggle('expanded')
