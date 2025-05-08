@@ -58,6 +58,15 @@ function mainRender() {
     let clone = ol.cloneNode(true)
     cta.appendChild(clone)
 
+    let s3 = contentSections('Ready?', [
+        `Start building your sustainable wardrobe today!`,
+        `Sign up and unlock a more organised and eco-friendly experience.`
+    ], 'ready', section)
+
+    new CreateElement('button').setAttributes({ class: 'btn' }).setText('Sign me up!').addEventListener('click', () => {
+        renderSignUpForm()
+    }).appendTo(s3)
+
     let s1 = contentSections('Why choose our virtual closet?', [
         'Sustainability Quizzes',
         'Challenges tailored to you',
@@ -79,15 +88,6 @@ function mainRender() {
     let imgs2 = new CreateElement('div').appendTo(s2)
     new CreateElement('img').setAttributes({ src: './assets/index/planner.jpg', class: 'index-img', id: 'right' }).appendTo(imgs2)
     new CreateElement('img').setAttributes({ src: './assets/index/dash.jpg', class: 'index-img', id: 'left' }).appendTo(imgs2)
-
-    let s3 = contentSections('Ready?', [
-        `Start building your sustainable wardrobe today!`,
-        `Sign up and unlock a more organised and eco-friendly experience.`
-    ], 'ready', section)
-
-    new CreateElement('button').setAttributes({ class: 'btn' }).setText('Sign me up!').addEventListener('click', () => {
-        renderSignUpForm()
-    }).appendTo(s3)
 
     return section
 }

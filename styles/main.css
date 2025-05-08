@@ -1103,3 +1103,11 @@ body>:has(.body-block) div#calendar {
     text-underline-offset: 4px;
     padding-left: 0;
 }
+
+#ready,
+#why-us,
+#how {
+    border-bottom: 1px solid var(--bs-secondary-bg);
+    padding: var(--p-3);
+    width: 87%;
+}
