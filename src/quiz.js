@@ -1,6 +1,6 @@
 async function renderQuiz(currentQuiz, challengeDate, container, complete = false, handleQuiz) {
 
-    let main = quizLayout(container)
+    let main = await quizLayout(container)
 
     let { data: answersData } = await supabase.from('answers').select()
 
@@ -34,7 +34,7 @@ function quizContent(currentQuiz, main, container, groupedQuestionsAnswers, prog
 
         let qId = question.id
         let questionGroup = new CreateElement('div').setAttributes({ class: 'question-group' }).appendTo(wrapper)
-        new CreateElement('h3').setText(question.question).appendTo(questionGroup)
+        new CreateElement('h4').setText(question.question).appendTo(questionGroup)
         let answers = groupedQuestionsAnswers[qId] || []
 
         let isAnswered = false
@@ -115,13 +115,17 @@ function quizContent(currentQuiz, main, container, groupedQuestionsAnswers, prog
     }
 }
 
-function quizLayout(container) {
-    displayInDashboard('quiz')
+async function quizLayout(container) {
+    await displayInDashboard('quiz')
 
-    closeBtnX(container, () => {
+    let quiz = new CreateElement('div').setAttributes({ class: 'quiz' }).appendTo(container)
+    let main = new CreateElement('div').setAttributes({ class: 'questions-container' }).appendTo(quiz)
+    let h3 = new CreateElement('h3').setText(`Let's get more sustainable`).appendTo(main)
+
+    closeBtnX(h3, () => {
         let header = document.querySelector('.quiz-container .header')
         setDisplay([header], 'grid')
-        displayInDashboard()
+        displayInDashboard('dash')
         container.style.gridColumn = 'span 2'
         Array.from(container.children).forEach((el, index) => {
             if (index != 0) {
@@ -132,9 +136,6 @@ function quizLayout(container) {
         container.classList.remove('expanded')
     })
 
-    let quiz = new CreateElement('div').setAttributes({ class: 'quiz' }).appendTo(container)
-    let main = new CreateElement('div').setAttributes({ class: 'questions-container' }).appendTo(quiz)
-    new CreateElement('h2').setText(`Let's get more sustainable`).appendTo(main)
     return main
 }
 
