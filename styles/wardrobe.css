@@ -336,7 +336,7 @@ input[type=text] {
 
 .clothing-formContainer input[type="checkbox"]:checked::before {
     border-color: var(--focus-color);
-    color: currentColor;
+    color:  var(--bs-secondary-text-emphasis);;
 }
 
 .delete.btn {

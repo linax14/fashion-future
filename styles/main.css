@@ -284,7 +284,7 @@ input[type="checkbox"]:checked {
 
 input[type="checkbox"]:checked::before {
     border-color: var(--focus-color);
-    color: var(--focus-color);
+    color:  var(--bs-secondary-text-emphasis);;
 }
 
 .side-nav {
@@ -795,19 +795,19 @@ body>:has(.body-block) div#calendar {
 
 .modal-footer .btn.btn-primary {
     background-color: transparent;
-    color: var(--bs-emphasis-color);
+    color: var(--bs-secondary-text-emphasis);
     padding: var(--p-1);
 }
 
 [data-bs-theme='dark'] ol .care-label {
-    width: 34px;
+    width: 28px;
     height: auto;
     filter: invert();
 }
 
 [data-bs-theme='earthy'] ol .care-label,
 [data-bs-theme='light'] ol .care-label {
-    width: 34px;
+    width: 28px;
     height: auto;
     filter: none;
 }
