@@ -446,7 +446,7 @@ function handleFormSubmit(form, onSubmitCallback, itemId = null, onSuccess = nul
 }
 
 let placeholder = (appendTo, mode, dataDate) => {
-    let div = new CreateElement('div').setAttributes({ class: 'outfit placeholder' }).appendTo(appendTo)
+    let div = new CreateElement('div').setAttributes({ class: 'main-placeholder' }).appendTo(appendTo)
     let msg = new CreateElement('p').appendTo(div)
     msg.innerHTML = getDailyCTA(mode)
 
