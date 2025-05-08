@@ -381,13 +381,11 @@ async function renderGarmentCareForm(settings) {
             if (selectInput) selectInput.value = value
 
             let elements = document.querySelectorAll(`.form-group.${name} .element`)
+            elements.forEach(el => el.classList.remove('selected'))
+
             elements.forEach(element => {
-
-                if (element.getAttribute('value')) {
-                    element.classList.toggle('selected', element.getAttribute('value') == value)
-                } else {
-                    element.classList.toggle('selected', element.getAttribute('name') == value)
-
+                if (element.getAttribute('data-value') == value) {
+                    element.classList.add('selected')
                 }
             })
         }

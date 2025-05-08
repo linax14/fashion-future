@@ -165,7 +165,7 @@
 
 .clothing-list .clothing-item-container input[type="checkbox"]:checked::before {
     border-color: var(--bs-secondary-bg);
-    color: var(--bs-emphasis-color);
+    color: var(--bs-emphasis-text-color);
 }
 
 .clothing-list .clothing-item-container [type="checkbox"]::before {
@@ -177,7 +177,7 @@
     margin-top: 0;
     padding-left: var(--p-4);
     padding-right: var(--p-4);
-    grid-column: span 4;
+    grid-column: span 3;
 }
 
 .clothing-item-container {
