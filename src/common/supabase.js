@@ -12,8 +12,6 @@ window.onload = async (event) => {
 (async function () {
     window.user = await getUser()
     await initializeUserCalendar(user)
-    console.log(window.user.user_metadata.theme);
-
     // let theme = window.user.user_metadata.theme
     // if (theme) document.documentElement.setAttribute('data-bs-theme', theme)
     document.dispatchEvent(new Event("userInitialized"));
