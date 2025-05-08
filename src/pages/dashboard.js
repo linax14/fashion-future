@@ -19,7 +19,7 @@ let displayInDashboard = async (type) => {
             if (streakContainer) setDisplay([streakContainer], 'none')
             if (sustainabilityTips) setDisplay([sustainabilityTips], 'none')
             if (challengeContainer) setDisplay([challengeContainer], 'none')
-            if (personality) setDisplay([challengeContainer], 'none')
+            if (personality) setDisplay([personality], 'none')
 
             quizContainer.style.gridColumn = 'span 4'
             setDisplay([quizContainer], 'flex')
@@ -34,7 +34,7 @@ let displayInDashboard = async (type) => {
                 quizContainer.style.gridColumn = 'span 2'
             }
             if (challengeContainer) setDisplay([challengeContainer], 'flex')
-            if (personality) setDisplay([challengeContainer], 'flex')
+            if (personality) setDisplay([personality], 'block')
             if (header) setDisplay([header], 'flex')
             break;
 
@@ -55,9 +55,8 @@ async function renderDashboard(user) {
 
     //from global.js
     let day = date.getDate()
-    // let today = `${year}-${month + 1}-${day}`
-    let today = `${year}-${month + 1}-10`
-
+    let today = `${year}-${month + 1}-${day}`
+    
     localStorageReset(today)
 
     await renderOutfitStreak(today, main)
@@ -535,6 +534,15 @@ let getPointsData = async () => {
 async function generatePersonality(appendTo) {
 
     let data = await getPointsData()
+
+    if (data.sum <= 10) {
+        lockedState(appendTo,
+            `<span>Your style and sustainability journey starts here. </span><br>Log outfits, complete challenges, and take quizzes to reach 10 points and unclock your personality!
+            <br><span>Current points: ${data.sum}</span>`
+        )
+        return
+    }
+
     let userValues = Object.values(data.percategory)
 
     let personalityTypes = {
@@ -601,7 +609,7 @@ async function generatePersonality(appendTo) {
 function personalityChart(appendTo, data, personality) {
     let container = new CreateElement('div').setAttributes({ class: 'chart-container dashboard-container' }).appendTo(appendTo)
     new CreateElement('h3').setText(capitalise(personality.bestMatch)).appendTo(container)
-    new CreateElement('p').setText(`This month your personality is closest to a ${personality.bestMatch}.`).setAttributes({ style: `font-size:small` }).appendTo(container)
+    new CreateElement('p').setText(`Your personality is leaning towards ${personality.bestMatch}.`).setAttributes({ style: `font-size:small` }).appendTo(container)
     let description = new CreateElement('p').appendTo(container)
     description.innerHTML = `${personality.description}`
     let viewPoints = new CreateElement('button').setAttributes({ class: 'btn' }).setText(`Reveal scores`).appendTo(container)
