@@ -1,5 +1,4 @@
 document.addEventListener("userInitialized", async () => {
-
     await renderDashboard(window.user)
     clothingManager = new ClothingManager(window.user)
 })
