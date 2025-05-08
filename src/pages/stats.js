@@ -26,7 +26,7 @@ async function setupStats(withWear, title, appendTo) {
             msg = `
             Almost there! You need to log ${remainingItems} more ${remainingItems == 1 ? 'item' : 'items'} in your outfits to unlock wear stats.<br>
             <a href='./public/planner.html' class='locked-link'>
-            <img src='../assets/icons/calendar.png'/>
+            <img src='./assets/icons/calendar.png'/>
             Log a fit<a/>`
 
         } else {

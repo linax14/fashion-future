@@ -307,51 +307,51 @@ async function renderGarmentCareForm(settings) {
     let careFields = {
         wash: new Images('wash', {
             type: 'button', options: {
-                'wash': '../assets/careLabel/wash1.png',
-                'wash at 30': '../assets/careLabel/wash2.png',
-                'wash at 40': '../assets/careLabel/wash3.png',
-                'wash at 50': '../assets/careLabel/wash4.png',
-                'wash at 60': '../assets/careLabel/wash5.png',
-                'hand wash': '../assets/careLabel/wash6.png',
-                'do not wash': '../assets/careLabel/wash7.png'
+                'wash': './assets/careLabel/wash1.png',
+                'wash at 30': './assets/careLabel/wash2.png',
+                'wash at 40': './assets/careLabel/wash3.png',
+                'wash at 50': './assets/careLabel/wash4.png',
+                'wash at 60': './assets/careLabel/wash5.png',
+                'hand wash': './assets/careLabel/wash6.png',
+                'do not wash': './assets/careLabel/wash7.png'
             }, class: 'care-label'
         }, form),
         bleach: new Images('bleach', {
             type: 'button', options: {
-                'bleach': '../assets/careLabel/bleach1.png',
-                'cl bleach': '../assets/careLabel/bleach2.png',
-                'ncl bleach': '../assets/careLabel/bleach3.png',
-                'do not bleach': '../assets/careLabel/bleach4.png',
-                'do not bleach': '../assets/careLabel/bleach5.png',
+                'bleach': './assets/careLabel/bleach1.png',
+                'cl bleach': './assets/careLabel/bleach2.png',
+                'ncl bleach': './assets/careLabel/bleach3.png',
+                'do not bleach': './assets/careLabel/bleach4.png',
+                'do not bleach': './assets/careLabel/bleach5.png',
             }, class: 'care-label'
         }, form),
         tumble_dry: new Images('tumble_dry', {
             type: 'button', options: {
-                'tumble dry': '../assets/careLabel/tumble1.png',
-                'tumble dry low': '../assets/careLabel/tumble2.png',
-                'tumble dry normal': '../assets/careLabel/tumble3.png',
-                'do not tumble dry': '../assets/careLabel/tumble4.png',
+                'tumble dry': './assets/careLabel/tumble1.png',
+                'tumble dry low': './assets/careLabel/tumble2.png',
+                'tumble dry normal': './assets/careLabel/tumble3.png',
+                'do not tumble dry': './assets/careLabel/tumble4.png',
             }, class: 'care-label'
         }, form),
         natural_dry: new Images('natural_dry', {
             type: 'button', options: {
-                'dry': '../assets/careLabel/dry1.png',
-                'line dry': '../assets/careLabel/dry2.png',
-                'dry flat': '../assets/careLabel/dry3.png',
-                'drip dry': '../assets/careLabel/dry4.png',
-                'dry in shade': '../assets/careLabel/dry5.png',
-                'line dry in the shade': '../assets/careLabel/dry6.png',
-                'dry flat in shade': '../assets/careLabel/dry7.png',
-                'drip dry in shade': '../assets/careLabel/dry8.png',
+                'dry': './assets/careLabel/dry1.png',
+                'line dry': './assets/careLabel/dry2.png',
+                'dry flat': './assets/careLabel/dry3.png',
+                'drip dry': './assets/careLabel/dry4.png',
+                'dry in shade': './assets/careLabel/dry5.png',
+                'line dry in the shade': './assets/careLabel/dry6.png',
+                'dry flat in shade': './assets/careLabel/dry7.png',
+                'drip dry in shade': './assets/careLabel/dry8.png',
             }, class: 'care-label'
         }, form),
         iron: new Images('iron', {
             type: 'button', options: {
-                'iron': '../assets/careLabel/iron1.png',
-                'iron low': '../assets/careLabel/iron2.png',
-                'iron medium': '../assets/careLabel/iron3.png',
-                'iron high': '../assets/careLabel/iron4.png',
-                'do not iron': '../assets/careLabel/iron5.png',
+                'iron': './assets/careLabel/iron1.png',
+                'iron low': './assets/careLabel/iron2.png',
+                'iron medium': './assets/careLabel/iron3.png',
+                'iron high': './assets/careLabel/iron4.png',
+                'do not iron': './assets/careLabel/iron5.png',
             }, class: 'care-label'
         }, form),
 

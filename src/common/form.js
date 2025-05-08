@@ -78,7 +78,7 @@ class ImageUpload extends FormField {
         let formContainer = document.querySelector('.clothing-formContainer');
 
         let addImage = new CreateElement('img')
-            .setAttributes({ src: '../assets/createOutfit.png' })
+            .setAttributes({ src: './assets/createOutfit.png' })
             .addEventListener('click', () => {
 
                 let img = formContainer.querySelector(config.class);
