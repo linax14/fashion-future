@@ -66,8 +66,8 @@ function mainRender() {
     ], 'why-us', section)
 
     let imgs = new CreateElement('div').appendTo(s1)
-    new CreateElement('img').setAttributes({ src: '../assets/index/quiz.jpg', class: 'index-img', id: 'left' }).appendTo(imgs)
-    new CreateElement('img').setAttributes({ src: '../assets/index/stats.jpg', class: 'index-img', id: 'right' }).appendTo(imgs)
+    new CreateElement('img').setAttributes({ src: './assets/index/quiz.jpg', class: 'index-img', id: 'left' }).appendTo(imgs)
+    new CreateElement('img').setAttributes({ src: './assets/index/stats.jpg', class: 'index-img', id: 'right' }).appendTo(imgs)
 
     let s2 = contentSections('How it works', [
         `Upload your clothes`,
@@ -77,8 +77,8 @@ function mainRender() {
     ], 'how', section)
 
     let imgs2 = new CreateElement('div').appendTo(s2)
-    new CreateElement('img').setAttributes({ src: '../assets/index/planner.jpg', class: 'index-img', id: 'right' }).appendTo(imgs2)
-    new CreateElement('img').setAttributes({ src: '../assets/index/dash.jpg', class: 'index-img', id: 'left' }).appendTo(imgs2)
+    new CreateElement('img').setAttributes({ src: './assets/index/planner.jpg', class: 'index-img', id: 'right' }).appendTo(imgs2)
+    new CreateElement('img').setAttributes({ src: './assets/index/dash.jpg', class: 'index-img', id: 'left' }).appendTo(imgs2)
 
     let s3 = contentSections('Ready?', [
         `Start building your sustainable wardrobe today!`,

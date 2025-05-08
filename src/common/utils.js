@@ -61,10 +61,10 @@ function renderNavigation() {
     let ol = new CreateElement('ol').appendTo(navigation)
 
     let elements = {
-        dashboard: { type: 'li', link: { type: 'a', href: 'dashboard.html', text: 'dashboard' }, i: { src: '../assets/icons/dash.png' } },
-        planner: { type: 'li', link: { type: 'a', href: 'planner.html', text: 'planner' }, i: { src: '../assets/icons/calendar.png' } },
-        wardrobe: { type: 'li', class: 'invert-image', link: { type: 'a', href: 'wardrobe.html', text: 'wardrobe' }, i: { src: 'https://img.icons8.com/pastel-glyph/64/hanger--v1.png' } },
-        stats: { type: 'li', link: { type: 'a', href: 'stats.html', text: 'stats' }, i: { src: '../assets/icons/stats.png' } },
+        dashboard: { type: 'li', link: { type: 'a', href: './public/dashboard.html', text: 'dashboard' }, i: { src: './assets/icons/dash.png' } },
+        planner: { type: 'li', link: { type: 'a', href: './public/planner.html', text: 'planner' }, i: { src: './assets/icons/calendar.png' } },
+        wardrobe: { type: 'li', class: 'invert-image', link: { type: 'a', href: './public/wardrobe.html', text: 'wardrobe' }, i: { src: 'https://img.icons8.com/pastel-glyph/64/hanger--v1.png' } },
+        stats: { type: 'li', link: { type: 'a', href: './public/stats.html', text: 'stats' }, i: { src: './assets/icons/stats.png' } },
     }
 
     Object.entries(elements).forEach(([key, value]) => {
@@ -91,7 +91,7 @@ let addNavBtn = () => {
     let navItems = navList.querySelectorAll('li');
     navBtn = document.createElement('li')
     let a = new CreateElement('a').setText('add').appendTo(navBtn)
-    new CreateElement('img').setAttributes({ src: '../assets/icons/plus.png' }).appendTo(a)
+    new CreateElement('img').setAttributes({ src: './assets/icons/plus.png' }).appendTo(a)
     navBtn.setAttribute('class', 'nav-btn-add')
     let middle = Math.floor(navItems.length / 2);
     navList.insertBefore(navBtn, navItems[middle]);
@@ -124,12 +124,12 @@ function renderSideNav() {
         }
     })
 
-    settings.addEventListener('click', () => { window.location.href = './settings.html' })
+    settings.addEventListener('click', () => { window.location.href = './public/settings.html' })
 
     signOut.addEventListener('click', async () => {
         const { error } = await supabase.auth.signOut()
         console.error(error);
-        window.location.href = '/index.html'
+        window.location.href = './public/index.html'
     })
 
     return { icon }

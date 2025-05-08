@@ -322,7 +322,7 @@ async function getImage(element, appendTo, callback, className = '') {
         console.error(`Error fetching image URL: ${urlError}`);
         new CreateElement('img')
             .setAttributes({
-                class: 'wardrobe image fallback', src: '../assets/createOutfit.png',
+                class: 'wardrobe image fallback', src: './assets/createOutfit.png',
                 alt: `Fallback image representing a variety of clothing items when no specific image is available`
             })
             .appendTo(appendTo)

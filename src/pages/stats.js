@@ -25,14 +25,14 @@ async function setupStats(withWear, title, appendTo) {
         if (withWear) {
             msg = `
             Almost there! You need to log ${remainingItems} more ${remainingItems == 1 ? 'item' : 'items'} in your outfits to unlock wear stats.<br>
-            <a href='planner.html' class='locked-link'>
+            <a href='./public/planner.html' class='locked-link'>
             <img src='../assets/icons/calendar.png'/>
             Log a fit<a/>`
 
         } else {
             msg = `Oops! It looks like you haven't added enough items to your wardrobe to unlock wardrobe stats. 
             Just ${remainingItems} more ${remainingItems == 1 ? 'item' : 'items'} to go! <br>
-            <a href='wardrobe.html' class='locked-link invert-image'>
+            <a href='./public/wardrobe.html' class='locked-link invert-image'>
             <img src='https://img.icons8.com/pastel-glyph/64/hanger--v1.png'/> Head to wardrobe <a/>`
         }
 

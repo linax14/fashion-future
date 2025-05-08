@@ -12,10 +12,12 @@ function renderSettings() {
 
         if (isActive) {
             inputs.forEach(input => input.removeAttribute('disabled'))
+            theme.removeAttribute('disabled')
             formSubmit.removeAttribute('disabled')
             setDisplay([formSubmit], 'block')
         } else {
             inputs.forEach(input => input.setAttribute('disabled', true))
+            theme.setAttribute('disabled', true)
             formSubmit.setAttribute('disabled', true)
             setDisplay([formSubmit], 'none')
         }
@@ -32,8 +34,6 @@ function renderSettings() {
     }
 
     let userData = new CreateElement('div').setAttributes({ class: 'user-data' }).appendTo(main)
-
-
     let signUpForm = new CreateElement('form').setAttributes({ id: 'sign-up' }).appendTo(userData)
 
     for (let [key, field] of Object.entries(formFields)) {
@@ -47,18 +47,21 @@ function renderSettings() {
     }
 
     let selectTheme = new CreateElement('div').appendTo(signUpForm)
+    new CreateElement('label').setText('Theme').appendTo(selectTheme)
     let theme = new CreateElement('select').setAttributes({ name: 'theme' }).setText('theme').appendTo(selectTheme)
-
-    let options = ['dark', 'light']
+    let options = ['dark', 'earthy', 'light']
     options.forEach(option => {
-        new CreateElement('option').setAttributes({ value: option }).setText(`${option}`).appendTo(theme)
+        let el = new CreateElement('option').setAttributes({ value: option }).setText(`${option}`).appendTo(theme)
+        if (option == user.theme) {
+            el.setAttribute('selected', option)
+        }
     })
 
     let inputs = signUpForm.querySelectorAll('input')
     inputs.forEach(input => input.setAttribute('disabled', true))
+    theme.setAttribute('disabled', true)
 
     let formSubmit = new CreateElement('button').setAttributes({ class: 'btn', type: 'submit' }).setText('save').appendTo(signUpForm)
-    setDisplay([formSubmit], 'none')
     formSubmit.setAttribute('disabled', true)
 
     let deleteBtn = new CreateElement('button').setText('delete Account').setAttributes({ class: 'btn', id: 'delete-account-btn' }).appendTo(main);
@@ -76,7 +79,7 @@ function renderSettings() {
             })
 
             if (confirm) {
-                window.location.href = '/index.html'
+                window.location.href = './public/index.html'
             }
         }
     })
@@ -91,6 +94,10 @@ function renderSettings() {
             updateData[key] = field.element.value
         }
 
+        if (theme.value) {
+            updateData['theme'] = theme.value
+        }
+
         const { data, error } = await supabase.auth.updateUser({
             data: updateData
         })
@@ -98,7 +105,10 @@ function renderSettings() {
         if (error) console.error(error);
         console.log(data);
         inputs.forEach(input => input.setAttribute('disabled', true))
+        theme.setAttribute('disabled', true)
         formSubmit.setAttribute('disabled', true)
+        edit.classList.remove('active')
+        setDisplay([formSubmit], 'none')
 
     })
     return main

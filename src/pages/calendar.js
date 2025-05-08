@@ -18,7 +18,7 @@ let createIconBtn = (className, text, src, alt, appendTo) => {
 }
 
 let navEvents = () => {
-    let createOutfit = createIconBtn('create-outfit-btn btn', 'New outfit', '../assets/createOutfit.png', 'clothing items', navModal)
+    let createOutfit = createIconBtn('create-outfit-btn btn', 'New outfit', './assets/createOutfit.png', 'clothing items', navModal)
     let addCareBtn = createIconBtn('add-care-btn btn', 'care event', 'https://img.icons8.com/ios/100/laundry-bag.png', 'laundry basket', navModal)
 
     createOutfit.addEventListener('click', async () => {
@@ -453,7 +453,7 @@ let placeholder = (appendTo, mode, dataDate) => {
     let btn
 
     if (mode == 'outfit') {
-        btn = createIconBtn('create-outfit-btn btn', 'Add fit', '../assets/createOutfit.png', 'clothing items', div)
+        btn = createIconBtn('create-outfit-btn btn', 'Add fit', './assets/createOutfit.png', 'clothing items', div)
         btn.addEventListener('click', async () => {
             await renderClothingDisplay(dataDate, { mode: 'addOutfit', itemRender: 'default' });;
         })
