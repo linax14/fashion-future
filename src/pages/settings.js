@@ -62,6 +62,7 @@ function renderSettings() {
     theme.setAttribute('disabled', true)
 
     let formSubmit = new CreateElement('button').setAttributes({ class: 'btn', type: 'submit' }).setText('save').appendTo(signUpForm)
+    setDisplay([formSubmit], 'none')
     formSubmit.setAttribute('disabled', true)
 
     let deleteBtn = new CreateElement('button').setText('delete Account').setAttributes({ class: 'btn', id: 'delete-account-btn' }).appendTo(main);
