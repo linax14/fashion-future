@@ -40,7 +40,7 @@ let displayInDashboard = async (type) => {
         case 'settings':
             setDisplay([document.querySelector('.dashboard')], 'none')
             sideNav.classList.remove('expanded')
-            window.location.href = './settings.html'
+            window.location.href = './public/settings.html'
             break
 
         default:
@@ -151,7 +151,7 @@ async function dailyChallenge(user, dateInfo, appendTo) {
         let min = 5 - data.length
         let locked = lockedState(appendTo,
             `You need to log ${min} more ${min == 1 ? 'outfit' : 'outfits'} to unlock challenges
-             <a href='planner.html' class='locked-link'>
+             <a href='./public/planner.html' class='locked-link'>
             Log a fit<a/>`)
 
         locked.classList.add = 'dashboard-container'
@@ -234,6 +234,7 @@ function renderChallenge(target, dateInfo, appendTo) {
     let span = new CreateElement('span').appendTo(h)
     new CreateElement('img').setAttributes({ src: 'https://img.icons8.com/ios/50/nui2.png', alt: 'click to complete challenge', class: 'icon' }).appendTo(span)
     let p = new CreateElement('p').setText(target.challenge.details).appendTo(div)
+console.log(target.challenge);
 
     if (target.challenge.complete) {
         div.removeEventListener('click', async () => completeChallengeEvent(target, dateInfo))
@@ -262,7 +263,7 @@ async function completeChallengeEvent(target, dateInfo) {
                             fromChallenge: true,
                             challengeId: target.challenge.id,
                         }))
-                        window.location.href = './planner.html'
+                        window.location.href = './public/planner.html'
 
                         break
 
@@ -278,7 +279,7 @@ async function completeChallengeEvent(target, dateInfo) {
                         fromChallenge: true,
                         challengeId: target.challenge.id,
                     }))
-                    window.location.href = './wardrobe.html'
+                    window.location.href = './public/wardrobe.html'
                 }
                 break
             default:
