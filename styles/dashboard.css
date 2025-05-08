@@ -8,18 +8,27 @@
 }
 
 .quiz-container {
+
     grid-column: span 2;
-    background-color: var(--focus-color);
     border-radius: var(--bs-border-radius-lg);
     padding: var(--padding-main);
 }
 
 .quiz-container.expanded {
     grid-column: span 3;
-    display: block;
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+    height: 89vh;
     background-color: transparent;
     padding: var(--p-0);
     transition: all 0.3s;
+    background-image: none;
+    border: none;
+    transform: translateY(-1%);
+    padding-left: var(--p-3);
+    padding-right: var(--p-3);
+    overflow: hidden;
 }
 
 .quiz-container .header {
@@ -29,11 +38,6 @@
 
     display: grid;
     grid-template-columns: repeat(6, 1fr);
-}
-
-.quiz-container .header i {
-    font-size: 80px;
-    grid-column: span 1;
 }
 
 .quiz-container .header h3 {
@@ -48,14 +52,34 @@
 
 .quiz-container p {
     margin: var(--p-0);
+    grid-column: span 6;
 }
 
-/* .questions-container .close {} */
+.quiz-container.expanded .close {
+    margin-left: auto;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.quiz-container .quiz {
+    height: 84%;
+    display: flex;
+    flex-direction: column;
+}
+
+.dashboard-container .questions-container h3 {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--p-2);
+    padding-bottom: var(--p-2);
+}
 
 .questions-container .wrapper {
     display: flex;
     flex-direction: column;
-    gap: 25vh;
+    gap: 40vh;
     height: 80vh;
     overflow-y: auto;
     overscroll-behavior-y: contain;
@@ -69,6 +93,12 @@
 .question-group {
     display: flex;
     flex-direction: column;
+}
+
+.dashboard-container .question-group h3 {
+    margin-bottom: var(--p-4);
+    padding-bottom: var(--p-4);
+    padding-top: var(--p-4);
 }
 
 .question-group p {
@@ -97,18 +127,8 @@
     margin-bottom: 50vh;
 }
 
-.image-placeholder {
-    width: 200px;
-    height: 200px;
-    align-self: center;
-    background-color: var(--bs-success-text-emphasis);
-    border-radius: var(--bs-border-radius-lg);
-    margin-top: 20px;
-    margin-bottom: 30px;
-}
-
 .progress {
-    margin-bottom: 30px;
+    margin-bottom: var(--p-3);
     border-radius: var(--bs-border-radius-lg);
     height: 20px;
     border: 1px solid var(--bs-success-text-emphasis);
@@ -130,20 +150,15 @@
     font-weight: bold;
 }
 
-.outfits-streak {
+#outfit-streak {
     display: flex;
     grid-column: span 1;
-    border-radius: var(--bs-border-radius-lg);
-    border: 1px solid var(--bs-secondary-text-emphasis-focus);
-    padding: var(--padding-main);
-    justify-content: center;
-    align-items: center;
     background-image: url('../assets/bg/bg.png');
     background-size: contain;
-
+    align-items: center;
 }
 
-.outfits-streak h3 {
+#outfit-streak h3 {
     text-align: center;
     max-width: min-content;
 }
@@ -173,8 +188,6 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    gap: var(--gap-4);
-    margin-bottom: 20px;
 }
 
 .header .icon {
@@ -185,59 +198,109 @@
     border-radius: var(--bs-border-radius-pill);
 }
 
-/* .header h3 {
-    margin: 0;
-} */
-
-.sustainability-tips.container,
-.challenge.container {
+.sustainability-tips-container,
+.challenge-container {
     display: flex;
     flex-direction: column;
     grid-column: span 3;
     /* background-color: var(--focus-color); */
     border-radius: var(--bs-border-radius-lg);
-    border: 1px solid var(--bs-secondary-text-emphasis-focus);
+    border: 1px solid var(--bs-secondary-bg);
     padding: var(--padding-main);
     justify-content: center;
 }
 
-.sustainability-tips.container h3,
-.challenge.container h3 {
+.sustainability-tips-container h3,
+.challenge-container h3 {
     margin-bottom: 0;
     margin-top: 0;
+    gap: var(--gap-4);
 }
 
-.challenge.container img {
+[data-bs-theme='dark'] .challenge-container img {
     filter: invert();
     width: 20px;
     opacity: 0.8;
 }
 
-.challenge.container h3 {
+[data-bs-theme='earthy'] .challenge-container img,
+[data-bs-theme='light'] .challenge-container img {
+    filter: none;
+    width: 20px;
+    opacity: 0.8;
+}
+
+.challenge-container h3 {
     display: flex;
     justify-content: space-between;
 }
 
-.prev-worn-container {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
+.dashboard-container {
     border-radius: var(--bs-border-radius-lg);
-    border: 1px solid var(--bs-secondary-text-emphasis-focus);
+    border: 1px solid var(--bs-secondary-bg);
     padding: var(--padding-main);
+    justify-content: center;
+}
+
+.dashboard-container h3 {
+    padding-bottom: 0;
+    padding-top: 0;
+    margin-bottom: 0;
+    margin-top: 0;
+}
+
+.dashboard-container.challenge-container p,
+.dashboard-container.chart-container p {
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.dashboard-container button {
+    margin-top: var(--p-3);
+    margin-bottom: var(--p-3);
+}
+
+.chart-container {
     grid-column: span 3;
+    height: min-content;
 }
 
-.prev-worn-container h3 {
-    grid-column: span 2;
-    padding-bottom: var(--p-3);
+.chart-container>p:nth-child(2) {
+    padding-top: 0;
+    margin-top: 0;
+    color: var(--bs-secondary-text-emphasis-focus);
 }
 
-.prev-worn-container .outfit {
-    border-top: 1px solid var(--bs-secondary-text-emphasis-focus);
-    border-bottom: 1px solid var(--bs-secondary-text-emphasis-focus);
-    border-radius: var(--bs-border-radius-lg);
-    grid-column: span 1;
-    padding: var(--p-3);
-    display: grid;
-    overflow: scroll;
+.chart-container .btn {
+    background-color: transparent;
+    padding: 0;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    font-size: small;
+    color: var(--bs-secondary-text-emphasis-focus);
+}
+
+.locked-state {
+    grid-column: span 3;
+    min-height: min-content;
+    flex-direction: row;
+    gap: var(--gap-2);
+}
+
+.locked-state .locked-link,
+.locked-state span {
+    margin-top: var(--p-1);
+    color: var(--bs-secondary-text-emphasis-focus);
+    font-size: small;
+}
+
+.locked-state p span {
+    display: inline-block;
+    margin-top: var(--p-2);
+    margin-bottom: var(--p-2);
+}
+
+.locked-state i.fa-solid.fa-lock {
+    padding-left: var(--p-1);
+    font-size: 34px;
 }

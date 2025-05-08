@@ -1,0 +1,240 @@
+.filters {
+    width: 100%;
+    grid-column: span 3;
+    z-index: 3;
+}
+
+.filters-body {
+    display: flex;
+    flex-direction: column;
+}
+
+.filters .form-group.brand label {
+    display: grid !important;
+}
+
+.filters .form-group label {
+    align-content: center;
+    font-size: var(--font-size-label);
+    font-variant: small-caps;
+    font-weight: var(--font-weight-label);
+}
+
+.filters .form-group .close {
+    font-size: 20px;
+    font-weight: var(--font-weight-label);
+}
+
+.filters .form-group>:first-child {
+    margin-top: var(--margin-big);
+    margin-bottom: var(--margin-big);
+}
+
+.filters .form-group>:not(:first-child) {
+    text-align: center;
+    gap: var(--gap-2);
+}
+
+.filters .form-group .element {
+    padding-left: 4px;
+    padding-right: 4px;
+    border: 1px solid var(--bs-secondary-bg);
+    border-radius: var(--bs-border-radius-lg);
+    height: 26px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.filters .form-group .element.selected {
+    border: 1px solid var(--bs-emphasis-color);
+    box-shadow: inset 1px 1px 12px var(--focus-color), inset -1px -1px 12px var(--focus-color);
+}
+
+.filters .form-group:not(.colour) {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr);
+    justify-content: space-between;
+    gap: var(--gap-2);
+    margin-bottom: var(--margin-big);
+}
+
+.filters .form-group span {
+    display: none;
+    text-transform: capitalize;
+}
+
+.form-group span {
+    font-size: small;
+}
+
+.filters .form-group.expanded span {
+    display: flex;
+}
+
+.filters .form-group.season.expanded {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr) !important;
+}
+
+.filters .form-group.season label {
+    grid-column: span 2 !important;
+}
+
+
+.filters .form-group:not(.colour)>:first-child {
+    grid-column: span 3;
+}
+
+.filters .form-group.colour {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    margin-bottom: var(--margin-big);
+}
+
+.filters .form-group.colour>:first-child {
+    grid-column: span 10;
+}
+
+.filters .reset.btn {
+    background-color: transparent;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+
+    color: var(--bs-secondary-text-emphasis-focus);
+}
+
+.filters .btn-container .btn {
+    padding: 6px 12px;
+}
+
+.filters .btn-container {
+    flex-direction: row-reverse;
+    position: absolute;
+    bottom: 12vh;
+    right: 10px;
+}
+
+.filters .btn-container .submit.btn {
+    background-color: var(--bs-success-text-emphasis);
+}
+
+.submit.btn {
+    background-color: var(--bs-success-text-emphasis);
+}
+
+.clothing-list {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: auto;
+    margin-top: 1vh;
+    gap: var(--gap-1);
+    height: 80vh;
+    overflow: scroll;
+}
+
+.clothing-list>h4:first-child {
+    grid-column: span 3;
+}
+
+.clothing-list .clothing-item-container input[type="checkbox"]:checked {
+    border-color: var(--bs-secondary-bg);
+}
+
+.clothing-list .clothing-item-container input[type="checkbox"]:checked::before {
+    border-color: var(--bs-secondary-bg);
+    color: currentColor;
+}
+
+.clothing-list .clothing-item-container [type="checkbox"]::before {
+    font-size: 12px;
+    margin-left: 3px;
+    margin-bottom: 8px;
+}
+
+.clothing-list .clothing-item-container input[type="checkbox"] {
+    background-color: var(--bs-body-bg);
+    border-color: var(--bs-secondary-bg);
+    border-radius: var(--bs-border-radius-sm);
+    /* position: absolute; */
+}
+
+.clothing-list .clothing-item-container input[type="checkbox"]:checked {
+    border-color: var(--bs-secondary-bg);
+}
+
+.clothing-list .clothing-item-container input[type="checkbox"]:checked::before {
+    border-color: var(--bs-secondary-bg);
+    color: var(--bs-emphasis-color);
+}
+
+.clothing-list .clothing-item-container [type="checkbox"]::before {
+    font-size: 12px;
+    margin-left: 3px;
+}
+
+.clothing-list .clothing-item-container ol {
+    margin-top: 0;
+    padding-left: var(--p-4);
+    padding-right: var(--p-4);
+    grid-column: span 4;
+}
+
+.clothing-item-container {
+    border: 1px solid var(--bs-secondary-bg);
+    background-color: var(--focus-color);
+    border-radius: var(--bs-border-radius-lg);
+    width: auto;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    justify-items: inherit;
+    overflow: hidden;
+}
+
+.clothing-item-container p {
+    margin-left: 8px;
+    margin-bottom: 8px;
+    margin-top: 0;
+    padding-top: 0;
+    grid-column: span 3;
+    text-align: start;
+    align-self: center;
+    text-transform: capitalize;
+}
+
+.clothing-item-container img {
+    height: 11dvh;
+    width: -moz-available;
+    width: -webkit-fill-available;
+    object-fit: cover;
+    grid-column: span 4;
+}
+
+.clothing-list.clothing-item-container input[type="checkbox"] {
+    background-color: var(--bs-emphasis-color);
+    border-color: var(--bs-secondary-bg);
+    border-radius: var(--bs-border-radius-sm);
+    grid-column: span 1;
+    align-self: safe;
+}
+
+.wardrobe.clothing-item-container [type="checkbox"]::before {
+    font-size: 12px;
+    margin-left: 3px;
+}
+
+.clothing-list {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: auto;
+    gap: var(--gap-2);
+    margin-top: 1vh;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    align-content: baseline;
+    justify-content: start;
+}
+
+.challenge.clothing-list {
+    grid-column: span 3;
+}
