@@ -283,7 +283,7 @@ class RenderClothing {
 
     createCheckbox(container) {
         let checkbox = new CreateElement('input')
-            .setAttributes({ type: 'checkbox', class: 'wardrobe-checkbox', style: 'display:none; position:absolute' })
+            .setAttributes({ type: 'checkbox', class: 'wardrobe-checkbox', style: 'display:none'})
             .appendTo(container)
 
         if (this.itemsToAdd) {
