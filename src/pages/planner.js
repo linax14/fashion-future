@@ -78,7 +78,14 @@ async function renderClothingDisplay(createOutfitDate, settings) {
         }
     }
 
-    if (data.length > 0) { new CreateElement('h4').setText('Other Items').appendTo(clothingList) }
+    let clothingListHeader
+
+    if (settings && settings.challenge && data.length > 0) {
+        clothingListHeader = new CreateElement('h4').setText('Other Items').appendTo(clothingList)
+    } else {
+        clothingListHeader = new CreateElement('h4').setText('All Clothes').appendTo(clothingList)
+    }
+
     filters.addEventListener('click', async () => {
         let filtersSection = document.querySelector('.filters');
 
