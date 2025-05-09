@@ -12,19 +12,35 @@ document.addEventListener("userInitialized", async () => {
 let clothingManager
 let outfit
 
-function outfitImagesDisplay(outfitContainer, count) {
+function outfitImagesDisplay(outfitContainer, count, type) {
     let images = outfitContainer.querySelectorAll('img');
     let c = images.length;
 
+    if (type == 'care') { images.forEach(img => img.style.width = '25vw') }
+
     if (count == 1) {
-        outfitContainer.style.display = 'grid'
-        outfitContainer.style.gridTemplateColumns = '1fr'
+        outfitContainer.style.display = 'grid';
+        if (type == 'care') {
+            outfitContainer.style.gridTemplateColumns = '4fr'
+        } else {
+            outfitContainer.style.gridTemplateColumns = '1fr'
+        }
     } else {
         outfitContainer.style.display = 'grid'
-        outfitContainer.style.gridTemplateColumns = 'repeat(2, 1fr)'
+
+        if (type == 'care') {
+            outfitContainer.style.gridTemplateColumns = 'repeat(4, 1fr)'
+        } else {
+            outfitContainer.style.gridTemplateColumns = 'repeat(2, 1fr)'
+        }
 
         if (count % 2 != 0) {
-            images[c - 1].style.gridColumn = 'span 2';
+            if (type == 'care') {
+                images[c - 1].style.gridColumn = 'span 4';
+            } else {
+                images[c - 1].style.gridColumn = 'span 2';
+            }
+
         }
 
     }

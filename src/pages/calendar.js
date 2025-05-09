@@ -168,7 +168,7 @@ let renderGarmentCareItems = async (dataDate, appendTo) => {
             })
         )
 
-        outfitImagesDisplay(outfitContainer, count)
+        outfitImagesDisplay(outfitContainer, count, 'care')
 
         outfitContainer.addEventListener('click', async () => {
             await renderGarmentCareForm({ date: dataDate, mode: 'edit', id: element.outfitId })

@@ -293,6 +293,10 @@
     flex-direction: column;
 }
 
+.care-event-container-items .outfit {
+    overflow: scroll;
+}
+
 .care-event-container .close {
     margin-left: auto;
 }
