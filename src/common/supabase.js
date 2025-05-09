@@ -337,8 +337,17 @@ let getUserData = async (dateInfo, progressType) => {
     let progress = {}
     let challengesToday = []
 
-    let updateChallengesProgress = userDetailsData[0].challenges_progress
-    let updateQuestionsProgress = userDetailsData[0].questions_progress
+    let updateChallengesProgress
+    if (userDetailsData[0].challenges_progress) {
+        updateChallengesProgress = userDetailsData[0].challenges_progress
+    } else {
+        updateChallengesProgress = {}
+    }
+
+    let updateQuestionsProgress
+    if (userDetailsData[0].questions_progress) {
+        updateQuestionsProgress = userDetailsData[0].questions_progress
+    }
 
     Object.values(updateChallengesProgress).forEach(value => {
         value.complete_count ??= 0;
@@ -364,7 +373,7 @@ let getUserData = async (dateInfo, progressType) => {
         default:
             break;
     }
-
+    
     return progressType == 'questions'
         ? { progress }
         : { progress, challengesToday, calendarData }

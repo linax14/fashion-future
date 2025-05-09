@@ -633,7 +633,7 @@ li {
 .form-group.natural_dry,
 .form-group.iron {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     grid-template-rows: auto;
     gap: var(--gap-4);
 }
@@ -643,7 +643,7 @@ li {
 .form-group.tumble_dry>:first-child,
 .form-group.natural_dry>:first-child,
 .form-group.iron>:first-child {
-    grid-column: span 4;
+    grid-column: span 3;
 }
 
 .form-group.wash>:not(:first-child),
