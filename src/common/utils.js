@@ -51,10 +51,9 @@ let bootstrap = new CreateElement('link').setAttributes({
     rel: 'stylesheet', href: "https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css",
     integrity: "sha512-jnSuA4Ss2PkkikSOLtYs8BlYIeeIK1h99ty4YfvRPAlzr377vr3CXDb7sb7eEEBYjDtcYj+AjBH3FLv5uSJuXg==",
     crossorigin: "anonymous", referrerpolicy: "no-referrer"
-})
+}).appendTo(document.head)
 
 if (mainCss) { document.head.insertBefore(bootstrap, mainCss) }
-
 
 function renderNavigation() {
     let navigation = new CreateElement('nav').setAttributes({ class: 'bottom-nav' }).appendTo(document.body)
@@ -103,7 +102,6 @@ function renderSideNav() {
     let sideNav = new CreateElement('nav').setAttributes({ class: 'side-nav', id: 'logged-side-nav' }).appendTo(document.body)
     let header = new CreateElement('div').setAttributes({ class: 'header' }).appendTo(sideNav)
 
-    let time = getTimePeriod()
 
     let icon = new CreateElement('i').setAttributes({ class: 'fa-solid fa-bars' }).appendTo(header)
     let page = new CreateElement('h2').setText(`${capitalise(window.location.href.split('/').pop().split('.')[0])}`).appendTo(header)
@@ -133,23 +131,6 @@ function renderSideNav() {
     })
 
     return { icon }
-}
-
-let getTimePeriod = () => {
-    let hours = new Date().getHours()
-    let period
-
-    switch (true) {
-        case (hours >= 5 && hours < 12):
-            period = 'morning'
-            break
-        case (hours >= 12 && hours < 20):
-            period = 'afternoon'
-            break
-        default:
-            period = 'night'
-    }
-    return period
 }
 
 let formatDateUnpadded = (dateString) => {

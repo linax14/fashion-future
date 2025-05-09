@@ -155,8 +155,6 @@ async function dailyChallenge(user, dateInfo, appendTo) {
             Log a fit<a/>`)
 
         locked.classList.add = 'dashboard-container'
-        console.log(locked);
-
         return
     }
 
@@ -234,7 +232,7 @@ function renderChallenge(target, dateInfo, appendTo) {
     let span = new CreateElement('span').appendTo(h)
     new CreateElement('img').setAttributes({ src: 'https://img.icons8.com/ios/50/nui2.png', alt: 'click to complete challenge', class: 'icon' }).appendTo(span)
     let p = new CreateElement('p').setText(target.challenge.details).appendTo(div)
-console.log(target.challenge);
+    console.log(target.challenge);
 
     if (target.challenge.complete) {
         div.removeEventListener('click', async () => completeChallengeEvent(target, dateInfo))
@@ -463,6 +461,30 @@ async function allChallenges() {
     return randomChallenge
 }
 
+let totalYearPoints = async (year) => {
+    let calendarData = await selectUserTable(window.user, 'user_calendar')
+    calendarData = calendarData.find(item => item.year == year)?.calendar
+
+    let total = 0
+
+    for (let month in calendarData) {
+        for (let day in calendarData[month]) {
+            let dayPoints = calendarData[month][day].points || {}
+
+            if (Object.keys(dayPoints).length == 0) {
+                total += 0
+            } else {
+                for (let type in dayPoints) {
+                    let val = Number(dayPoints[type]) || 0
+                    if (!isNaN(val)) total += dayPoints[type]
+                }
+            }
+        }
+    }
+
+    return total
+}
+
 class Points {
     constructor(user, date) {
         this.user = user
@@ -534,16 +556,17 @@ let getPointsData = async () => {
 async function generatePersonality(appendTo) {
 
     let data = await getPointsData()
+    let total = await totalYearPoints(year)
 
-    if (data.sum <= 10) {
+    if (total < 10) {
         lockedState(appendTo,
-            `<span>Your style and sustainability journey starts here. </span><br>Log outfits, complete challenges, and take quizzes to reach 10 points and unclock your personality!
-            <br><span>Current points: ${data.sum}</span>`
+            `<span>Your style and sustainability journey starts here. </span><br>Log outfits, complete challenges, and take quizzes to reach 10 points and unlock your personality!
+            <br><span>Current points: ${total}</span>`
         )
         return
     }
 
-    let userValues = Object.values(data.percategory)
+    let userValues = Object.values(data.percentages)
 
     let personalityTypes = {
         alchemist: {
@@ -569,7 +592,7 @@ async function generatePersonality(appendTo) {
         }
     }
 
-    let order = Object.entries(data.percategory)
+    let order = Object.entries(data.percentages)
         .sort((a, b) => b[1] - a[1])
         .map(([trait]) => trait)
 
@@ -582,8 +605,7 @@ async function generatePersonality(appendTo) {
         if (definition.uniform) {
             let avg = userValues.reduce((a, b) => a + b, 0) / userValues.length
             let variance = userValues.reduce((sum, v) => sum + Math.abs(v - avg), 0)
-            score = -variance
-
+            score = 100 - Math.min(variance, 100)
         } else if (definition.order) {
 
             for (let i = 0; i < definition.order.length; i++) {
