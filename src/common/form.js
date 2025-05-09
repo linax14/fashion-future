@@ -258,6 +258,7 @@ class Images extends FormField {
                 .setAttributes({ class: 'element', 'data-value': option })
                 .appendTo(this.wrapper)
 
+            new CreateElement('label').setAttributes({ class: 'label', id: 'care-event-label' }).setText(capitalise(option)).appendTo(element)
             let item = new CreateElement('img')
                 .setAttributes({ class: config.class, src: value })
                 .addEventListener('click', () => {

@@ -284,7 +284,8 @@ input[type="checkbox"]:checked {
 
 input[type="checkbox"]:checked::before {
     border-color: var(--focus-color);
-    color:  var(--bs-secondary-text-emphasis);;
+    color: var(--bs-secondary-text-emphasis);
+    ;
 }
 
 .side-nav {
@@ -632,8 +633,9 @@ li {
 .form-group.natural_dry,
 .form-group.iron {
     display: grid;
-    grid-template-columns: repeat(8, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     grid-template-rows: auto;
+    gap: var(--gap-4);
 }
 
 .form-group.wash>:first-child,
@@ -641,7 +643,7 @@ li {
 .form-group.tumble_dry>:first-child,
 .form-group.natural_dry>:first-child,
 .form-group.iron>:first-child {
-    grid-column: span 8;
+    grid-column: span 4;
 }
 
 .form-group.wash>:not(:first-child),
@@ -650,6 +652,11 @@ li {
 .form-group.natural_dry>:not(:first-child),
 .form-group.iron>:not(:first-child) {
     grid-column: span 1;
+    display: flex;
+    flex-direction: column-reverse;
+    justify-content: center;
+    align-items: center;
+    font-size: small;
 }
 
 [data-bs-theme='dark'] .form-group.wash .element img.care-label,
