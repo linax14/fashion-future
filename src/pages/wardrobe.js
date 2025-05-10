@@ -26,13 +26,15 @@ let displayInHome = (type) => {
         case 'wardrobe':
             clothingList.innerHTML = ''
             wardrobeHeader.innerHTML = ''
-            setDisplay([wardrobeSection, wardrobeHeader], 'grid')
+            setDisplay([wardrobeSection], 'grid')
+            setDisplay([wardrobeHeader], 'flex')
             setDisplay([clothingFormContainer], 'none')
             clothingFormContainer.style.visibility = 'hidden'
             break;
 
         default:
-            setDisplay([clothingList, wardrobeHeader], 'grid')
+            setDisplay([clothingList], 'grid')
+            setDisplay([wardrobeHeader], 'flex')
             setDisplay([clothingFormContainer], 'none')
             break;
     }
@@ -159,7 +161,7 @@ function handleFormSubmit(form, onSubmitCallback, itemId = null) {
 
         await onSubmitCallback(formValues, imageName)
         isDirty = false
-        renderWardrobe()
+        await renderWardrobe()
     })
 
     return { form, isDirty: () => isDirty }
@@ -178,7 +180,8 @@ async function renderClothingForm(mainForm) {
         setDisplay([mainForm], 'none')
         mainForm.style.visibility = 'hidden'
         renderWardrobe()
-        setDisplay([clothingList, wardrobeHeader], 'grid')
+        setDisplay([clothingList], 'grid')
+        setDisplay([wardrobeHeader], 'flex')
     })
 
     let form = new CreateElement('form')
@@ -507,12 +510,8 @@ async function updateClothingItem(itemId, formContainer, clothingFormContainer, 
 }
 
 async function renderWardrobe(settings = null) {
-    let editMode = false
     let filterMode = false
-
     displayInHome('wardrobe')
-
-    new CreateElement('h3').setText('Clothing items').appendTo(wardrobeHeader)
 
     let nav = addNavBtn()
     nav.addEventListener('click', () => {
@@ -524,6 +523,7 @@ async function renderWardrobe(settings = null) {
     })
 
     let data = await selectUserTable(window.user, 'clothing_items')
+    data = data.sort((a, b) => a.wear_count - b.wear_count)
 
     if (data.length == 0) {
         setDisplay([clothingList], 'none')
@@ -532,9 +532,6 @@ async function renderWardrobe(settings = null) {
     }
 
     let btnContainer = new CreateElement('div').setAttributes({ class: 'btn-container' }).appendTo(wardrobeHeader)
-    let deleteButton = new CreateElement('button').setText('Delete').setAttributes({ style: 'display:none', class: 'delete btn' }).appendTo(wardrobeHeader)
-    let editWardrobe = new CreateElement('button').setAttributes({ class: 'edit btn' }).appendTo(btnContainer)
-    new CreateElement('i').setAttributes({ class: 'fa-trash fa-solid' }).appendTo(editWardrobe)
 
     let clothingListHeader
     let allClothes
@@ -555,38 +552,24 @@ async function renderWardrobe(settings = null) {
         clothingListHeader = new CreateElement('h4').setText('All Clothes').appendTo(clothingList)
     }
 
-    await renderClothingItem({ appendTo: clothingList, data: data })
+    allClothes = await renderClothingItem({ appendTo: clothingList, data: data })
     renderClothingForm(clothingFormContainer)
 
-    let filtersBtn = new CreateElement('button').setAttributes({ class: 'filter btn' }).appendTo(btnContainer)
+    let filtersBtn = new CreateElement('button').setAttributes({ class: 'filter btn' }).setText('Filter').appendTo(btnContainer)
     new CreateElement('i').setAttributes({ class: 'fa-filter fa-solid' }).appendTo(filtersBtn)
-
-    let toggleEditMode = () => {
-        editMode = !editMode
-        filterMode = false
-
-        allClothes.forEach(({ container, checkbox }) => {
-            editMode
-                ? container.removeEventListener('click', container.itemClickHandler)
-                : container.addEventListener('click', container.itemClickHandler)
-
-            setDisplay([checkbox, deleteButton], editMode ? 'block' : 'none')
-        })
-
-        filtersBtn.disabled = editMode
-    }
 
     let toggleFilterMode = () => {
         filterMode = !filterMode
-        editMode = false
 
         let filtersDisplay = document.querySelector('.filters')
 
         if (!filtersDisplay) {
             renderFilters(wardrobeHeader, clothingList, (filteredItems) => {
                 clothingList.innerHTML = ''
-                filteredItems.forEach(e => renderClothingItem({ clothingFormContainer: clothingFormContainer, appendTo: clothingList, data: [e] }))
-                console.log(filteredItems);
+
+                filteredItems
+                    .sort((a, b) => b.wear_count - a.wear_count)
+                    .forEach(e => renderClothingItem({ clothingFormContainer: clothingFormContainer, appendTo: clothingList, data: [e] }))
             })
             filtersDisplay = document.querySelector('.filters');
         }
@@ -599,38 +582,15 @@ async function renderWardrobe(settings = null) {
 
             } else {
                 filtersDisplay.classList.remove('expanded');
-                setDisplay([clothingList, wardrobeHeader], 'grid')
+                setDisplay([clothingList], 'grid')
+                setDisplay([wardrobeHeader], 'flex')
             }
 
             setDisplay([filtersDisplay], filterMode ? 'block' : 'none')
         }
-        editWardrobe.disabled = filterMode
     }
 
-    editWardrobe.addEventListener('click', toggleEditMode);
     filtersBtn.addEventListener('click', toggleFilterMode);
-
-    deleteButton.addEventListener('click', async () => {
-
-        let selectedClothesCheckbox = allClothes.filter(({ checkbox }) => checkbox.checked)
-
-        if (selectedClothesCheckbox.length === 0) {
-            alert('No items selected.')
-            return
-        }
-
-        let clothesIdFromCheckbox = selectedClothesCheckbox.map(({ id }) => id)
-        allClothes = await wardrobeManager.deleteItems(clothesIdFromCheckbox, selectedClothesCheckbox, allClothes)
-        editMode = false
-
-        allClothes.forEach(({ container, checkbox }) => {
-            container.addEventListener('click', container.itemClickHandler)
-            setDisplay([checkbox], 'none')
-        })
-
-        setDisplay([clothingFormContainer, deleteButton], 'none')
-        setDisplay([clothingList], 'grid')
-    })
 }
 
 let clothesPlaceholder = (appendTo) => {
