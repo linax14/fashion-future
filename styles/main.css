@@ -528,19 +528,6 @@ li {
     gap: var(--gap-2);
 }
 
-.body-block {
-    display: block;
-    position: absolute;
-    width: 100vw;
-    height: 100vh;
-    background-color: rgba(30, 30, 30, 0.9);
-    overflow: hidden;
-}
-
-body>:has(.body-block) div#calendar {
-    overflow: hidden;
-}
-
 .fade-out {
     transition: opacity 1s ease-out;
     opacity: 0;

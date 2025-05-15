@@ -11,6 +11,7 @@ let displayInDashboard = async (type) => {
     let personality = document.querySelector('.chart-container')
     let locked = document.querySelector('.locked-state')
     let motivation = document.querySelector('#motivation')
+    let points = document.querySelector('#points-container')
 
     let header = document.querySelector('.header')
     let sideNav = document.querySelector('.top-nav')
@@ -23,13 +24,14 @@ let displayInDashboard = async (type) => {
             if (personality) setDisplay([personality], 'none')
             if (locked) setDisplay([locked], 'none')
             if (motivation) setDisplay([motivation], 'none')
+            if (points) setDisplay([points], 'none')
 
             quizContainer.style.gridColumn = 'span 12'
             setDisplay([quizContainer], 'flex')
             break;
 
         case 'dash':
-            if (streakContainer) setDisplay([streakContainer], 'block')
+            if (streakContainer) setDisplay([streakContainer], 'flex')
             if (sustainabilityTips) setDisplay([sustainabilityTips], 'flex')
 
             if (quizContainer) {
@@ -38,9 +40,10 @@ let displayInDashboard = async (type) => {
             }
             if (challengeContainer) setDisplay([challengeContainer], 'flex')
             if (locked) setDisplay([locked], 'flex')
-            if (personality) setDisplay([personality], 'block')
+            if (personality) setDisplay([personality], 'grid')
             if (header) setDisplay([header], 'flex')
             if (motivation) setDisplay([motivation], 'flex')
+            if (points) setDisplay([points], 'flex')
 
             break;
 
@@ -61,7 +64,7 @@ async function renderDashboard(user) {
 
     //from global.js
     let day = date.getDate()
-    let today = `${year}-${month + 1}-${day}`
+    let today = `${year}-${month}-7`
 
     localStorageReset(today)
 
@@ -686,17 +689,15 @@ function personalityChart(appendTo, data, personality) {
     }).setText(`Learn more`).appendTo(container)
 
 
-    renderPoints(appendTo, data)
+    renderPointsContainer(appendTo, data)
 }
 
-function renderPoints(appendTo, data) {
+function renderPointsContainer(appendTo, data) {
     let pointsContainer = new CreateElement('div').setAttributes({ class: 'chart-container dashboard-card', id: 'points-container' }).appendTo(appendTo)
 
     let icon = new CreateElement('i').setAttributes({ class: `fa-solid fa-seedling` }).appendTo(pointsContainer)
     let span = new CreateElement('span').setText(`${capitalise(months[month])} points`).setAttributes({ class: 'main' }).appendTo(pointsContainer)
     let viewPoints = new CreateElement('button').setAttributes({ class: 'btn' }).setText(`Reveal scores`).appendTo(span)
-
-    console.log(months[month]);
 
     let ctx = new CreateElement('canvas').setAttributes({ class: 'chart' }).appendTo(pointsContainer)
     ctx.style.display = 'none'

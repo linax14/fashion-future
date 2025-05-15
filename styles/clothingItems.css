@@ -275,8 +275,6 @@
     width: 34px;
     height: auto;
     filter: invert();
-    border: 1px solid var(--bs-border-subtle);
-    border-radius: var(--bs-border-radius-lg);
 }
 
 [data-bs-theme='earthy'] .form-group.wash .element img.care-label,
@@ -294,11 +292,20 @@
     filter: none;
 }
 
-.form-group.wash .element.selected img.care-label,
-.form-group.bleach .element.selected img.care-label,
-.form-group.tumble_dry .element.selected img.care-label,
-.form-group.natural_dry .element.selected img.care-label,
-.form-group.iron .element.selected img.care-label {
+.form-group.wash .element,
+.form-group.bleach .element,
+.form-group.tumble_dry .element,
+.form-group.natural_dry .element,
+.form-group.iron .element {
+    border: 1px solid var(--bs-border-subtle);
+    border-radius: var(--bs-border-radius-lg);
+}
+
+.form-group.wash .element.selected,
+.form-group.bleach .element.selected,
+.form-group.tumble_dry .element.selected,
+.form-group.natural_dry .element.selected,
+.form-group.iron .element.selected {
     border: 1px solid var(--bs-secondary-text-emphasis);
 }
 

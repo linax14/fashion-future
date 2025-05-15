@@ -1,4 +1,5 @@
 async function renderQuiz(currentQuiz, challengeDate, container, complete = false, handleQuiz) {
+    await displayInDashboard('quiz')
 
     let main = await quizLayout(container)
 
@@ -14,10 +15,10 @@ async function renderQuiz(currentQuiz, challengeDate, container, complete = fals
 
     let { progress } = await getUserData(challengeDate, 'questions')
 
-    quizContent(currentQuiz, main, container, groupedQuestionsAnswers, progress, challengeDate)
+    await quizContent(currentQuiz, main, container, groupedQuestionsAnswers, progress, challengeDate)
 }
 
-function quizContent(currentQuiz, main, container, groupedQuestionsAnswers, progress, challengeDate) {
+async function quizContent(currentQuiz, main, container, groupedQuestionsAnswers, progress, challengeDate) {
     let totalQuestions = currentQuiz.length
     let answeredQuestions = 0
     let score = 0
@@ -44,7 +45,7 @@ function quizContent(currentQuiz, main, container, groupedQuestionsAnswers, prog
 
             let answerUI = new CreateElement('p').setText(answer.answer).appendTo(questionGroup)
             if (answer.is_correct) answerUI.classList.add('correct-answer')
-            answerUI.addEventListener('click', async function handleAnswer() {
+            answerUI.addEventListener('click', async () => {
 
                 if (question.answered) return
                 question.answered = true
@@ -60,7 +61,6 @@ function quizContent(currentQuiz, main, container, groupedQuestionsAnswers, prog
                 if (isNaN(update.correctAnswers)) update.correctAnswers = 0
 
                 if (answer.is_correct == true) {
-                    console.log('correct')
                     score++
                     if (update) {
                         update.attempts += 1
@@ -73,7 +73,6 @@ function quizContent(currentQuiz, main, container, groupedQuestionsAnswers, prog
 
 
                 } else {
-                    console.log(`u'll get it next time`)
                     if (update) {
                         update.attempts += 1
                     }
@@ -141,12 +140,12 @@ async function quizLayout(container) {
 
 async function getQuiz(user, dateInfo, appendTo) {
 
-    let calendarData = await selectUserTable(window.user, 'user_calendar')
+    let calendarData = await selectUserTable(user, 'user_calendar')
     let [year, month, day] = dateInfo.split('-')
     let currentMonth = months[month - 1].toLowerCase()
     let header
 
-    let quiz
+    let quiz = new CreateElement('div').setAttributes({ class: 'dashboard-card', id: 'quiz-container' }).appendTo(appendTo)
 
     for (const element of calendarData) {
         if (element.year == year) {
@@ -160,7 +159,7 @@ async function getQuiz(user, dateInfo, appendTo) {
                 let expandQuiz = async () => {
                     localStorage.setItem('targetQuiz', JSON.stringify(target.quiz));
                     localStorage.setItem('dateInfo', `${dateInfo}`);
-                    await renderQuiz(target.quiz, dateInfo, quiz, expandQuiz)
+                    await renderQuiz(target.quiz, dateInfo, quiz, false, expandQuiz)
                     quiz.classList.toggle('expanded')
                     setDisplay([header], 'none')
                 }
@@ -171,7 +170,6 @@ async function getQuiz(user, dateInfo, appendTo) {
                 }
 
                 let sessionCompleted = localStorage.getItem(`quiz_${dateInfo}_completed`)
-                quiz = new CreateElement('div').setAttributes({ class: 'dashboard-card', id: 'quiz-container' }).appendTo(appendTo)
                 header = new CreateElement('div').setAttributes({ class: 'header' }).addEventListener('click', expandQuiz).appendTo(quiz)
                 new CreateElement('i').setAttributes({ class: 'fa-solid fa-dice' }).appendTo(header)
                 let main = new CreateElement('span').setAttributes({ class: 'main' }).setText('Quiz time').appendTo(header)

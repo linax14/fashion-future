@@ -227,7 +227,7 @@ class RenderClothing {
         }
 
         this.createCheckbox(container)
-        if (hasCareInstructions == false) new CreateElement('li').setText(`You haven't added any care information yet`).appendTo(ol)
+        if (hasCareInstructions == false) new CreateElement('li').setText(`No care information`).appendTo(ol)
 
         return { container, checkbox: container.querySelector('.wardrobe-checkbox'), itemClickHandler, id: this.element.id }
     }

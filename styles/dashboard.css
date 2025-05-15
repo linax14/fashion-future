@@ -237,6 +237,10 @@ span.details {
     border-radius: var(--bs-border-radius-sm);
 }
 
+#quiz-container button {
+    margin-bottom: 11vh;
+}
+
 .close {
     background-color: transparent !important;
     border: none;
