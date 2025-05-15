@@ -1,0 +1,418 @@
+#calendar {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    flex-direction: column;
+    margin-bottom: 11vh;
+    gap: var(--gap-2);
+    overflow: scroll;
+}
+
+.calendar-info {
+    display: block;
+    margin-bottom: var(--p-4);
+    grid-column: span 2;
+}
+
+.month.header {
+    color: var(--bs-secondary-bg);
+    display: flex;
+    flex-direction: row;
+    gap: var(--gap-2);
+    overflow: scroll;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    white-space: nowrap;
+    margin-top: var(--p-2);
+}
+
+::-webkit-scrollbar {
+    display: none;
+}
+
+.month .item {
+    margin-top: 0;
+    margin-bottom: var(--p-2);
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.month .item.current {
+    color: var(--bs-secondary-text-emphasis);
+}
+
+[data-bs-theme='light'] .month .item,
+[data-bs-theme='earthy'] .month .item {
+    color: #0e0e0eb0;
+}
+
+[data-bs-theme='light'] .month .item.current,
+[data-bs-theme='earthy'] .month .item.current {
+    color: #0e0e0e;
+}
+
+[data-bs-theme='dark'] .month .item {
+    color: #9c9c9cb0;
+}
+
+[data-bs-theme='dark'] .month .item.current {
+    color: #ffffff;
+}
+
+
+.week-scroll-wrapper {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    width: 100%;
+    white-space: nowrap;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.days-container {
+    display: flex;
+    gap: var(--gap-1);
+}
+
+.day-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    scroll-snap-align: start;
+    border: 1px solid var(--bs-secondary-text-emphasis-focus);
+    border-radius: var(--bs-border-radius-lg);
+    padding-top: 10px;
+}
+
+.day-container.sunday {
+    background-color: var(--focus-color);
+}
+
+.days-container .day-container.selected {
+    margin-left: 5px;
+    margin-right: 5px;
+}
+
+.day-container.selected {
+    background-color: var(--bs-success-border-subtle);
+    border-color: var(--bs-secondary-text-emphasis-focus);
+    scale: 1.1;
+}
+
+.day-header {
+    /* font-weight: bold; */
+    color: var(--bs-secondary-text-emphasis);
+}
+
+.day {
+    width: 50px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.outfits-container {
+    border-radius: var(--bs-border-radius-lg);
+}
+
+.outfits-container h2 {
+    text-transform: uppercase;
+    margin-bottom: 2px;
+}
+
+.nav-modal .create-outfit-btn,
+.nav-modal .add-care-btn {
+    display: flex;
+    justify-content: start;
+    align-items: center;
+    position: relative;
+    gap: var(--gap-4);
+    flex-direction: row-reverse;
+    padding-left: var(--padding-small);
+}
+
+[data-bs-theme='dark'] .nav-modal .create-outfit-btn img {
+    filter: none;
+}
+
+[data-bs-theme='earthy'] .nav-modal .create-outfit-btn img,
+[data-bs-theme='light'] .nav-modal .create-outfit-btn img {
+    filter: invert();
+}
+
+.nav-modal .create-outfit-btn img,
+.nav-modal .add-care-btn img {
+    width: 20px;
+    opacity: 0.8;
+}
+
+[data-bs-theme='dark'] .nav-modal .add-care-btn img {
+    filter: invert();
+}
+
+[data-bs-theme='earthy'] .nav-modal .add-care-btn img,
+[data-bs-theme='light'] .nav-modal .add-care-btn img {
+    filter: none;
+}
+
+.nav-modal .create-outfit-btn p,
+.nav-modal .add-care-btn p {
+    text-align: center;
+    text-transform: uppercase;
+    text-decoration: underline;
+    margin-top: 2px;
+    margin-bottom: 0;
+}
+
+.nav-modal .btn {
+    padding: var(--p-0);
+    padding-left: var(--padding-small);
+}
+
+.nav-modal .btn:hover {
+    opacity: 0.9;
+}
+
+.outfit {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    border-top: 1px solid var(--bs-secondary-bg);
+    border-bottom: 1px solid var(--bs-secondary-bg);
+    border-radius: var(--bs-border-radius-lg);
+    overflow: hidden;
+    min-height: 100px;
+    height: 20vh;
+    align-items: center;
+    margin: var(--p-1);
+}
+
+.outfit img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.outfit .image.fallback {
+    width: 50vw;
+    height: 100%;
+    object-fit: contain;
+}
+
+.planner-section-heading {
+    padding-left: var(--p-2);
+}
+
+#calendar section {
+    margin-bottom: var(--p-3);
+    padding-bottom: var(--p-3);
+    grid-column: span 2;
+}
+
+#calendar section h4 {
+    border-bottom: 1px solid var(--bs-secondary-bg);
+    padding-bottom: var(--p-3);
+}
+
+.close {
+    background-color: transparent !important;
+    border: none;
+    color: #aaa;
+    float: right;
+    font-size: 30px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* .submit.btn {
+    position: absolute;
+    float: right;
+    bottom: 10vh;
+    right: 5vw;
+} */
+
+/* filters */
+.filters-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.filters-container h4 {
+    padding-bottom: 0;
+    margin-bottom: 0;
+}
+
+.filters {
+    display: none;
+    height: 0;
+}
+
+.filters {
+    display: block;
+    height: 80%;
+    overflow-y: scroll;
+}
+
+.filters .submit.btn {
+    position: initial;
+}
+
+.open {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.filters .form-group span label {
+    align-content: center;
+    font-size: var(--font-size-label);
+    font-variant: small-caps;
+    font-weight: var(--font-weight-label);
+}
+
+.open:hover,
+.open:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+#quiz-container {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    position: relative;
+    background-color: var(--focus-color);
+    border-radius: var(--bs-border-radius-lg);
+    padding: var(--padding-main);
+    gap: var(--gap-4);
+}
+
+.care-event-container {
+    display: flex;
+    flex-direction: column;
+    height: 80vh;
+    overflow-y: scroll;
+    margin-bottom: 11vh;
+}
+
+.care-event-container form {
+    margin-top: 3vh;
+}
+
+.care-event-container-items {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-1)
+}
+
+.care-event-container-items .outfit {
+    overflow: scroll;
+    margin: var(--p-0);
+}
+
+.care-event-container .close {
+    margin-left: auto;
+}
+
+.care-event-container h3 {
+    margin-top: 0;
+    padding-top: 0;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.care-event-container p {
+    margin-top: 0;
+    padding-top: 0;
+}
+
+.care-event-container .submit {
+    display: block;
+    margin-left: auto;
+    margin-top: var(--p-5);
+}
+
+#care-form {
+    margin-top: 0;
+    padding-top: 0;
+}
+
+.modal#challenge-fail {
+    top: 25vh;
+}
+
+@media (min-width:768px) and (max-width:1023px) {
+
+    .calendar-info {
+        grid-column: span 2;
+    }
+
+    #calendar section {
+        grid-column: span 1;
+    }
+
+    .month.header {
+        justify-content: center;
+    }
+
+    .outfit .image.fallback {
+        width: auto;
+    }
+
+    .clothing-list {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .clothing-list>h4:first-child {
+        grid-column: span 4;
+    }
+
+    .form-group {
+        grid-template-columns: repeat(6, 1fr);
+    }
+
+    .form-group>:first-child {
+        grid-column: span 3;
+    }
+}
+
+@media (min-width:1024px) {
+    .calendar-info {
+        grid-column: span 2;
+    }
+
+    #calendar section {
+        grid-column: span 1;
+        width: 48vw;
+    }
+
+    .month.header {
+        justify-content: center;
+    }
+
+    .clothing-list {
+        grid-template-columns: repeat(6, 1fr);
+    }
+
+    .clothing-list>h4:first-child {
+        grid-column: span 6;
+    }
+
+    .form-group {
+        grid-template-columns: repeat(6, 1fr);
+    }
+
+    .form-group>:first-child {
+        grid-column: span 3;
+    }
+}

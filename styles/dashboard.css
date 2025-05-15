@@ -1,0 +1,412 @@
+.dashboard {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: var(--gap-2);
+    margin-top: var(--p-3);
+    overflow: scroll;
+    margin-bottom: 11vh;
+}
+
+.dashboard-card {
+    display: flex;
+    flex-direction: column;
+    border-radius: var(--bs-border-radius-lg);
+    border: 1px solid var(--bs-border-subtle);
+    padding: var(--p-3);
+    justify-content: center;
+}
+
+span.main {
+    font-weight: 700;
+    font-size: 1.4rem;
+}
+
+span.details {
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.dashboard-card h3 {
+    padding-bottom: 0;
+    padding-top: 0;
+    margin: 0 0 var(--p-2);
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.dashboard-card p {
+    margin: 0;
+    padding: 0;
+}
+
+#outfit-streak {
+    grid-column: span 6;
+    grid-row: span 4;
+    display: flex;
+}
+
+#sustainability-tips-container {
+    grid-column: span 8;
+    grid-row: span 4;
+}
+
+#sustainability-tips-container .details {
+    text-transform: none;
+}
+
+#challenge-container {
+    grid-column: span 12;
+    grid-row: span 3;
+}
+
+.chart-container {
+    grid-column: span 12;
+}
+
+.locked-state {
+    grid-column: span 12;
+
+}
+
+#motivation {
+    grid-column: span 6;
+    grid-row: span 4;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+}
+
+#motivation i {
+    grid-column: span 1;
+    grid-row: span 4;
+    font-size: 40px;
+    color: var(--bs-secondary-text-emphasis-focus);
+    order: 2;
+    display: flex;
+    justify-content: center;
+}
+
+#motivation span.main {
+    order: 1;
+}
+
+.dashboard-card#challenge-container h3 {
+    gap: var(--gap-4);
+}
+
+.dashboard-card#sustainability-tips-container p {
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.dashboard-card#challenge-container p,
+.dashboard-card#chart-container p {
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.dashboard-card button {
+    margin-top: var(--p-3);
+    margin-bottom: var(--p-3);
+}
+
+#quiz-container {
+    display: flex;
+    flex-direction: row;
+    grid-column: span 4;
+    grid-row: span 4;
+}
+
+#quiz-container i {
+    font-size: 40px;
+    color: var(--bs-secondary-text-emphasis-focus);
+    align-self: center;
+    padding-bottom: var(--p-4);
+}
+
+#quiz-container.expanded {
+    grid-column: span 12;
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+    height: 89vh;
+    background-color: transparent;
+    padding: var(--p-0);
+    transition: all 0.3s;
+    border: none;
+    transform: translateY(-1%);
+    padding-left: var(--p-3);
+    padding-right: var(--p-3);
+    overflow: hidden;
+}
+
+#quiz-container .header,
+#quiz-container .quiz,
+#quiz-container .questions-group {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+#quiz-container p {
+    margin: var(--p-0);
+}
+
+#quiz-container.expanded .close {
+    margin-left: auto;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+#quiz-container .quiz,
+#quiz-container .questions-group {
+    height: 84%;
+}
+
+#quiz-container .questions-container h3 {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--p-2);
+    padding-bottom: var(--p-2);
+}
+
+#quiz-container .questions-container .wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 40vh;
+    height: 80vh;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    scroll-snap-type: y mandatory;
+}
+
+#quiz-container .questions-container .question-group {
+    scroll-snap-align: start;
+}
+
+#quiz-container .question-group h4 {
+    margin-bottom: var(--p-4);
+    padding-bottom: var(--p-4);
+    padding-top: var(--p-4);
+}
+
+#quiz-container .question-group p {
+    border-bottom: 1px solid var(--bs-secondary-text-emphasis-focus);
+    padding-top: var(--padding-small);
+    padding-bottom: var(--padding-small);
+    display: flex;
+    gap: var(--gap-2);
+    justify-content: space-between;
+    align-items: center;
+}
+
+#quiz-container .question-group i {
+    font-size: 18px;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+#quiz-container .question-group p.incorrect i {
+    color: var(--bs-danger-text-emphasis);
+}
+
+#quiz-container .question-group p.correct i {
+    color: var(--bs-success-text-emphasis);
+}
+
+#quiz-container .question-group p:first-of-type {
+    border-top: 1px solid var(--bs-secondary-text-emphasis-focus);
+}
+
+#quiz-container .question-group:last-child {
+    margin-bottom: 50vh;
+}
+
+#quiz-container .progress {
+    margin-bottom: var(--p-3);
+    border-radius: var(--bs-border-radius-lg);
+    height: 20px;
+    border: 1px solid var(--bs-success-text-emphasis);
+    background-color: var(--bs-progress-bg) !important;
+}
+
+#quiz-container .progress-bar {
+    height: 20px;
+    background-color: var(--bs-success-text-emphasis);
+    border-radius: var(--bs-border-radius-sm);
+}
+
+.close {
+    background-color: transparent !important;
+    border: none;
+    color: #aaa;
+    float: right;
+    font-size: 30px;
+    font-weight: bold;
+}
+
+[data-bs-theme='dark'] #challenge-container img {
+    filter: invert();
+    width: 20px;
+    opacity: 0.8;
+}
+
+[data-bs-theme='earthy'] #challenge-container img,
+[data-bs-theme='light'] #challenge-container img {
+    filter: none;
+    width: 20px;
+    opacity: 0.8;
+}
+
+#challenge-container span.main {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: var(--p-2);
+}
+
+.chart-container {
+    grid-column: span 12;
+    height: min-content;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.chart-container span.main {
+    grid-column: span 2;
+    order: 1;
+}
+
+.chart-container>span:nth-child(2) {
+    grid-column: span 4;
+    color: var(--bs-secondary-text-emphasis-focus);
+    padding-bottom: var(--p-2);
+    order: 3;
+}
+
+.chart-container>p {
+    grid-column: span 4;
+    color: var(--bs-text-color);
+    order: 4;
+    padding-bottom: var(--p-2);
+}
+
+.chart-container #learn-more,
+.chart-container i {
+    grid-column: span 2;
+    order: 5;
+}
+
+.chart-container #learn-more {
+    grid-row: span 1;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    font-size: small;
+    padding: 0;
+    color: var(--bs-secondary-text-emphasis-focus);
+
+    grid-column: span 2;
+    grid-row: span 1;
+    width: max-content;
+}
+
+.chart-container i {
+    font-size: 80px;
+    grid-row: span 4;
+    grid-column: span 2;
+    align-self: center;
+    justify-self: center;
+    color: var(--bs-secondary-text-emphasis-focus);
+    order: 2;
+
+}
+
+.chart-container#points-container {
+    grid-column: span 12;
+    height: min-content;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.chart-container#points-container .btn {
+    background-color: transparent;
+    padding: 0;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    font-size: small;
+    color: var(--bs-secondary-text-emphasis-focus);
+    width: max-content;
+    margin-left: auto;
+    align-self: end;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.chart-container#points-container span.main {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-2);
+}
+
+.chart-container#points-container span.main {
+    color: var(--bs-text-color);
+}
+
+.chart-container#points-container i {
+    order: 0;
+    align-self: start;
+    justify-content: center;
+    font-size: 50px;
+}
+
+.chart-container.points-column#points-container {
+    display: flex;
+    flex-direction: column-reverse;
+}
+
+.locked-state {
+    min-height: min-content;
+    flex-direction: row-reverse;
+    gap: var(--gap-2);
+    align-items: end;
+}
+
+.locked-state span.details {
+    text-transform: none;
+}
+
+.locked-state div {
+    width: 80%;
+}
+
+.locked-state div span.main,
+.locked-state div span.details {
+    color: var(--bs-text-color);
+}
+
+.locked-state i {
+    display: flex;
+    justify-content: end;
+    margin-left: auto;
+    width: 20%;
+}
+
+.locked-state .locked-link,
+.locked-state span {
+    margin-top: var(--p-1);
+    color: var(--bs-secondary-text-emphasis-focus);
+}
+
+.locked-state p span {
+    display: inline-block;
+    margin-top: var(--p-2);
+    margin-bottom: var(--p-2);
+}
+
+.locked-state i.fa-solid.fa-lock {
+    padding-left: var(--p-1);
+    font-size: 40px;
+    color: var(--bs-secondary-text-emphasis-focus);
+}

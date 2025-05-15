@@ -1,0 +1,106 @@
+.settings {
+    padding: var(--p-3);
+    display: flex;
+    gap: var(--gap-2);
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border-radius: var(--bs-border-radius-lg);
+}
+
+.settings form {
+    display: flex;
+    gap: var(--gap-3);
+    flex-direction: column;
+}
+
+.settings form div {
+    border-bottom: 1px solid var(--bs-secondary-bg);
+    display: flex;
+    align-items: center;
+}
+
+.settings form div label {
+    width: 30vw;
+    margin-left: var(--p-2);
+}
+
+.settings form div input {
+    width: 70vw;
+}
+
+.settings h3 {
+    width: 88vw;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.settings h3 span button {
+    background-color: transparent;
+    padding: var(--p-1);
+
+}
+
+.settings h3 span button:hover {
+    background-color: transparent;
+}
+
+
+.settings h3 span.active {
+    border-bottom: 1px solid grey;
+}
+
+.user-details {
+    background-color: var(--focus-color);
+}
+
+.user-data {
+    display: flex;
+    gap: var(--gap-2);
+    flex-direction: column;
+    justify-content: center;
+    /* border-radius: var(--bs-border-radius-lg); */
+    margin-bottom: 2vh;
+    width: 90vw;
+}
+
+.user-data form input::after {
+    box-shadow: 1px 1px 2px var(--bs-secondary-bg), -1px -1px 2px var(--bs-body-bg);
+    border: 1px solid var(--bs-body-bg);
+    border-radius: var(--bs-border-radius-lg);
+    background-color: transparent;
+}
+
+.user-data form input::before {
+    box-shadow: none;
+    border: none;
+    /* border-radius: var(--bs-border-radius-lg); */
+    background-color: transparent;
+}
+
+input[type="text"],
+input[type="date"],
+input[type="email"] {
+    background-color: var(--bs-body-bg);
+    border: 1px solid var(--bs-body-bg);
+    /* border-radius: var(--bs-border-radius-lg); */
+    border-radius: 0;
+}
+
+#delete-account-btn {
+    background-color: transparent;
+    padding: var(--p-0);
+    text-decoration: underline;
+    text-underline-offset: var(--p-1);
+    margin-right: auto;
+}
+
+input::after {
+    border: 1px solid var(--bs-body-bg);
+}
+
+select {
+    padding: var(--padding-btn);
+}
