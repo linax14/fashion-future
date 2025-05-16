@@ -503,9 +503,7 @@ async function updateClothingItem(itemId, formContainer, clothingFormContainer, 
         )
 
         if (fromChallenge == true) {
-            let challengeAction = JSON.parse(localStorage.getItem('challengeAction'))
-            await updatePoints(['discipline', 'style'], challengeAction.dateInfo)
-            completeChallenge()
+            completeChallenge(['discipline', 'style'])
         } else {
             displayInHome('wardrobe')
             await renderWardrobe()
