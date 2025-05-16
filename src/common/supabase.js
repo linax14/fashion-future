@@ -428,7 +428,7 @@ async function renderPoints(text) {
         setTimeout(() => {
             div.remove()
         }, 1000);
-    }, 4000);
+    }, 3000);
 
     return div
 }

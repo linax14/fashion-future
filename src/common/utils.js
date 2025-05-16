@@ -257,11 +257,18 @@ async function completeChallenge(points = false) {
         }))
 
         localStorage.removeItem('challengeAction')
-        window.location.href = './public/dashboard.html'
-    }
 
-    if (points) {
-        updatePoints(points, challenge.dateInfo)
+        if (points) {
+            await updatePoints(points, challenge.dateInfo)
+            setTimeout(() => {
+                window.location.href = './public/dashboard.html'
+            }, 3000);
+        } else {
+            window.location.href = './public/dashboard.html'
+        }
+
+
+
     }
 }
 
