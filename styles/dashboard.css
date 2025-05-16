@@ -294,6 +294,9 @@ span.details {
     color: var(--bs-text-color);
     order: 4;
     padding-bottom: var(--p-2);
+    gap: var(--gap-1);
+    display: flex;
+    flex-direction: column;
 }
 
 .chart-container #learn-more,

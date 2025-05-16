@@ -42,7 +42,7 @@ let displayInDashboard = async (type) => {
             if (locked) setDisplay([locked], 'flex')
             if (personality) setDisplay([personality], 'grid')
             if (header) setDisplay([header], 'flex')
-            if (motivation) setDisplay([motivation], 'flex')
+            if (motivation) setDisplay([motivation], 'grid')
             if (points) setDisplay([points], 'flex')
 
             break;
@@ -64,7 +64,7 @@ async function renderDashboard(user) {
 
     //from global.js
     let day = date.getDate()
-    let today = `${year}-${month}-7`
+    let today = `${year}-${month+1}-${day}`
 
     localStorageReset(today)
 
@@ -599,27 +599,28 @@ async function generatePersonality(appendTo) {
     let personalityTypes = {
         alchemist: {
             order: ['knowledge', 'mastery', 'discipline', 'curiosity', 'style'],
-            description: `Seeker of patterns and pursuer of precision.<br>
-            You engage deeply — completing quizzes and aiming for that 100%.<br>This reflects your thoughtful,
-            introspective style and drive to truly understand and master what interests you.`,
+            description: `<span>Seeker of patterns and pursuer of precision.</span>
+            <span>You engage deeply — completing quizzes and aiming for that 100%.</span>
+            <span>This reflects your thoughtful,introspective style and drive to truly understand and master what interests you.</span>`,
             icon: 'fa-solid fa-flask'
         },
         nomad: {
-            uniform: true, description: `A wanderer at heart.<br>You explore many things but rarely stick to just one.<br>
-            Your journey is spontaneous and open ended - it is marked by bursts of curiosity and experimentation.<br>
-            This openness and curiosity are part of what make your journey unique.` },
+            uniform: true, 
+            description: `<span>A wanderer at heart.</span><span>You explore many things but rarely stick to just one.
+            Your journey is spontaneous and open ended - it is marked by bursts of curiosity and experimentation.</span>
+           <span>This openness and curiosity are part of what make your journey unique.</span>` },
         icon: 'fa-solid fa-mountain-sun',
         curator: {
             order: ['style', 'mastery', 'knowledge', 'discipline', 'curiosity',],
-            description: `A visual storyteller and expressive thinker.<br>You treat your wardrobe like an evolving gallery -
-            logging outfits regularly and curating your look with care.<br>Style is more than appearance; it is your way of showing up with intention and flair.`,
+            description: `</span>A visual storyteller and expressive thinker.</span><span>You treat your wardrobe like an evolving gallery -
+            logging outfits regularly and curating your look with care.</span><span>Style is more than appearance; it is your way of showing up with intention and flair.</span>`,
             icon: 'fa-solid fa-image'
         },
         strategist: {
             order: ['curiosity', 'knowledge', 'mastery', 'style', 'discipline',],
-            description: `Focused, intentional, and results-oriented.<br>
-            You show up with a plan — completing challenges with purpose, valuing structure, 
-            and blending discipline with curiosity.<br>Your process is intentional and your results speak for themselves.`,
+            description: `<span>Focused, intentional, and results-oriented.</span>
+            <span>You show up with a plan — completing challenges with purpose, valuing structure, 
+            and blending discipline with curiosity.</span><span>Your process is intentional and your results speak for themselves.</span>`,
             icon: 'fa-solid fa-chess'
         }
     }
@@ -674,7 +675,7 @@ function personalityChart(appendTo, data, personality) {
     let learn = new CreateElement('span').setAttributes({ id: 'learn-more' }).addEventListener('click', () => {
         isVisible = !isVisible
         if (isVisible) {
-            setDisplay([description], 'block')
+            setDisplay([description], 'flex')
             learn.innerText = 'Show less'
             // setDisplay([icon], 'none')
         } else {
@@ -696,8 +697,8 @@ function renderPointsContainer(appendTo, data) {
     let pointsContainer = new CreateElement('div').setAttributes({ class: 'chart-container dashboard-card', id: 'points-container' }).appendTo(appendTo)
 
     let icon = new CreateElement('i').setAttributes({ class: `fa-solid fa-seedling` }).appendTo(pointsContainer)
-    let span = new CreateElement('span').setText(`${capitalise(months[month])} points`).setAttributes({ class: 'main' }).appendTo(pointsContainer)
-    let viewPoints = new CreateElement('button').setAttributes({ class: 'btn' }).setText(`Reveal scores`).appendTo(span)
+    let span = new CreateElement('span').setText(`${capitalise(months[month])} Scores`).setAttributes({ class: 'main' }).appendTo(pointsContainer)
+    let viewPoints = new CreateElement('button').setAttributes({ class: 'btn' }).setText(`Reveal`).appendTo(span)
 
     let ctx = new CreateElement('canvas').setAttributes({ class: 'chart' }).appendTo(pointsContainer)
     ctx.style.display = 'none'
@@ -712,7 +713,7 @@ function renderPointsContainer(appendTo, data) {
             pointsContainer.classList.remove('points-column')
             ctx.style.display = 'none'
             setDisplay([icon], 'flex')
-            viewPoints.innerText = 'Reveal Scores'
+            viewPoints.innerText = 'Reveal'
         }
 
     })
