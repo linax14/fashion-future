@@ -381,13 +381,12 @@ let addMode = async (itemsToAdd, createOutfitDate, submitBtn, challengeExtras) =
         if (challengeExtras) {
             for (let item of challengeExtras) {
                 if (itemsToAdd.includes(item.id)) {
-                    await updatePoints(['curiosity', 'style'], createOutfitDate)
-                    await completeChallenge()
+                    await completeChallenge(['curiosity', 'style'])
                 } else {
                     let confirmed = await confirmBox({
                         title: 'Challenge Fail',
-                        text: `You did not select a challenge item, if you save the outfit you will not gain challenge points and you will not be able to redo the challenge today`,
-                        save: 'Save', dismiss: 'Go back', modalId: 'challenge-fail'
+                        text: `To participate in the challenge and earn points, make sure to include a challenge item in your outfit. You can edit your selection now`,
+                        save: 'Save', dismiss: 'Edit', modalId: 'challenge-fail'
                     })
 
                     if (confirmed) {
@@ -400,8 +399,7 @@ let addMode = async (itemsToAdd, createOutfitDate, submitBtn, challengeExtras) =
                 }
             }
         } else {
-            updatePoints(['style', 'curiosity'], createOutfitDate)
-            completeChallenge()
+            completeChallenge(['style', 'curiosity'])
         }
 
         if (challengeFailed == false) {

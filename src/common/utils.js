@@ -244,7 +244,7 @@ async function getChallengeAction() {
     }
 }
 
-async function completeChallenge() {
+async function completeChallenge(points = false) {
 
     let challenge = JSON.parse(localStorage.getItem('challengeAction'))
     console.log(challenge);
@@ -258,6 +258,10 @@ async function completeChallenge() {
 
         localStorage.removeItem('challengeAction')
         window.location.href = './public/dashboard.html'
+    }
+
+    if (points) {
+        updatePoints(points, challenge.dateInfo)
     }
 }
 
