@@ -12,6 +12,7 @@ let displayInDashboard = async (type) => {
     let locked = document.querySelector('.locked-state')
     let motivation = document.querySelector('#motivation')
     let points = document.querySelector('#points-container')
+    let greeting = document.querySelector('#dashboard-greeting')
 
     let header = document.querySelector('.header')
     let sideNav = document.querySelector('.top-nav')
@@ -25,6 +26,7 @@ let displayInDashboard = async (type) => {
             if (locked) setDisplay([locked], 'none')
             if (motivation) setDisplay([motivation], 'none')
             if (points) setDisplay([points], 'none')
+            if (greeting) setDisplay([greeting], 'none')
 
             quizContainer.style.gridColumn = 'span 12'
             setDisplay([quizContainer], 'flex')
@@ -44,6 +46,7 @@ let displayInDashboard = async (type) => {
             if (header) setDisplay([header], 'flex')
             if (motivation) setDisplay([motivation], 'grid')
             if (points) setDisplay([points], 'flex')
+            if (greeting) setDisplay([greeting], 'block')
 
             break;
 
@@ -61,7 +64,7 @@ async function renderDashboard(user) {
     await displayInDashboard('dash')
     let main = new CreateElement('div').setAttributes({ class: 'dashboard' }).appendTo(document.body)
 
-    new CreateElement('h1').setText(`Good ${getTimePeriod()}, ${window.user.user_metadata.first_name} `).appendTo(main)
+    new CreateElement('h1').setAttributes({ id: 'dashboard-greeting' }).setText(`Good ${getTimePeriod()}, ${window.user.user_metadata.first_name} `).appendTo(main)
     //from global.js
     let day = date.getDate()
     let today = `${year}-${month + 1}-${day}`
