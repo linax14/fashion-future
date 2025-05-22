@@ -117,6 +117,11 @@
     border-radius: var(--bs-border-radius-lg);
 }
 
+.outfits-container h4.planner-section-heading {
+    padding-bottom: var(--p-2);
+    font-weight: 400;
+}
+
 .outfits-container h2 {
     text-transform: uppercase;
     margin-bottom: 2px;

@@ -405,7 +405,7 @@ async function generateClothingChallenge(clothingAttribute) {
         case 'category':
             challenge = {
                 id: `${challengeId}`,
-                title: `Wear More ${challengeData.leastWorn}`,
+                title: `Wear More ${capitalise(challengeData.leastWorn)}`,
                 details: `${capitalise(challengeData.leastWorn)} are the least worn in your wardrobe. Create an outfit that includes one of them.`,
                 target: "outfit",
                 event_type: "new_outfit",
