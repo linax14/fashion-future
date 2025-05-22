@@ -195,8 +195,7 @@
 }
 
 .outfit .image.fallback {
-    width: 50vw;
-    height: 100%;
+    width: 44vw;
     object-fit: contain;
 }
 

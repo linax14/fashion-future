@@ -5,6 +5,16 @@
     margin-top: var(--p-3);
     overflow: scroll;
     margin-bottom: 11vh;
+    margin-top: 0;
+}
+
+.dashboard>:first-child {
+    grid-column: span 12;
+    font-weight: 700;
+    font-size: 1.6rem;
+    padding-left: var(--p-1);
+    border-bottom: 1px solid var(--bs-border-subtle);
+    margin-top: var(--p-2);
 }
 
 .dashboard-card {
@@ -416,4 +426,67 @@ span.details {
     padding-left: var(--p-1);
     font-size: 40px;
     color: var(--bs-secondary-text-emphasis-focus);
+}
+
+@media (min-width:768px) and (max-width:1023px) {
+    /* #outfit-streak {} */
+
+}
+
+@media (min-width:1024px) {
+
+    #outfit-streak,
+    #motivation {
+        grid-column: span 2;
+        grid-row: span 4;
+        justify-content: center;
+        align-items: center;
+    }
+
+    #sustainability-tips-container,
+    #quiz-container {
+        grid-column: span 4;
+        grid-row: span 4;
+        align-items: center;
+    }
+
+    #quiz-container .header {
+        align-items: center;
+    }
+
+    #challenge-container,
+    .chart-container.dashboard-card,
+    .chart-container#points-container {
+        grid-column: span 4;
+        grid-row: span 6;
+    }
+
+    .chart-container#points-container {
+        height: auto;
+        align-items: center;
+    }
+
+    .chart-container#points-container i {
+        align-self: center;
+    }
+
+    .chart-container.dashboard-card {
+        display: flex;
+        justify-content: center;
+        gap: var(--gap-2);
+        height: auto;
+    }
+
+    #motivation {
+        display: flex !important;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-around;
+    }
+
+    #motivation span.main {
+        align-items: center;
+        display: flex;
+        grid-row: span 3;
+    }
 }

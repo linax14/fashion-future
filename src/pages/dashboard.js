@@ -57,14 +57,14 @@ let displayInDashboard = async (type) => {
             break;
     }
 }
-
 async function renderDashboard(user) {
     await displayInDashboard('dash')
     let main = new CreateElement('div').setAttributes({ class: 'dashboard' }).appendTo(document.body)
 
+    new CreateElement('h1').setText(`Good ${getTimePeriod()}, ${window.user.user_metadata.first_name} `).appendTo(main)
     //from global.js
     let day = date.getDate()
-    let today = `${year}-${month+1}-${day}`
+    let today = `${year}-${month + 1}-${day}`
 
     localStorageReset(today)
 
@@ -605,7 +605,7 @@ async function generatePersonality(appendTo) {
             icon: 'fa-solid fa-flask'
         },
         nomad: {
-            uniform: true, 
+            uniform: true,
             description: `<span>A wanderer at heart.</span><span>You explore many things but rarely stick to just one.
             Your journey is spontaneous and open ended - it is marked by bursts of curiosity and experimentation.</span>
            <span>This openness and curiosity are part of what make your journey unique.</span>` },
@@ -777,4 +777,21 @@ function renderPointsContainer(appendTo, data) {
     }
 
     new Chart(ctx, config)
+}
+
+let getTimePeriod = () => {
+    let hours = new Date().getHours()
+    let period
+
+    switch (true) {
+        case (hours >= 5 && hours < 12):
+            period = 'morning'
+            break
+        case (hours >= 12 && hours < 20):
+            period = 'afternoon'
+            break
+        default:
+            period = 'night'
+    }
+    return period
 }
