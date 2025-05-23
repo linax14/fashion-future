@@ -179,6 +179,7 @@ function renderSignUpForm() {
     let firstName = new CreateElement('input').setAttributes({ type: 'text', placeholder: 'First Name', required: true }).appendTo(signUpForm)
     let lastName = new CreateElement('input').setAttributes({ type: 'text', placeholder: 'Last Name', required: true }).appendTo(signUpForm)
     let birthdayInputDiv = new CreateElement('div').appendTo(signUpForm)
+    new CreateElement('label').setText('Birthdate').appendTo(birthdayInputDiv)
     let birthday = new CreateElement('input').setAttributes({ type: 'date', required: true }).appendTo(birthdayInputDiv)
     let emailInput = new CreateElement('input').setAttributes({ type: 'email', placeholder: 'E-mail', required: true }).appendTo(signUpForm)
 

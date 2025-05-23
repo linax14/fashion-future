@@ -68,6 +68,7 @@
     flex-direction: row;
     align-items: center;
     padding-right: var(--p-2);
+    justify-content: space-between;
 }
 
 .auth-form-container form button {
@@ -92,6 +93,11 @@
 #sign-in input {
     border: none;
     width: 90vw;
+}
+
+.auth-form-container form#sign-up div label {
+    padding: var(--padding-btn);
+    color: var(--bs-secondary-bg);
 }
 
 #sign-in div {
