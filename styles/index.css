@@ -85,6 +85,10 @@
     --webkit-appearance: none;
 }
 
+.auth-form-container form#sign-up input[type=date] {
+    border: none;
+}
+
 #sign-in input {
     border: none;
     width: 90vw;
