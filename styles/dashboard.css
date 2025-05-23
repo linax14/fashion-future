@@ -28,7 +28,6 @@
 
 span.main {
     font-weight: 700;
-    font-size: 1.4rem;
 }
 
 span.details {
@@ -400,6 +399,7 @@ span.details {
 .locked-state div span.main,
 .locked-state div span.details {
     color: var(--bs-text-color);
+    text-transform: capitalize;
 }
 
 .locked-state i {
