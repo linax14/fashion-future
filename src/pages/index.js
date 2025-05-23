@@ -188,7 +188,7 @@ function renderSignUpForm() {
     passwordVisibility(passwordInputDiv)
 
     let selectTheme = new CreateElement('div').appendTo(signUpForm)
-    new CreateElement('small').setText('Theme').appendTo(selectTheme)
+    new CreateElement('label').setText('Theme').appendTo(selectTheme)
     let theme = new CreateElement('select').setAttributes({ name: 'theme', id: 'select-theme' }).setText('theme').appendTo(selectTheme)
 
     let options = ['dark', 'light']

@@ -1,6 +1,7 @@
 #index-main select {
     background-color: var(--focus-color);
     text-transform: capitalize;
+    padding: var(--padding-btn);
 }
 
 #main-top-nav {
@@ -68,7 +69,6 @@
     flex-direction: row;
     align-items: center;
     padding-right: var(--p-2);
-    justify-content: space-between;
 }
 
 .auth-form-container form button {
@@ -88,6 +88,7 @@
 
 .auth-form-container form#sign-up input[type=date] {
     border: none;
+    padding-left: 0;
 }
 
 #sign-in input {
@@ -98,15 +99,11 @@
 .auth-form-container form#sign-up div label {
     padding: var(--padding-btn);
     color: var(--bs-secondary-bg);
+    width: 100px;
 }
 
 #sign-in div {
     justify-content: space-between;
-}
-
-.auth-form-container form#sign-up div small {
-    color: var(--bs-secondary-bg);
-    padding: var(--padding-btn);
 }
 
 .auth-form-container form#sign-up input {
