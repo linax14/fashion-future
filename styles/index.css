@@ -80,7 +80,7 @@
     color: var(--bs-text-color);
     padding: var(--padding-btn);
     text-align: left;
-    display: inline-block;
+    display: block;
     font-size: var(--font-size-btn);
 }
 
