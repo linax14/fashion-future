@@ -82,6 +82,7 @@
     text-align: left;
     display: block;
     font-size: var(--font-size-btn);
+    --webkit-appearance: none;
 }
 
 #sign-in input {
