@@ -41,13 +41,11 @@
     color: var(--bs-secondary-text-emphasis);
 }
 
-[data-bs-theme='light'] .month .item,
-[data-bs-theme='earthy'] .month .item {
+[data-bs-theme='light'] .month .item{
     color: #0e0e0eb0;
 }
 
-[data-bs-theme='light'] .month .item.current,
-[data-bs-theme='earthy'] .month .item.current {
+[data-bs-theme='light'] .month .item.current {
     color: #0e0e0e;
 }
 
@@ -137,7 +135,6 @@
     filter: none;
 }
 
-[data-bs-theme='earthy'] .nav-modal .create-outfit-btn img,
 [data-bs-theme='light'] .nav-modal .create-outfit-btn img {
     filter: invert();
 }
@@ -152,7 +149,6 @@
     filter: invert();
 }
 
-[data-bs-theme='earthy'] .nav-modal .add-care-btn img,
 [data-bs-theme='light'] .nav-modal .add-care-btn img {
     filter: none;
 }

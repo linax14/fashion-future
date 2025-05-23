@@ -385,7 +385,7 @@ let addMode = async (itemsToAdd, createOutfitDate, submitBtn, challengeExtras) =
                 } else {
                     let confirmed = await confirmBox({
                         title: 'Challenge Fail',
-                        text: `To participate in the challenge and earn points, make sure to include a challenge item in your outfit. You can edit your selection now`,
+                        text: `To participate in the challenge and earn points, make sure to include a challenge item in your outfit. You can still edit your selection!`,
                         save: 'Save', dismiss: 'Edit', modalId: 'challenge-fail'
                     })
 

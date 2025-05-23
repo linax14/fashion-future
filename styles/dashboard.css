@@ -266,7 +266,6 @@ span.details {
     opacity: 0.8;
 }
 
-[data-bs-theme='earthy'] #challenge-container img,
 [data-bs-theme='light'] #challenge-container img {
     filter: none;
     width: 20px;

@@ -50,6 +50,11 @@ let contentSections = (title, list, id, appendTo) => {
 mainRender()
 
 function mainRender() {
+    let theme = localStorage.getItem('theme')
+    if (theme == 'dark') {
+        theme = 'dark'
+    } else { theme = 'light' }
+
     displayInHome('welcome')
 
     new CreateElement('h2').setText('Fashion Future').appendTo(section)
@@ -83,8 +88,8 @@ function mainRender() {
     ], 'why-us', section)
 
     let imgs = new CreateElement('div').appendTo(s1)
-    new CreateElement('img').setAttributes({ src: './assets/index/wardrobe-light.png', class: 'index-img', id: 'left' }).appendTo(imgs)
-    new CreateElement('img').setAttributes({ src: './assets/index/stats-light.png', class: 'index-img', id: 'right' }).appendTo(imgs)
+    new CreateElement('img').setAttributes({ src: `./assets/index/wardrobe-${theme}.png`, class: 'index-img', id: 'left' }).appendTo(imgs)
+    new CreateElement('img').setAttributes({ src: `./assets/index/stats-${theme}.png`, class: 'index-img', id: 'right' }).appendTo(imgs)
 
     let s2 = contentSections('How it works', [
         `Upload your clothes`,
@@ -94,8 +99,8 @@ function mainRender() {
     ], 'how', section)
 
     let imgs2 = new CreateElement('div').appendTo(s2)
-    new CreateElement('img').setAttributes({ src: './assets/index/dash-light.png', class: 'index-img', id: 'left' }).appendTo(imgs2)
-    new CreateElement('img').setAttributes({ src: './assets/index/planner-light.png', class: 'index-img', id: 'right' }).appendTo(imgs2)
+    new CreateElement('img').setAttributes({ src: `./assets/index/dash-${theme}.png`, class: 'index-img', id: 'left' }).appendTo(imgs2)
+    new CreateElement('img').setAttributes({ src: `./assets/index/planner-${theme}.png`, class: 'index-img', id: 'right' }).appendTo(imgs2)
 
     return section
 }
@@ -184,7 +189,7 @@ function renderSignUpForm() {
     new CreateElement('small').setText('Theme').appendTo(selectTheme)
     let theme = new CreateElement('select').setAttributes({ name: 'theme', id: 'select-theme' }).setText('theme').appendTo(selectTheme)
 
-    let options = ['dark', 'earthy', 'light']
+    let options = ['dark', 'light']
     options.forEach(option => {
         new CreateElement('option').setAttributes({ value: option }).setText(`${option}`).appendTo(theme)
     })

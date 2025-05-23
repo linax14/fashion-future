@@ -49,7 +49,7 @@ function renderSettings() {
     let selectTheme = new CreateElement('div').appendTo(signUpForm)
     new CreateElement('label').setText('Theme').appendTo(selectTheme)
     let theme = new CreateElement('select').setAttributes({ name: 'theme' }).setText('theme').appendTo(selectTheme)
-    let options = ['dark', 'earthy', 'light']
+    let options = ['dark','light']
     options.forEach(option => {
         let el = new CreateElement('option').setAttributes({ value: option }).setText(`${option}`).appendTo(theme)
         if (option == user.theme) {

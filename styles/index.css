@@ -192,8 +192,7 @@
     width: max-content;
 }
 
-[data-bs-theme='light'] #index-section ol.repeat-li li,
-[data-bs-theme='earthy'] #index-section ol.repeat-li li {
+[data-bs-theme='light'] #index-section ol.repeat-li li {
     opacity: 0.5;
 }
 

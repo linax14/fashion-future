@@ -269,7 +269,7 @@
     flex-direction: column-reverse;
     justify-content: center;
     align-items: center;
-    font-size: small;
+    font-size: x-small;
 }
 
 [data-bs-theme='dark'] .form-group.wash .element img.care-label,
@@ -282,11 +282,6 @@
     filter: invert();
 }
 
-[data-bs-theme='earthy'] .form-group.wash .element img.care-label,
-[data-bs-theme='earthy'] .form-group.bleach .element img.care-label,
-[data-bs-theme='earthy'] .form-group.tumble_dry .element img.care-label,
-[data-bs-theme='earthy'] .form-group.natural_dry .element img.care-label,
-[data-bs-theme='earthy'] .form-group.iron .element img.care-label,
 [data-bs-theme='light'] .form-group.wash .element img.care-label,
 [data-bs-theme='light'] .form-group.bleach .element img.care-label,
 [data-bs-theme='light'] .form-group.tumble_dry .element img.care-label,
@@ -322,7 +317,6 @@
     filter: invert();
 }
 
-[data-bs-theme='earthy'] ol .care-label,
 [data-bs-theme='light'] ol .care-label {
     width: 28px;
     height: auto;
@@ -388,7 +382,6 @@
     object-fit: contain;
 }
 
-[data-bs-theme='earthy'] .main-placeholder button img,
 [data-bs-theme='light'] .main-placeholder button img {
     height: 50px;
     width: auto;
@@ -402,7 +395,6 @@
     filter: invert();
 }
 
-[data-bs-theme='earthy'] .main-placeholder .add-care-btn img,
 [data-bs-theme='light'] .main-placeholder .add-care-btn img {
     filter: none;
 }
@@ -412,7 +404,6 @@
     filter: invert();
 }
 
-[data-bs-theme='earthy'] .main-placeholder.invert-image img,
 [data-bs-theme='light'] .main-placeholder.invert-image img {
     width: 60px;
     filter: none;

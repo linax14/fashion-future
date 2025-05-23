@@ -52,7 +52,7 @@
 }
 
 .form-part#care .element label {
-    font-size: inherit;
+    font-size: x-small;
     font-variant: normal;
     font-weight: initial;
 }
