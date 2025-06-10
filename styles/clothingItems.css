@@ -2,6 +2,7 @@
     width: 100%;
     grid-column: span 3;
     z-index: 3;
+    order: 1;
 }
 
 .filters-body {
@@ -11,6 +12,11 @@
 
 .filters .form-group.brand label {
     display: grid !important;
+}
+
+.filters .form-group {
+    gap: var(--gap-2);
+    padding: 2px;
 }
 
 .filters .form-group label {
@@ -37,11 +43,14 @@
 .filters .form-group .element {
     padding-left: 4px;
     padding-right: 4px;
-    border: 1px solid var(--bs-secondary-bg);
-    border-radius: var(--bs-border-radius-lg);
     height: 26px;
     display: flex;
     align-items: center;
+}
+
+.filters .form-group:not(.colour) .element {
+    border: 1px solid var(--bs-border-subtle);
+    border-radius: var(--bs-border-radius-lg);
     justify-content: center;
 }
 
@@ -53,7 +62,6 @@
     display: grid !important;
     grid-template-columns: repeat(3, 1fr);
     justify-content: space-between;
-    gap: var(--gap-2);
     margin-bottom: var(--p-4);
 }
 
@@ -86,11 +94,18 @@
 
 .filters .form-group.colour {
     display: grid;
-    grid-template-columns: repeat(10, 1fr);
+    grid-template-columns: repeat(3, 1fr);
 }
 
 .filters .form-group.colour>:first-child {
-    grid-column: span 10;
+    grid-column: span 3;
+}
+
+.filters .form-group.colour .element label {
+    align-content: center;
+    font-size: small;
+    font-variant: initial;
+    font-weight: initial;
 }
 
 .filters .reset.btn {
@@ -127,10 +142,20 @@
     margin-top: 1vh;
     gap: var(--gap-1);
     overflow: scroll;
+    height: 70vh;
 }
 
 .clothing-list>h4:first-child {
     grid-column: span 3;
+    padding-inline: 2px;
+    border-bottom: 1px solid var(--bs-secondary-bg);
+    font-size: var(--font-size-label);
+}
+
+.clothing-list h4 {
+    font-size: small;
+    font-variant: small-caps;
+    font-weight: var(--font-weight-label);
 }
 
 .clothing-list .clothing-item-container input[type="checkbox"]:checked {
@@ -331,6 +356,11 @@
     border-radius: var(--bs-border-radius-sm);
     padding: 2px;
     gap: var(--gap-3);
+
+    font-size: var(--font-size-label);
+    font-variant: small-caps;
+    font-weight: var(--font-weight-label);
+    order: 1;
 }
 
 
@@ -350,7 +380,7 @@
 }
 
 .main-placeholder button {
-    width: 40vw;
+    width: 30%;
     display: flex;
     flex-direction: column-reverse;
     justify-content: flex-end;
@@ -385,17 +415,19 @@
 [data-bs-theme='light'] .main-placeholder button img {
     height: 50px;
     width: auto;
-    opacity: 0.7;
+    opacity: 0.5;
     filter: invert();
     object-fit: contain;
 }
 
 
-[data-bs-theme='dark'] .main-placeholder .add-care-btn img {
+[data-bs-theme='dark'] .main-placeholder .add-care-btn img,
+[data-bs-theme='dark'] .main-placeholder .create-outfit-btn img {
     filter: invert();
 }
 
-[data-bs-theme='light'] .main-placeholder .add-care-btn img {
+[data-bs-theme='light'] .main-placeholder .add-care-btn img,
+[data-bs-theme='light'] .main-placeholder .create-outfit-btn img {
     filter: none;
 }
 
@@ -437,7 +469,7 @@
 }
 
 .clothing-container .filters-container {
-    grid-column: span 5;
+    grid-column: span 6;
     order: 3;
 }
 
@@ -463,8 +495,52 @@
 .clothing-container .btn-container {
     flex-direction: row-reverse;
     position: absolute;
-    bottom: 10vh;
     right: 10px;
+}
+
+.clothing-container .btn-container.bottom {
+    bottom: 10vh;
+    z-index: 1;
+}
+
+.clothing-list .main-placeholder {
+    min-height: 80px;
+    height: auto;
+    align-items: start;
+    padding-left: var(--p-3);
+    padding-right: var(--p-3);
+    flex-direction: row-reverse;
+    justify-content: space-between;
+}
+
+.clothing-list .main-placeholder,
+.clothing-list .main-placeholder p {
+    width: 100%;
+}
+
+.clothing-list .main-placeholder i {
+    font-size: 40px;
+    color: var(--bs-secondary-bg);
+    align-self: flex-end;
+}
+
+.clothing-list .main-placeholder a {
+    color: var(--bs-text-color);
+}
+
+.locked-state div p.main,
+.locked-state div p.details {
+    color: var(--bs-text-color);
+}
+
+.locked-state .locked-link,
+.locked-state p {
+    margin-top: var(--p-1);
+    color: var(--bs-secondary-text-emphasis-focus);
+}
+
+p.main {
+    font-weight: 700;
 }
 
 @media (min-width:768px) and (max-width:1023px) {

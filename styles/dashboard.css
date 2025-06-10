@@ -49,18 +49,46 @@ span.details {
 }
 
 #outfit-streak {
-    grid-column: span 6;
+    grid-column: span 4;
     grid-row: span 4;
     display: flex;
+    align-items: center;
 }
 
 #sustainability-tips-container {
-    grid-column: span 8;
+    grid-column: span 4;
     grid-row: span 4;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
+
+#sustainability-tips-container div.icons {
+    display: flex;
+}
+
+#sustainability-tips-container div.icons i:nth-child(1),
+#sustainability-tips-container div.icons i:nth-child(3) {
+    font-size: 24px;
+    opacity: 0.5;
+}
+
+#sustainability-tips-container div.icons i:nth-child(2) {
+    font-size: 32px;
+}
+
 
 #sustainability-tips-container .details {
     text-transform: none;
+}
+
+#sustainability-tips-container .main,
+#sustainability-tips-container .main-header {
+    grid-column: span 6;
+}
+
+#sustainability-tips-container .main-header {
+    font-weight: 700;
 }
 
 #challenge-container {
@@ -96,6 +124,7 @@ span.details {
 
 #motivation span.main {
     order: 1;
+    width: 34px;
 }
 
 .dashboard-card#challenge-container h3 {
@@ -125,11 +154,22 @@ span.details {
     grid-row: span 4;
 }
 
+#quiz-container span.main {
+    align-self: center;
+}
+
+#sustainability-tips-container i,
 #quiz-container i {
     font-size: 40px;
     color: var(--bs-secondary-text-emphasis-focus);
     align-self: center;
-    padding-bottom: var(--p-4);
+    padding-bottom: var(--p-2);
+}
+
+#outfit-streak.dashboard-card span.details,
+#quiz-container.dashboard-card span.details {
+    padding-top: var(--p-1);
+    font-size: small;
 }
 
 #quiz-container.expanded {
@@ -218,6 +258,7 @@ span.details {
 
 #quiz-container .question-group p.incorrect i {
     color: var(--bs-danger-text-emphasis);
+    font-size: 16px;
 }
 
 #quiz-container .question-group p.correct i {
@@ -302,7 +343,7 @@ span.details {
     color: var(--bs-text-color);
     order: 4;
     padding-bottom: var(--p-2);
-    gap: var(--gap-1);
+    gap: var(--gap-2);
     display: flex;
     flex-direction: column;
 }
@@ -396,8 +437,11 @@ span.details {
     width: 80%;
 }
 
-.locked-state div span.main,
 .locked-state div span.details {
+    color: var(--bs-text-color);
+}
+
+.locked-state div span.main {
     color: var(--bs-text-color);
     text-transform: capitalize;
 }

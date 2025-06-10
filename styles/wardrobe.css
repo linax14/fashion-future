@@ -199,7 +199,7 @@
 
 .form-group.colour {
     display: grid;
-    grid-template-columns: repeat(11, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: var(--gap-2);
     justify-content: space-evenly;
     align-content: space-evenly;
@@ -207,7 +207,7 @@
 }
 
 .form-group.colour>:first-child {
-    grid-column: span 11;
+    grid-column: span 3;
 }
 
 .form-group.colour .element[name="white"] .color.btn.selected::after {
@@ -250,6 +250,10 @@
     align-content: baseline;
 }
 
+.wardrobe-container .clothing-list {
+    height: 100%;
+}
+
 .form-group.colour .element {
     display: flex;
     flex-direction: row;
@@ -259,7 +263,7 @@
 
 .form-group.colour .element label {
     align-content: center;
-    font-size: 12px;
+    font-size: x-small;
     font-variant: normal;
     font-weight: 300;
     display: flex;
@@ -344,7 +348,8 @@ input[type=text] {
     flex-direction: row-reverse;
     justify-content: space-between;
     padding-left: var(--p-3);
-    padding-right: var(--p-3);
+    padding-right: 0;
+    margin-right: 0;
 }
 
 .clothing-formContainer input[type="checkbox"]::before {
@@ -377,7 +382,7 @@ input[type=text] {
     background-color: transparent;
 }
 
-.wardrobe-container .main-placeholder p{
+.wardrobe-container .main-placeholder p {
     width: 100%;
     margin-bottom: var(--p-2);
     padding-bottom: var(--p-2);

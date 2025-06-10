@@ -41,7 +41,7 @@
     color: var(--bs-secondary-text-emphasis);
 }
 
-[data-bs-theme='light'] .month .item{
+[data-bs-theme='light'] .month .item {
     color: #0e0e0eb0;
 }
 
@@ -196,7 +196,10 @@
 }
 
 .planner-section-heading {
-    padding-left: var(--p-2);
+    align-content: center;
+    font-size: var(--font-size-label);
+    font-variant: small-caps;
+    font-weight: var(--font-weight-label);
 }
 
 #calendar section {
@@ -207,7 +210,7 @@
 
 #calendar section h4 {
     border-bottom: 1px solid var(--bs-secondary-bg);
-    padding-bottom: var(--p-2);
+    padding-bottom: var(--p-1);
 }
 
 .close {
@@ -217,6 +220,8 @@
     float: right;
     font-size: 30px;
     font-weight: bold;
+    justify-self: end;
+    padding-right: 0;
 }
 
 .close:hover,

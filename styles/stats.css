@@ -9,6 +9,9 @@
 .overview-section h3 {
     padding-bottom: 4px;
     border-bottom: 1px solid var(--bs-secondary-bg);
+    font-size: var(--font-size-label);
+    font-variant: small-caps;
+    font-weight: var(--font-weight-label);
 }
 
 .stats-container {
@@ -29,6 +32,7 @@
 
 .stats-container .locked-state i {
     font-size: 60px;
+    color: var(--bs-secondary-text-emphasis-focus);
 }
 
 .chart-canvas {
