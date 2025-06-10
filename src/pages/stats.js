@@ -32,7 +32,7 @@ async function setupStats(withWear, title, appendTo) {
         } else {
             msg = `Oops! It looks like you haven't added enough items to your wardrobe to unlock wardrobe stats. 
             Just ${remainingItems} more ${remainingItems == 1 ? 'item' : 'items'} to go! <br>
-            <a href='./public/wardrobe.html' class='locked-link invert-image'>
+            <a href='./public/wardrobe.html' class='locked-link invert-image' id='hanger'>
             <img src='https://img.icons8.com/pastel-glyph/64/hanger--v1.png'/> Head to wardrobe <a/>`
         }
 

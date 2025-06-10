@@ -142,18 +142,21 @@ function handleFormSubmit(form, onSubmitCallback, itemId = null) {
         let formValues = {}
 
         formData.forEach((value, key) => {
-            if (formValues[key]) {
-                formValues[key] = `${formValues[key]},${value}`
+            if (key != 'image') {
+                if (formValues[key]) {
+                    formValues[key] = `${formValues[key]},${value}`
+                } else {
+                    formValues[key] = `${escapeHTML(value)}`
+                    console.log(formValues[key]);
+                }
             } else {
-                formValues[key] = `${escapeHTML(value)}`
-                console.log(formValues[key]);
+                formValues[key] = value
             }
         })
 
         let imageFile = formValues.image
         if (Array.isArray(imageFile)) { imageFile = imageFile[imageFile.length - 1] }
         let imageName = null
-        console.log(imageFile);
 
         if (imageFile) {
             imageName = imageFile.name
@@ -599,12 +602,4 @@ async function renderWardrobe(settings = null) {
     }
 
     filtersBtn.addEventListener('click', toggleFilterMode);
-}
-
-let clothesPlaceholder = (appendTo) => {
-    let div = new CreateElement('div').setAttributes({ class: 'main-placeholder invert-image' }).appendTo(appendTo)
-    new CreateElement('img').setAttributes({ src: 'https://img.icons8.com/pastel-glyph/64/hanger--v1.png' }).appendTo(div)
-    let p = new CreateElement('p').setText().appendTo(div)
-    p.innerHTML = `Your wardrobe is a blank canvas. <br>Start adding your favourite pieces today!`
-    return div
 }
