@@ -448,7 +448,7 @@ let placeholder = (appendTo, mode, dataDate) => {
     let btn
 
     if (mode == 'outfit') {
-        btn = createIconBtn('create-outfit-btn btn', 'Add fit', './assets/createOutfit.png', 'clothing items', div)
+        btn = createIconBtn('create-outfit-btn btn', 'Add fit', 'https://img.icons8.com/material/96/t-shirt--v1.png', 'clothing items', div)
         btn.addEventListener('click', async () => {
             await renderClothingDisplay(dataDate, { mode: 'addOutfit', itemRender: 'default' });;
         })

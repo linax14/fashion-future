@@ -266,9 +266,6 @@ async function completeChallenge(points = false) {
         } else {
             window.location.href = './public/dashboard.html'
         }
-
-
-
     }
 }
 

@@ -47,9 +47,15 @@ async function filters(container) {
         value.forEach(i => {
             let element
             if (key === 'colour' && colourOptions[i]) {
+
+                let div = new CreateElement('div').setAttributes({class:'element'}).appendTo(filter)
+
                 element = new CreateElement('span')
                     .setAttributes({ style: `background-color:${colourOptions[i]}`, class: 'color btn' })
-                    .appendTo(filter);
+                    .appendTo(div);
+
+                new CreateElement('label').setAttributes({class:'color label'}).setText(capitalise(i)).appendTo(div)                
+
             } else {
                 element = new CreateElement('span')
                     .setAttributes({ value: i, class: 'element' })
@@ -298,4 +304,12 @@ class RenderClothing {
             })
         }
     }
+}
+
+let clothesPlaceholder = (appendTo) => {
+    let div = new CreateElement('div').setAttributes({ class: 'main-placeholder invert-image' }).appendTo(appendTo)
+    new CreateElement('img').setAttributes({ src: 'https://img.icons8.com/pastel-glyph/64/hanger--v1.png' }).appendTo(div)
+    let p = new CreateElement('p').setText().appendTo(div)
+    p.innerHTML = `Your wardrobe is a blank canvas. <br>Start adding your favourite pieces today!`
+    return div
 }

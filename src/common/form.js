@@ -95,11 +95,9 @@ class ImageUpload extends FormField {
                         .addEventListener('change', async (event) => {
                             let file = event.target.files[0]
                             this.selectedFile = await resizeImage(file);
-                            console.log(this.selectedFile);
 
                             if (this.selectedFile) {
                                 let url = URL.createObjectURL(this.selectedFile)
-                                console.log(url);
                                 console.log(this.selectedFile);
 
                                 addImage.setAttribute('src', url)
@@ -110,8 +108,6 @@ class ImageUpload extends FormField {
                         .appendTo(this.wrapper)
                     img.click()
                 }
-
-                img.click()
             })
             .appendTo(this.wrapper)
     }
@@ -239,6 +235,8 @@ class Colours extends FormField {
                     this.hiddenInput.value = this.selected.join(',')
                 })
                 .appendTo(element)
+
+            new CreateElement('label').setText(capitalise(option)).appendTo(element)
         })
     }
 }
