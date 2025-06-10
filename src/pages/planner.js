@@ -73,7 +73,26 @@ async function renderClothingDisplay(createOutfitDate, settings) {
     let header = new CreateElement('h3')
     renderClothingDisplayHeader(settings, header)
 
-    closeBtnX(clothingContainer, () => displayInPlanner('calendar'))
+    if (settings.challenge) {
+        closeBtnX(clothingContainer, async () => {
+
+            let confirmed = await confirmBox({
+                title: 'Challenge Fail',
+                text: `Heads up! If you dip now, you won't earn points from today's challenge. Still wanna leave?`,
+                save: 'Yes', dismiss: 'No', modalId: 'challenge-fail'
+            })
+
+            if (confirmed) {
+                await completeChallenge()
+            }
+
+            displayInPlanner('calendar')
+        })
+
+    } else {
+        closeBtnX(clothingContainer, () => displayInPlanner('calendar'))
+    }
+
 
     let filtersContainer = new CreateElement('div').setAttributes({ class: 'filters-container' }).appendTo(clothingContainer)
     let filtersBtn = new CreateElement('button').setAttributes({ class: 'filter btn' }).setText('Filter').appendTo(filtersContainer)
@@ -82,7 +101,21 @@ async function renderClothingDisplay(createOutfitDate, settings) {
     let clothingList = new CreateElement('div').setAttributes({ class: 'clothing-list' }).appendTo(clothingContainer)
     let clothingItemElements
 
+
     let data = await selectUserTable(window.user, 'clothing_items')
+
+    if (!data || data.length == 0) {
+        setDisplay([clothingList], 'flex')
+        setDisplay([filtersContainer], 'none')
+        let locked = lockedState(clothingList,
+            `<p class='main'>Your wardrobe is empty</p>
+            <p class='details'>Add items to create outfits </p>
+            <a href='./public/wardrobe.html' class='locked-link invert-image' id='hanger'>
+            <img src='https://img.icons8.com/pastel-glyph/64/hanger--v1.png'/> Head to wardrobe <a/>`)
+
+        locked.classList.add('main-placeholder')
+        return
+    }
 
     if (localStorage.getItem('fromChallenge') && settings.challenge) {
         let filtered = settings.challenge.filtered
@@ -90,7 +123,6 @@ async function renderClothingDisplay(createOutfitDate, settings) {
             let challengeContainer = new CreateElement('div').setAttributes({ class: 'clothing-list', id: 'challenge-items' }).appendTo(clothingContainer)
             new CreateElement('h4').setText('Challenge Items').appendTo(challengeContainer)
             let clothingItems = await renderClothingItem({ appendTo: challengeContainer, data: filtered, itemsToAdd: itemsToAdd })
-            console.log(clothingItems);
 
             data = data.filter(item => !filtered.some(filteredItem => filteredItem.id == item.id))
         }
@@ -127,6 +159,10 @@ async function renderClothingDisplay(createOutfitDate, settings) {
 
     clothingItemElements = await renderClothingItem({ appendTo: clothingList, data: data, itemsToAdd: itemsToAdd, mode: settings.itemRender })
 
+    if (localStorage.getItem('fromChallenge') && settings.challenge) {
+        document.querySelectorAll('.clothing-list')[0].style.height = '39vh'
+    }
+
     let btns = document.querySelectorAll('btn-container.bottom .btn').forEach(btn => btn.remove())
     let btnContainer = new CreateElement('div').setAttributes({ class: 'btn-container bottom' }).appendTo(clothingContainer)
     let submitBtn = new CreateElement('button').setText('Save').setAttributes({ class: 'submit btn' }).appendTo(btnContainer)
@@ -159,7 +195,6 @@ async function renderClothingDisplay(createOutfitDate, settings) {
         }
     }
 }
-
 function renderClothingDisplayHeader(settings, header) {
     switch (settings.mode) {
         case 'addOutfit':
@@ -364,7 +399,6 @@ let addMode = async (itemsToAdd, createOutfitDate, submitBtn, challengeExtras) =
         let data = await clothingManager.getData('outfit')
 
         for (let outfit of data) {
-
             if (outfit.worn && outfit.wornDates && outfit.clothingItems) {
                 for (let date of outfit.wornDates) {
                     for (let item of outfit.clothingItems) {
@@ -399,7 +433,7 @@ let addMode = async (itemsToAdd, createOutfitDate, submitBtn, challengeExtras) =
                 }
             }
         } else {
-            completeChallenge(['style', 'curiosity'])
+            completeChallenge(['style'])
         }
 
         if (challengeFailed == false) {
