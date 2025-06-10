@@ -9,8 +9,7 @@ let displayInDashboard = async (type) => {
     let challengeContainer = document.querySelector('#challenge-container')
     let quizContainer = document.querySelector('#quiz-container')
     let personality = document.querySelector('.chart-container')
-    let locked = document.querySelector('.locked-state')
-    let motivation = document.querySelector('#motivation')
+    let locked = document.querySelectorAll('.locked-state.dashboard-card')
     let points = document.querySelector('#points-container')
     let greeting = document.querySelector('#dashboard-greeting')
 
@@ -23,8 +22,7 @@ let displayInDashboard = async (type) => {
             if (sustainabilityTips) setDisplay([sustainabilityTips], 'none')
             if (challengeContainer) setDisplay([challengeContainer], 'none')
             if (personality) setDisplay([personality], 'none')
-            if (locked) setDisplay([locked], 'none')
-            if (motivation) setDisplay([motivation], 'none')
+            if (locked) locked.forEach(el => setDisplay([el], 'none'))
             if (points) setDisplay([points], 'none')
             if (greeting) setDisplay([greeting], 'none')
 
@@ -38,13 +36,12 @@ let displayInDashboard = async (type) => {
 
             if (quizContainer) {
                 setDisplay([quizContainer], 'block')
-                quizContainer.style.gridColumn = 'span 6'
+                quizContainer.style.gridColumn = 'span 4'
             }
             if (challengeContainer) setDisplay([challengeContainer], 'flex')
-            if (locked) setDisplay([locked], 'flex')
+            if (locked) locked.forEach(el => setDisplay([el], 'flex'))
             if (personality) setDisplay([personality], 'grid')
             if (header) setDisplay([header], 'flex')
-            if (motivation) setDisplay([motivation], 'grid')
             if (points) setDisplay([points], 'flex')
             if (greeting) setDisplay([greeting], 'block')
 
@@ -61,7 +58,6 @@ let displayInDashboard = async (type) => {
     }
 }
 async function renderDashboard(user) {
-    await displayInDashboard('dash')
     let main = new CreateElement('div').setAttributes({ class: 'dashboard' }).appendTo(document.body)
 
     new CreateElement('h1').setAttributes({ id: 'dashboard-greeting' }).setText(`Good ${getTimePeriod()}, ${window.user.user_metadata.first_name} `).appendTo(main)
@@ -71,12 +67,13 @@ async function renderDashboard(user) {
 
     localStorageReset(today)
 
-    await renderOutfitStreak(today, main)
-    msg(main)
     await getQuiz(window.user, today, main)
+    await renderOutfitStreak(today, main)
     await dailyTips(window.user, today, main)
     await dailyChallenge(window.user, today, main)
     await generatePersonality(main)
+
+    await displayInDashboard('dash')
 }
 
 let localStorageReset = (today) => {
@@ -101,15 +98,6 @@ async function renderOutfitStreak(createOutfitDate, appendTo) {
         new CreateElement('span').setAttributes({ class: 'main' }).setText(`${data.target.streak} Day`).appendTo(div)
         new CreateElement('span').setAttributes({ class: 'details' }).setText('outfit streak').appendTo(div)
     }
-
-    return div
-}
-
-let msg = (appendTo) => {
-    let div = new CreateElement('div').setAttributes({ class: 'dashboard-card', id: 'motivation' }).appendTo(appendTo)
-
-    new CreateElement('i').setAttributes({ class: 'fa-solid fa-leaf' }).appendTo(div)
-    new CreateElement('span').setAttributes({ class: 'main' }).setText(`Keep it up`).appendTo(div)
 
     return div
 }
@@ -153,12 +141,49 @@ async function dailyTips(user, dateInfo, appendTo) {
 
                 }
 
-                let div = new CreateElement('div').setAttributes({ class: 'dashboard-card', id: 'sustainability-tips-container' }).appendTo(appendTo)
-                new CreateElement('span').setText(target.tip.main).setAttributes({ class: 'main' }).appendTo(div)
-                new CreateElement('span').setText(target.tip.details).setAttributes({ class: 'details' }).appendTo(div)
+                displayDailyTip(appendTo, target)
             }
         }
     }
+}
+
+let displayDailyTip = (appendTo, target) => {
+    let div = new CreateElement('div').setAttributes({ class: 'dashboard-card', id: 'sustainability-tips-container' }).appendTo(appendTo)
+
+    let icons = new CreateElement('div').setAttributes({ class: 'icons' }).appendTo(div)
+    new CreateElement('i').setAttributes({ class: 'fa-solid fa-lightbulb' }).appendTo(icons)
+    new CreateElement('i').setAttributes({ class: 'fa-solid fa-lightbulb' }).appendTo(icons)
+    new CreateElement('i').setAttributes({ class: 'fa-solid fa-lightbulb' }).appendTo(icons)
+
+    let h = new CreateElement('span').setText('Daily Tip').setAttributes({ class: 'main-header' }).appendTo(div)
+    setDisplay([h], 'flex')
+
+    let main = new CreateElement('span').setText(target.tip.main).setAttributes({ class: 'main' }).appendTo(div)
+    let details = new CreateElement('span').setText(target.tip.details).setAttributes({ class: 'details' }).appendTo(div)
+
+    setDisplay([main, details], 'none')
+
+    div.addEventListener('click', () => {
+        let isVisible = main.style.display == 'flex'
+        setDisplay([h], isVisible ? 'block' : 'none')
+        setDisplay([main, details], isVisible ? 'none' : 'flex')
+
+        if (isVisible) {
+            main.style.alignSelf = 'center'
+            div.style.gridColumn = 'span 4'
+            document.querySelector('#outfit-streak').style.gridColumn = 'span 4'
+            document.querySelector('#outfit-streak').style.gridColumn = 'span 4'
+            document.querySelector('#quiz-container').style.gridColumn = 'span 4'
+            icons.style.display = 'flex'
+
+        } else {
+            main.style.alignSelf = 'start'
+            div.style.gridColumn = 'span 12'
+            document.querySelector('#outfit-streak').style.gridColumn = 'span 8'
+            document.querySelector('#quiz-container').style.gridColumn = 'span 4'
+            icons.style.display = 'none'
+        }
+    })
 }
 
 async function dailyChallenge(user, dateInfo, appendTo) {
@@ -176,11 +201,11 @@ async function dailyChallenge(user, dateInfo, appendTo) {
         let min = 5 - data.length
         let locked = lockedState(appendTo,
             `<span class='main'>challenge time</span>
-            <span class='details'>You need to log ${min} more ${min == 1 ? 'outfit' : 'outfits'} to unlock challenges </span>
+            <span class='details'>${min} more ${min == 1 ? 'outfit' : 'outfits'} to unlock challenges </span>
              <a href='./public/planner.html' class='locked-link'>
             Log a fit<a/>`)
 
-        locked.classList.add = 'dashboard-card'
+        locked.classList.add('dashboard-card')
         return
     }
 
@@ -257,11 +282,11 @@ function renderChallenge(target, dateInfo, appendTo) {
     let isComplete = target.challenge.complete
 
     let title = new CreateElement('span').setAttributes({ class: 'main' }).appendTo(div)
-    title.innerText = `${target.challenge.title}`
+    title.innerText = `${capitalise(target.challenge.title)}`
 
     let span = new CreateElement('span').setAttributes({ class: 'icon' }).appendTo(title)
     new CreateElement('img').setAttributes({ src: 'https://img.icons8.com/ios/50/nui2.png', alt: 'click to complete challenge', class: 'icon' }).appendTo(span)
-    new CreateElement('p').setText(target.challenge.details).appendTo(div)
+    new CreateElement('p').setText(capitalise(target.challenge.details)).appendTo(div)
 
     if (isComplete) {
         div.removeEventListener('click', async () => completeChallengeEvent(target, dateInfo))
@@ -271,7 +296,6 @@ function renderChallenge(target, dateInfo, appendTo) {
 
     return div
 }
-
 async function completeChallengeEvent(target, dateInfo) {
     let clothingData = await selectUserTable(window.user, 'clothing_items')
     localStorage.setItem('fromChallenge', true)
@@ -589,11 +613,13 @@ async function generatePersonality(appendTo) {
     let total = await totalYearPoints(year)
 
     if (total < 10) {
-        lockedState(appendTo,
+        let locked = lockedState(appendTo,
             `<span class='main'>personality</span>
             <span class='details'>Reach 10 points to unlock!</span>
             <span>Current points: ${total}</span>`
         )
+
+        locked.classList.add('dashboard-card')
         return
     }
 
@@ -602,6 +628,7 @@ async function generatePersonality(appendTo) {
     let personalityTypes = {
         alchemist: {
             order: ['knowledge', 'mastery', 'discipline', 'curiosity', 'style'],
+            tag: ['Precise', 'introspective', 'perfectionist'],
             description: `<span>Seeker of patterns and pursuer of precision.</span>
             <span>You engage deeply — completing quizzes and aiming for that 100%.</span>
             <span>This reflects your thoughtful,introspective style and drive to truly understand and master what interests you.</span>`,
@@ -609,19 +636,22 @@ async function generatePersonality(appendTo) {
         },
         nomad: {
             uniform: true,
+            tag: ['Spontaneous', 'explorative', 'free-flowing'],
             description: `<span>A wanderer at heart.</span><span>You explore many things but rarely stick to just one.
             Your journey is spontaneous and open ended - it is marked by bursts of curiosity and experimentation.</span>
            <span>This openness and curiosity are part of what make your journey unique.</span>` },
         icon: 'fa-solid fa-mountain-sun',
         curator: {
             order: ['style', 'mastery', 'knowledge', 'discipline', 'curiosity',],
+            tag: ['Expressive', 'intentional', 'aesthetic'],
             description: `</span>A visual storyteller and expressive thinker.</span><span>You treat your wardrobe like an evolving gallery -
             logging outfits regularly and curating your look with care.</span><span>Style is more than appearance; it is your way of showing up with intention and flair.</span>`,
             icon: 'fa-solid fa-image'
         },
         strategist: {
             order: ['curiosity', 'knowledge', 'mastery', 'style', 'discipline',],
-            description: `<span>Focused, intentional, and results-oriented.</span>
+            tag: ['Focused', 'intentional', 'results-oriented'],
+            description: `
             <span>You show up with a plan — completing challenges with purpose, valuing structure, 
             and blending discipline with curiosity.</span><span>Your process is intentional and your results speak for themselves.</span>`,
             icon: 'fa-solid fa-chess'
@@ -659,7 +689,7 @@ async function generatePersonality(appendTo) {
         }
     }
 
-    personalityChart(appendTo, data, { bestMatch, description: personalityTypes[bestMatch].description, icon: personalityTypes[bestMatch].icon })
+    personalityChart(appendTo, data, { bestMatch, description: personalityTypes[bestMatch].description, tag: personalityTypes[bestMatch].tag })
 
     return bestMatch
 }
@@ -667,7 +697,8 @@ async function generatePersonality(appendTo) {
 function personalityChart(appendTo, data, personality) {
     let container = new CreateElement('div').setAttributes({ class: 'chart-container dashboard-card' }).appendTo(appendTo)
     new CreateElement('span').setAttributes({ class: 'main' }).setText(capitalise(personality.bestMatch)).appendTo(container)
-    let span = new CreateElement('span').setText(`Your personality is leaning towards ${personality.bestMatch}. `).appendTo(container)
+
+    let span = new CreateElement('span').setText(`${(personality.tag).join(' • ')} `).appendTo(container)
 
     let description = new CreateElement('p').appendTo(container)
     // let icon = new CreateElement('i').setAttributes({ class: `${personality.icon}` }).appendTo(container)
