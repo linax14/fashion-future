@@ -68,7 +68,6 @@ async function quizContent(currentQuiz, main, container, groupedQuestionsAnswers
                     }
 
                     answerUI.classList.add('correct')
-                    new CreateElement('span').appendTo(answerUI)
                     i = new CreateElement('i').setAttributes({ class: 'fa-solid fa-check' }).appendTo(answerUI)
 
 
@@ -77,7 +76,6 @@ async function quizContent(currentQuiz, main, container, groupedQuestionsAnswers
                         update.attempts += 1
                     }
                     answerUI.classList.add('incorrect')
-                    new CreateElement('span').appendTo(answerUI)
                     i = new CreateElement('i').setAttributes({ class: 'fa-solid fa-x' }).appendTo(answerUI)
 
                 }
@@ -108,6 +106,7 @@ async function quizContent(currentQuiz, main, container, groupedQuestionsAnswers
 
     function revealAnswer(i) {
         document.querySelectorAll('.correct-answer').forEach(el => {
+            if (el.querySelector('.fa-solid.fa-check')) return
             i = new CreateElement('i').setAttributes({ class: 'fa-solid fa-check' }).appendTo(el)
             el.setAttribute('class', 'correct')
         })
@@ -173,11 +172,9 @@ async function getQuiz(user, dateInfo, appendTo) {
                 header = new CreateElement('div').setAttributes({ class: 'header' }).addEventListener('click', expandQuiz).appendTo(quiz)
                 new CreateElement('i').setAttributes({ class: 'fa-solid fa-dice' }).appendTo(header)
                 let main = new CreateElement('span').setAttributes({ class: 'main' }).setText('Quiz time').appendTo(header)
-                let p = new CreateElement('span').setAttributes({ class: 'details' }).setText(`Are you ready?`).appendTo(header)
 
                 if (quizData.length == 0) {
                     header.removeEventListener('click', expandQuiz)
-                    p.remove()
                     main.innerText = 'Quiz unavailable'
                     new CreateElement('br').appendTo(main)
                     new CreateElement('p').setText('Check back tomorrow').appendTo(header)
@@ -185,7 +182,6 @@ async function getQuiz(user, dateInfo, appendTo) {
 
                 if (sessionCompleted) {
                     header.removeEventListener('click', expandQuiz)
-                    p.remove()
                     main.innerText = 'Quiz completed'
                     new CreateElement('br').appendTo(main)
                     new CreateElement('p').setText('Check back tomorrow').appendTo(header)
