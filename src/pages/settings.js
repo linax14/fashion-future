@@ -86,7 +86,6 @@ function renderSettings() {
     })
 
     signUpForm.addEventListener('submit', async (event) => {
-        console.log(window.user.user_metadata);
 
         event.preventDefault()
 
@@ -104,7 +103,6 @@ function renderSettings() {
         })
 
         if (error) console.error(error);
-        console.log(data);
         inputs.forEach(input => input.setAttribute('disabled', true))
         theme.setAttribute('disabled', true)
         formSubmit.setAttribute('disabled', true)

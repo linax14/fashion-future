@@ -123,7 +123,7 @@ async function quizLayout(container) {
     closeBtnX(h3, () => {
         let header = document.querySelector('#quiz-container .header')
         setDisplay([header], 'grid')
-        displayInDashboard('dash')
+        displayInDashboard()
         container.style.gridColumn = 'span 4'
         Array.from(container.children).forEach((el, index) => {
             if (index != 0) {

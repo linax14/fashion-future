@@ -170,6 +170,7 @@ span.details {
 #quiz-container.dashboard-card span.details {
     padding-top: var(--p-1);
     font-size: small;
+    text-align: center;
 }
 
 #quiz-container.expanded {
@@ -177,7 +178,7 @@ span.details {
     display: flex;
     flex-direction: column;
     justify-content: start;
-    height: 89vh;
+    height: 76vh;
     background-color: transparent;
     padding: var(--p-0);
     transition: all 0.3s;
@@ -185,6 +186,7 @@ span.details {
     transform: translateY(-1%);
     padding-left: var(--p-3);
     padding-right: var(--p-3);
+    padding-top: var(--p-3);
     overflow: hidden;
 }
 

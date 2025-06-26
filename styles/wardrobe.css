@@ -196,19 +196,23 @@
     border: 1px solid var(--bs-secondary-text-emphasis);
 }
 
-
 .form-group.colour {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(11, 1fr);
     gap: var(--gap-2);
     justify-content: space-evenly;
     align-content: space-evenly;
     margin-bottom: var(--p-3);
 }
 
-.form-group.colour>:first-child {
-    grid-column: span 3;
+.form-group.colour .element label{
+    display: none;
 }
+
+.form-group.colour>:first-child {
+    grid-column: span 11;
+}
+
 
 .form-group.colour .element[name="white"] .color.btn.selected::after {
     color: rgb(61, 61, 61);

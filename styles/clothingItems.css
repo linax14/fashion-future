@@ -142,7 +142,7 @@
     margin-top: 1vh;
     gap: var(--gap-1);
     overflow: scroll;
-    height: 70vh;
+    height: 66vh;
 }
 
 .clothing-list>h4:first-child {
@@ -228,6 +228,11 @@
     width: -webkit-fill-available;
     object-fit: cover;
     grid-column: span 4;
+}
+
+#care-view.clothing-list .clothing-item-container {
+    min-height: 26dvh;
+    overflow: scroll;
 }
 
 .clothing-list.clothing-item-container input[type="checkbox"] {

@@ -148,8 +148,6 @@ let signUpUser = async (userEmail, userPassword, firstName, lastName, birthday, 
     if (error) {
         console.error(error)
         return
-    } else {
-        console.log('User', data)
     }
 }
 
@@ -163,7 +161,6 @@ let signInWithEmail = async (emailInput, passwordInput) => {
         console.error('Error creating user:', error)
         return null
     } else {
-        console.log('User data:', data)
         return data
     }
 }
@@ -258,7 +255,6 @@ function signInFormClickHandler() {
 
         let userData = await signInWithEmail(emailInput.value, passwordInput.value)
         if (userData) {
-            console.log(userData);
 
             if (timeoutId) {
                 clearTimeout(timeoutId)
@@ -268,8 +264,6 @@ function signInFormClickHandler() {
             if (deleteError) {
                 console.error(deleteError);
             }
-
-            console.log(deleteRequest);
 
             if (deleteRequest) {
                 error.innerText = 'Your account is scheduled for deletion and cannot be accessed.'

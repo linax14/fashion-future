@@ -130,7 +130,6 @@ async function renderFilters(appendTo, currentDisplay, onFilter) {
                 return true;
             });
 
-            console.log('Filtered Items:', filteredItems);
             currentDisplay.innerHTML = '';
             setDisplay([currentDisplay], 'grid')
             if (filtersSection) {
@@ -151,7 +150,6 @@ async function renderFilters(appendTo, currentDisplay, onFilter) {
         .addEventListener('click', () => {
             for (const key in selectedSets) {
                 selectedSets[key].clear()
-                console.log(selectedSets);
             }
             let allElements = div.querySelectorAll('.element, .color');
             allElements.forEach(element => {

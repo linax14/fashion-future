@@ -247,7 +247,6 @@ async function getChallengeAction() {
 async function completeChallenge(points = false) {
 
     let challenge = JSON.parse(localStorage.getItem('challengeAction'))
-    console.log(challenge);
 
     if (challenge && challenge.fromChallenge) {
 

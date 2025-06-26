@@ -30,7 +30,14 @@ let displayInDashboard = async (type) => {
             setDisplay([quizContainer], 'flex')
             break;
 
-        case 'dash':
+        case 'settings':
+            setDisplay([document.querySelector('.dashboard')], 'none')
+            sideNav.classList.remove('expanded')
+            window.location.href = './public/settings.html'
+            break
+
+        default:
+
             if (streakContainer) setDisplay([streakContainer], 'flex')
             if (sustainabilityTips) setDisplay([sustainabilityTips], 'flex')
 
@@ -46,21 +53,13 @@ let displayInDashboard = async (type) => {
             if (greeting) setDisplay([greeting], 'block')
 
             break;
-
-        case 'settings':
-            setDisplay([document.querySelector('.dashboard')], 'none')
-            sideNav.classList.remove('expanded')
-            window.location.href = './public/settings.html'
-            break
-
-        default:
-            break;
     }
 }
+
 async function renderDashboard(user) {
     let main = new CreateElement('div').setAttributes({ class: 'dashboard' }).appendTo(document.body)
-
     new CreateElement('h1').setAttributes({ id: 'dashboard-greeting' }).setText(`Good ${getTimePeriod()}, ${window.user.user_metadata.first_name} `).appendTo(main)
+
     //from global.js
     let day = date.getDate()
     let today = `${year}-${month + 1}-${day}`
@@ -71,9 +70,9 @@ async function renderDashboard(user) {
     await renderOutfitStreak(today, main)
     await dailyTips(window.user, today, main)
     await dailyChallenge(window.user, today, main)
-    await generatePersonality(main)
+    await revealPersonality(main)
 
-    await displayInDashboard('dash')
+    await displayInDashboard()
 }
 
 let localStorageReset = (today) => {
@@ -147,13 +146,14 @@ async function dailyTips(user, dateInfo, appendTo) {
     }
 }
 
+
 let displayDailyTip = (appendTo, target) => {
     let div = new CreateElement('div').setAttributes({ class: 'dashboard-card', id: 'sustainability-tips-container' }).appendTo(appendTo)
-
     let icons = new CreateElement('div').setAttributes({ class: 'icons' }).appendTo(div)
-    new CreateElement('i').setAttributes({ class: 'fa-solid fa-lightbulb' }).appendTo(icons)
-    new CreateElement('i').setAttributes({ class: 'fa-solid fa-lightbulb' }).appendTo(icons)
-    new CreateElement('i').setAttributes({ class: 'fa-solid fa-lightbulb' }).appendTo(icons)
+
+    for (let i = 0; i < 3; i++) {
+        new CreateElement('i').setAttributes({ class: 'fa-solid fa-lightbulb' }).appendTo(icons)
+    }
 
     let h = new CreateElement('span').setText('Daily Tip').setAttributes({ class: 'main-header' }).appendTo(div)
     setDisplay([h], 'flex')
@@ -171,16 +171,22 @@ let displayDailyTip = (appendTo, target) => {
         if (isVisible) {
             main.style.alignSelf = 'center'
             div.style.gridColumn = 'span 4'
+            div.style.alignItems = 'center'
+
             document.querySelector('#outfit-streak').style.gridColumn = 'span 4'
             document.querySelector('#outfit-streak').style.gridColumn = 'span 4'
             document.querySelector('#quiz-container').style.gridColumn = 'span 4'
+
             icons.style.display = 'flex'
 
         } else {
             main.style.alignSelf = 'start'
             div.style.gridColumn = 'span 12'
+            div.style.alignItems = 'self-start'
+
             document.querySelector('#outfit-streak').style.gridColumn = 'span 8'
             document.querySelector('#quiz-container').style.gridColumn = 'span 4'
+
             icons.style.display = 'none'
         }
     })
@@ -191,8 +197,6 @@ async function dailyChallenge(user, dateInfo, appendTo) {
     let calendarData = await selectUserTable(window.user, 'user_calendar')
     let [year, month, day] = dateInfo.split('-')
     let currentMonth = months[month - 1].toLowerCase()
-    let { data: defaultChallenges, error } = await supabase.from('challenges').select()
-    if (error) { console.error(error) }
 
     let challenges = new Set()
 
@@ -215,9 +219,7 @@ async function dailyChallenge(user, dateInfo, appendTo) {
             for (let [months, days] of Object.entries(element.calendar)) {
                 for (let [daysNum, dayData] of Object.entries(days)) {
                     if (dayData?.challenge?.id) { challenges.add(dayData?.challenge?.id) }
-
                 }
-
             }
         }
     }
@@ -241,9 +243,7 @@ async function dailyChallenge(user, dateInfo, appendTo) {
                     if (data && data.challengeData) {
                         localStorage.setItem('challengeData', JSON.stringify(data.challengeData))
                     }
-
                     await updateUserTable(window.user, 'user_calendar', { calendar: element.calendar });
-
                 }
                 renderChallenge(target, dateInfo, appendTo)
                 await challengeCompleted(target, element)
@@ -261,9 +261,6 @@ async function challengeCompleted(target, element) {
             heading.textContent += '✔'
         }
     }
-    // if (target.challenge.complete == true) {
-    //     renderChallengeCompleted()
-    // }
 
     let completedChallenge = localStorage.getItem('challengeCompleted')
     if (completedChallenge) {
@@ -356,7 +353,6 @@ async function prepareClothingChallengeData(clothingAttribute, appendTo) {
             : [String(item[clothingAttribute]).toLowerCase()]
 
         for (let value of values) {
-
             clothingAttributeMap[value] = (clothingAttributeMap[value] || 0) + wear_count
 
             if (!itemMap[value]) itemMap[value] = []
@@ -499,16 +495,11 @@ async function allChallenges() {
 
     for (let attribute of clothingAttributes) {
         let data = await generateClothingChallenge(attribute)
-
-        if (data && data.challenge) {
-            allChallenges.push(data)
-        }
+        if (data?.challenge) { allChallenges.push(data) }
     }
 
     let careInfo = await generateCareChallenge()
-    if (careInfo && careInfo.challenge) {
-        allChallenges.push(careInfo)
-    }
+    if (careInfo?.challenge) { allChallenges.push(careInfo) }
 
     let randomChallenge = allChallenges[Math.floor(Math.random() * allChallenges.length)]
 
@@ -603,11 +594,44 @@ let getPointsData = async () => {
     let day = date.getDate()
     let today = `${year}-${month + 1}-${day}`
     let points = new Points(window.user, today)
-
     return await points.detailedData()
 }
 
-async function generatePersonality(appendTo) {
+let personalities = {
+    alchemist: {
+        order: ['knowledge', 'mastery', 'discipline', 'curiosity', 'style'],
+        tag: ['Precise', 'introspective', 'perfectionist'],
+        description: `<span>Seeker of patterns and pursuer of precision.</span>
+            <span>You engage deeply — completing quizzes and aiming for that 100%.</span>
+            <span>This reflects your thoughtful,introspective style and drive to truly understand and master what interests you.</span>`,
+        icon: 'fa-solid fa-flask'
+    },
+    nomad: {
+        uniform: true,
+        tag: ['Spontaneous', 'explorative', 'free-flowing'],
+        description: `<span>A wanderer at heart.</span><span>You explore many things but rarely stick to just one.
+            Your journey is spontaneous and open ended - it is marked by bursts of curiosity and experimentation.</span>
+           <span>This openness and curiosity are part of what make your journey unique.</span>`,
+        icon: 'fa-solid fa-mountain-sun'
+    },
+    curator: {
+        order: ['style', 'mastery', 'knowledge', 'discipline', 'curiosity',],
+        tag: ['Expressive', 'intentional', 'aesthetic'],
+        description: `</span>A visual storyteller and expressive thinker.</span><span>You treat your wardrobe like an evolving gallery -
+            logging outfits regularly and curating your look with care.</span><span>Style is more than appearance; it is your way of showing up with intention and flair.</span>`,
+        icon: 'fa-solid fa-image'
+    },
+    strategist: {
+        order: ['curiosity', 'knowledge', 'mastery', 'style', 'discipline',],
+        tag: ['Focused', 'intentional', 'results-oriented'],
+        description: `
+            <span>You show up with a plan — completing challenges with purpose, valuing structure, 
+            and blending discipline with curiosity.</span><span>Your process is intentional and your results speak for themselves.</span>`,
+        icon: 'fa-solid fa-chess'
+    }
+}
+
+async function revealPersonality(appendTo) {
 
     let data = await getPointsData()
     let total = await totalYearPoints(year)
@@ -624,54 +648,25 @@ async function generatePersonality(appendTo) {
     }
 
     let userValues = Object.values(data.percentages)
-
-    let personalityTypes = {
-        alchemist: {
-            order: ['knowledge', 'mastery', 'discipline', 'curiosity', 'style'],
-            tag: ['Precise', 'introspective', 'perfectionist'],
-            description: `<span>Seeker of patterns and pursuer of precision.</span>
-            <span>You engage deeply — completing quizzes and aiming for that 100%.</span>
-            <span>This reflects your thoughtful,introspective style and drive to truly understand and master what interests you.</span>`,
-            icon: 'fa-solid fa-flask'
-        },
-        nomad: {
-            uniform: true,
-            tag: ['Spontaneous', 'explorative', 'free-flowing'],
-            description: `<span>A wanderer at heart.</span><span>You explore many things but rarely stick to just one.
-            Your journey is spontaneous and open ended - it is marked by bursts of curiosity and experimentation.</span>
-           <span>This openness and curiosity are part of what make your journey unique.</span>` },
-        icon: 'fa-solid fa-mountain-sun',
-        curator: {
-            order: ['style', 'mastery', 'knowledge', 'discipline', 'curiosity',],
-            tag: ['Expressive', 'intentional', 'aesthetic'],
-            description: `</span>A visual storyteller and expressive thinker.</span><span>You treat your wardrobe like an evolving gallery -
-            logging outfits regularly and curating your look with care.</span><span>Style is more than appearance; it is your way of showing up with intention and flair.</span>`,
-            icon: 'fa-solid fa-image'
-        },
-        strategist: {
-            order: ['curiosity', 'knowledge', 'mastery', 'style', 'discipline',],
-            tag: ['Focused', 'intentional', 'results-oriented'],
-            description: `
-            <span>You show up with a plan — completing challenges with purpose, valuing structure, 
-            and blending discipline with curiosity.</span><span>Your process is intentional and your results speak for themselves.</span>`,
-            icon: 'fa-solid fa-chess'
-        }
-    }
-
-    let order = Object.entries(data.percentages)
+    let order = Object.keys(data.percentages)
+        .map((trait, i) => [trait, userValues[i]])
         .sort((a, b) => b[1] - a[1])
         .map(([trait]) => trait)
 
     let bestMatch = null
     let bestScore = -Infinity
 
-    for (let [type, definition] of Object.entries(personalityTypes)) {
+    for (let [type, definition] of Object.entries(personalities)) {
         let score = 0
 
         if (definition.uniform) {
             let avg = userValues.reduce((a, b) => a + b, 0) / userValues.length
-            let variance = userValues.reduce((sum, v) => sum + Math.abs(v - avg), 0)
-            score = 100 - Math.min(variance, 100)
+            let variance = userValues.reduce((sum, v) => sum + Math.pow(v - avg, 2), 0) / userValues.length
+            let stdDev = Math.sqrt(variance)
+            if (stdDev < 5) {
+                score = 100 - Math.min(stdDev * 2, 100)
+            } else { score = 0 }
+
         } else if (definition.order) {
 
             for (let i = 0; i < definition.order.length; i++) {
@@ -681,6 +676,8 @@ async function generatePersonality(appendTo) {
                     score += (definition.order.length - Math.abs(i - rank))
                 }
             }
+
+            score = (score / (definition.order.length * definition.order.length)) * 100
         }
 
         if (score > bestScore) {
@@ -689,7 +686,7 @@ async function generatePersonality(appendTo) {
         }
     }
 
-    personalityChart(appendTo, data, { bestMatch, description: personalityTypes[bestMatch].description, tag: personalityTypes[bestMatch].tag })
+    personalityChart(appendTo, data, { bestMatch, description: personalities[bestMatch].description, tag: personalities[bestMatch].tag })
 
     return bestMatch
 }
@@ -701,7 +698,6 @@ function personalityChart(appendTo, data, personality) {
     let span = new CreateElement('span').setText(`${(personality.tag).join(' • ')} `).appendTo(container)
 
     let description = new CreateElement('p').appendTo(container)
-    // let icon = new CreateElement('i').setAttributes({ class: `${personality.icon}` }).appendTo(container)
 
     let isVisible = false
     if (isVisible) setDisplay([description], 'none')
@@ -711,18 +707,14 @@ function personalityChart(appendTo, data, personality) {
         if (isVisible) {
             setDisplay([description], 'flex')
             learn.innerText = 'Show less'
-            // setDisplay([icon], 'none')
         } else {
             setDisplay([description], 'none')
             learn.innerText = 'Learn more'
-            // setDisplay([icon], 'block')
-
         }
 
         description.innerHTML = `${personality.description}`
 
     }).setText(`Learn more`).appendTo(container)
-
 
     renderPointsContainer(appendTo, data)
 }

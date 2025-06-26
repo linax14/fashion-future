@@ -98,7 +98,6 @@ class ImageUpload extends FormField {
 
                             if (this.selectedFile) {
                                 let url = URL.createObjectURL(this.selectedFile)
-                                console.log(this.selectedFile);
 
                                 addImage.setAttribute('src', url)
                                 addImage.classList.remove('create-outfit')
@@ -301,7 +300,6 @@ let resizeImage = async (file, maxWidth = 300, maxHeight = 200, quality = 0.7) =
 
             canvas.toBlob((blob) => {
                 if (blob) {
-                    console.log(`${w}x${h}, ${Math.round(blob.size / 1024)} KB`);
                     resolve(new File([blob], file.name, { type: file.type }))
                 } else {
                     reject(new Error('failed'))

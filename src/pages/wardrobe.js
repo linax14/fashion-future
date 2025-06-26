@@ -72,8 +72,6 @@ class WardrobeManager {
                 allClothes = allClothes.filter(({ id }) => !itemId.includes(id))
             }
 
-            console.log('items deleted')
-
         } catch (error) {
             console.error('error deleting', error.message)
         }
@@ -147,7 +145,6 @@ function handleFormSubmit(form, onSubmitCallback, itemId = null) {
                     formValues[key] = `${formValues[key]},${value}`
                 } else {
                     formValues[key] = `${escapeHTML(value)}`
-                    console.log(formValues[key]);
                 }
             } else {
                 formValues[key] = value
@@ -162,8 +159,6 @@ function handleFormSubmit(form, onSubmitCallback, itemId = null) {
             imageName = imageFile.name
             await uploadFile(window.user, imageName, imageFile)
         }
-
-        console.log(formValues);
 
         await onSubmitCallback(formValues, imageName)
         isDirty = false
@@ -424,7 +419,6 @@ async function renderEditClothingItem(clothingFormContainer, wardrobeContainer, 
                 natural_dry: aboutFormContainer.querySelector(`input[name="normal_dry"]`)?.value,
                 iron: aboutFormContainer.querySelector(`input[name="iron"]`)?.value
             }
-            console.log(updatedCare);
 
             let changes = {}
             for (let key in updatedCare) {
@@ -432,8 +426,6 @@ async function renderEditClothingItem(clothingFormContainer, wardrobeContainer, 
                     changes[key] = { before: originalCare[key], after: updatedCare[key] }
                 }
             }
-
-            console.log(Object.keys(changes).length);
 
             if (Object.keys(changes).length > 0) {
                 updateClothingItem(item.id, aboutFormContainer, clothingFormContainer, true)
@@ -448,7 +440,6 @@ async function renderEditClothingItem(clothingFormContainer, wardrobeContainer, 
     })
 
     let btns = clothingFormContainer.querySelector('.btn-container')
-    //do not add it inside the form again!!
 
     if (!btns.querySelector('.delete.btn')) {
         new CreateElement('button').setAttributes({ class: 'delete btn' }).setText('delete item')

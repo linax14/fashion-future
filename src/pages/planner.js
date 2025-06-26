@@ -1,5 +1,4 @@
 document.addEventListener("userInitialized", async () => {
-    //console.log("user", window.user)
     clothingManager = new ClothingManager(window.user)
     outfitItems = new ClothingItems(window.user)
 
@@ -67,7 +66,7 @@ async function renderClothingDisplay(createOutfitDate, settings) {
     clothingContainer = document.querySelector('.clothing-container')
     if (clothingContainer) clothingContainer.innerHTML = ''
 
-    displayInPlanner('clothing')
+    await displayInPlanner('clothing')
 
     let itemsToAdd = []
     let header = new CreateElement('h3')
@@ -317,7 +316,6 @@ let editMode = async (settings) => {
                             text: `This item has care instructions that don't fully match this care event. Would you like to keep it anyway or remove it from your selection?`,
                             save: 'Keep', dismiss: 'Remove', modalId: 'incompatible-item'
                         });
-                        console.log(confirmed);
 
                         if (!confirmed) {
                             event.target.checked = false
@@ -332,7 +330,6 @@ let editMode = async (settings) => {
                 itemsToAdd.push(element.id);
                 let index = itemsToRemove.indexOf(itemId)
                 if (index != -1) itemsToRemove.splice(index, 1)
-                console.log(itemsToAdd);
 
             } else {
                 itemsToRemove.push(element.id);
@@ -433,7 +430,7 @@ let addMode = async (itemsToAdd, createOutfitDate, submitBtn, challengeExtras) =
                 }
             }
         } else {
-            completeChallenge(['style'])
+            updatePoints(['style'], createOutfitDate)
         }
 
         if (challengeFailed == false) {
@@ -442,8 +439,8 @@ let addMode = async (itemsToAdd, createOutfitDate, submitBtn, challengeExtras) =
 
             let count = await updateWearCount(itemWearMap);
             let streak = await addOutfitStreak(createOutfitDate);
-            console.log(streak);
         }
+
     })
 
     return itemsToAdd
